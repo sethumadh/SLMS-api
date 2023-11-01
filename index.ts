@@ -7,6 +7,14 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import { Err } from './src/types/type';
 import { config } from './src/config/config';
+import log from './src/utils/logger';
+import { customError } from './src/utils/customError';
+import { db } from './src/utils/db.server';
+import { User } from '@prisma/client';
+import validate from './src/middleware/validateResource';
+import { z } from 'zod';
+import { userSchema } from './src/schema/user.schema';
+// const prisma = new PrismaClient();
 
 const app = express();
 app.use(cookieParser());
@@ -33,40 +41,48 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // unhandled exception Error
 process.on('uncaughtException', (err: Err) => {
-    console.log('->>>>', err.name, err.message);
-    console.log('uncaughtException! shutting down.. @ksm');
+    log.info('->>>>', err.name, err.message);
+    log.info('uncaughtException! shutting down.. @ksm');
 
     process.exit(1);
 });
 
 //Routes
-app.use('/', (req, res) => {
-    res.send('hello');
+app.get('/one', validate(userSchema), async (req, res) => {
+    // const user = await db.user.findUnique({name:req.body.name});
+    console.log(req.body.name, 'hello');
+    res.json(req.body.name);
+});
+app.get('/', async (req, res) => {
+    // const user = await db.user.findUnique({name:req.body.name});
+    const user = await db.user.findMany({ });
+    // console.log(req.body.name, 'hello');
+    res.json(user);
 });
 
 // Server frontend static assets and handle catch-all route
 if (process.env.NODE_ENV === 'production') {
     const __dirname = path.resolve();
-    app.use(express.static(path.join(__dirname, '/frontend/dist/index.html')));
-    app.get('*', (req: Request, res: Response) => res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html')));
+    app.use(express.static(path.join(__dirname, '/client/dist/index.html')));
+    app.get('*', (req: Request, res: Response) => res.sendFile(path.resolve(__dirname, 'client', 'dist', 'index.html')));
 }
 
-// app.all('*', (req: Request, res: Response, next: NextFunction) => {
-//     // ************** -->> resubale / or use a class customerError
-//     const error = customError(`cant find ${req.originalUrl}`, 'fail', 404, true);
-//     next(error);
-// });
+app.all('*', (req: Request, res: Response, next: NextFunction) => {
+    // ************** -->> resubale / or use a class customerError
+    const error = customError(`cant find ${req.originalUrl}`, 'fail', 404, true);
+    next(error);
+});
 
 // app.use(globalErrorHandler);
 
 // server setup to listen to port
 
-const server = app.listen(config.server.port, () => console.log(`Server Port: http://localhost:${config.server.port}`));
+const server = app.listen(config.server.port, () => log.info(`Server Port: http://localhost:${config.server.port}`));
 
 // unhandled promise rejection
 process.on('unhandledRejection', (err: Err) => {
-    console.log('->>>>', err.name, err.message);
-    console.log('unhandled rejection! shutting down.. @ksm');
+    log.info('->>>>', err.name, err.message);
+    log.info('unhandled rejection! shutting down.. @ksm');
 
     server.close(() => {
         process.exit(1);
