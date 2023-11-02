@@ -42,22 +42,22 @@ model Student {
 }
 
 model PersonalDetails {
-  id        Int       @id @default(autoincrement())
-  role      Role      @default(STUDENT)
+  id        Int     @id @default(autoincrement())
+  role      Role    @default(STUDENT)
   firstName String
   lastName  String
-  DOB       DateTime?
+  DOB       String?
   gender    String
-  email     String    @unique
-  contact   String    @unique
+  email     String  @unique
+  contact   String  @unique
   address   String
   suburb    String
   state     String
   country   String
   postcode  String
   image     String?
-  Student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId Int       @unique
+  Student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId Int     @unique
 }
 
 model ParentsDetails {

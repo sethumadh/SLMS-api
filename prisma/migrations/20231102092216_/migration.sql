@@ -16,7 +16,7 @@ CREATE TABLE "PersonalDetails" (
     "role" "Role" NOT NULL DEFAULT 'STUDENT',
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
-    "DOB" TIMESTAMP(3),
+    "DOB" TEXT,
     "gender" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "contact" TEXT NOT NULL,

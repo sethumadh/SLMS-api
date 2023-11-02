@@ -3,7 +3,8 @@ import { z } from 'zod';
 export const PersonalSchema = z.object({
     firstName: z.string({ required_error: 'First name is required' }).min(3, { message: 'Name should be minimum 3 Characters' }),
     lastName: z.string({ required_error: 'Last name is required' }).min(3, { message: 'Last Name should be minimum 3 Characters' }),
-    DOB: z.date({ required_error: 'Please select a date ' }).min(new Date('2005-01-01'), { message: 'Age cannot be more than 18' }).max(new Date('2013-01-01'), { message: 'Age should be more 10' }).optional(),
+    // DOB: z.date({ required_error: 'Please select a date ' }).min(new Date('2005-01-01'), { message: 'Age cannot be more than 18' }).max(new Date('2013-01-01'), { message: 'Age should be more 10' }).optional(),
+    DOB: z.string(),
     gender: z.string({ required_error: 'Gender is required' }).min(1, { message: 'Enter gender' }),
     email: z.string({ required_error: 'Email is required' }).email({ message: 'Invalid email address' }),
     contact: z.string({ required_error: 'Mobile number is required' }).regex(/^0\d{9}$/, 'Please provide a valid Number!'),
@@ -49,8 +50,6 @@ export const OtherInformationSchema = z.object({
         message: 'Please give your declaration'
     })
 });
-
-
 
 export const studentSchema = z.object({
     body: z.object(

@@ -11,6 +11,7 @@ import log from './src/utils/logger';
 import { customError } from './src/utils/customError';
 import { db } from './src/utils/db.server';
 import studentRoutes from './src/route/student.route';
+import { globalErrorHandler } from './src/controller/error.controller/error.controller';
 
 const app = express();
 app.use(cookieParser());
@@ -80,7 +81,7 @@ app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(error);
 });
 
-// app.use(globalErrorHandler);
+
 
 // server setup to listen to port
 

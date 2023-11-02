@@ -5,11 +5,11 @@ import { NewStudentSchema } from '../../schema/student.schema';
 import { createStudent, deleteManyStudents, findStudents } from '../../service/student.service';
 import { asyncErrorHandler } from '../../utils/asyncErrorHandler';
 
-export const createStudentHandler = async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
+export const createStudentHandler = asyncErrorHandler(async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
     const data = req.body;
     const newStudent = await createStudent(data);
     res.status(200).json(newStudent);
-};
+});
 export const findStudentsHandler = asyncErrorHandler(async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
     try {
         const newStudent = await findStudents();
