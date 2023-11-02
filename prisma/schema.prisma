@@ -56,7 +56,7 @@ model PersonalDetails {
   country   String
   postcode  String
   image     String?
-  Student   Student   @relation(fields: [studentId], references: [id])
+  Student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId Int       @unique
 }
 
@@ -67,7 +67,7 @@ model ParentsDetails {
   parentEmail   String
   parentContact String
   studentId     Int     @unique
-  Student       Student @relation(fields: [studentId], references: [id])
+  Student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model EmergencyContact {
@@ -76,7 +76,7 @@ model EmergencyContact {
   contactNumber String
   relationship  String
   studentId     Int     @unique
-  Student       Student @relation(fields: [studentId], references: [id])
+  Student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model HealthInformation {
@@ -86,7 +86,7 @@ model HealthInformation {
   medicalCondition          String
   allergy                   String
   studentId                 Int     @unique
-  Student                   Student @relation(fields: [studentId], references: [id])
+  Student                   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Subjects {
@@ -101,7 +101,7 @@ model OtherInformation {
   id          Int      @id @default(autoincrement())
   otherInfo   String   @default("No information provided")
   declaration String[]
-  Student     Student? @relation(fields: [studentId], references: [id])
+  Student     Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId   Int      @unique
 }
 

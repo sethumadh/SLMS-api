@@ -2,7 +2,7 @@ import { NewStudentSchema } from '../schema/student.schema';
 import { db } from '../utils/db.server';
 
 export async function findStudents() {
-    const student = await db.student.findMany({
+    const students = await db.student.findMany({
         include: {
             personalDetails: true,
             parentsDetails: true,
@@ -12,8 +12,8 @@ export async function findStudents() {
             otherInformation: true
         }
     });
-    if (student) {
-        return student;
+    if (students) {
+        return students;
     } else {
         throw new Error('student not found');
     }
@@ -22,7 +22,6 @@ export async function deleteManyStudents() {
     const student = await db.student.deleteMany({});
 }
 export async function createStudent(data: NewStudentSchema['body']) {
-    console.log(data);
     const {
         emergencyContact: { contactNumber, contactPerson, relationship },
         healthInformation: { allergy, medicalCondition, medicareNumber, ambulanceMembershipNumber },
