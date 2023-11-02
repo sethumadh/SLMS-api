@@ -21,3 +21,4 @@ dist-ssr
 *.sw?
 build
 .env
+data

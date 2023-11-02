@@ -6,10 +6,10 @@ const SERVER_PORT = process.env.SERVER_PORT ? Number(process.env.SERVER_PORT) : 
 
 
 export const config = {
-    // mongo: {
-    //     username: MONGO_USERNAME,
-    //     password: MONGO_PASSWORD,
-    //     url: MONGO_URL
+    // mysql: {
+    //     username: MYSQL_USERNAME,
+    //     password: MYSQL_PASSWORD,
+    //     url: MYSQL_URL
     // },
     server: {
         port: SERVER_PORT

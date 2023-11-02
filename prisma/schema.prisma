@@ -6,11 +6,110 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id   Int    @id @default(autoincrement())
-  name String
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+  ALUMNI
+}
+
+// model User {
+//   id      Int      @id @default(autoincrement())
+//   profile Profile?
+// }
+
+// model Profile {
+//   id     Int  @id @default(autoincrement())
+//   user   User @relation(fields: [userId], references: [id])
+//   userId Int  @unique // relation scalar field (used in the `@relation` attribute above)
+// }
+
+model Student {
+  id                Int                @id @default(autoincrement())
+  personalDetails   PersonalDetails?
+  parentsDetails    ParentsDetails?
+  emergencyContact  EmergencyContact?
+  subjects          Subjects?
+  otherInformation  OtherInformation?
+  healthInformation HealthInformation?
+  feedback          Feedback[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model PersonalDetails {
+  id        Int       @id @default(autoincrement())
+  role      Role      @default(STUDENT)
+  firstName String
+  lastName  String
+  DOB       DateTime?
+  gender    String
+  email     String    @unique
+  contact   String    @unique
+  address   String
+  suburb    String
+  state     String
+  country   String
+  postcode  String
+  image     String?
+  Student   Student   @relation(fields: [studentId], references: [id])
+  studentId Int       @unique
+}
+
+model ParentsDetails {
+  id            Int     @id @default(autoincrement())
+  fatherName    String
+  motherName    String
+  parentEmail   String
+  parentContact String
+  studentId     Int     @unique
+  Student       Student @relation(fields: [studentId], references: [id])
+}
+
+model EmergencyContact {
+  id            Int     @id @default(autoincrement())
+  contactPerson String
+  contactNumber String
+  relationship  String
+  studentId     Int     @unique
+  Student       Student @relation(fields: [studentId], references: [id])
+}
+
+model HealthInformation {
+  id                        Int     @id @default(autoincrement())
+  medicareNumber            String  @unique
+  ambulanceMembershipNumber String?
+  medicalCondition          String
+  allergy                   String
+  studentId                 Int     @unique
+  Student                   Student @relation(fields: [studentId], references: [id])
+}
+
+model Subjects {
+  id             Int      @id @default(autoincrement())
+  subjects       String[]
+  subjectRelated String[]
+  Student        Student? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         Int      @unique
+}
+
+model OtherInformation {
+  id          Int      @id @default(autoincrement())
+  otherInfo   String   @default("No information provided")
+  declaration String[]
+  Student     Student? @relation(fields: [studentId], references: [id])
+  studentId   Int      @unique
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  feedback  String[]
+  Student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
