@@ -1,27 +1,98 @@
 import { error } from 'console';
-import { NewStudentSchema } from '../schema/student.schema';
+import { NewStudentSchema } from '../schema/student.dto';
 import { db } from '../utils/db.server';
 
-export async function findStudents() {
-    const students = await db.student.findMany({
-        include: {
-            personalDetails: true,
-            parentsDetails: true,
-            emergencyContact: true,
-            healthInformation: true,
-            subjects: {
-                include: {
-                    subjectRelated: true,
-                    subjects: true
-                }
-            },
-            otherInformation: true
+export async function findUniqueStudent(id: string) {
+    const stdId = parseInt(id);
+    console.log(stdId);
+    const student = await db.student.findUnique({
+        where: {
+            id: stdId
         }
     });
+    return student;
+}
+
+export async function findAllStudents() {
+    const students = await db.student.findMany({
+        select: {
+            personalDetails: {
+                select: {
+                    id: true,
+                    role: true,
+                    firstName: true,
+                    lastName: true,
+                    DOB: true,
+                    gender: true,
+                    email: true,
+                    contact: true,
+                    address: true,
+                    suburb: true,
+                    state: true,
+                    country: true,
+                    postcode: true,
+                    image: true
+                }
+            },
+            parentsDetails: {
+                select: {
+                    id: true,
+                    fatherName: true,
+                    motherName: true,
+                    parentEmail: true,
+                    parentContact: true
+                }
+            },
+            emergencyContact: {
+                select: {
+                    id: true,
+                    contactPerson: true,
+                    contactNumber: true,
+                    relationship: true
+                }
+            },
+            healthInformation: {
+                select: {
+                    id: true,
+                    medicareNumber: true,
+                    ambulanceMembershipNumber: true,
+                    medicalCondition: true,
+                    allergy: true
+                }
+            },
+            subjects: {
+                select: {
+                    subjectRelated: {
+                        select: {
+                            id: true,
+                            subjectRelated: true
+                        }
+                    },
+                    subjects: {
+                        select: {
+                            id: true,
+                            subjectName: true
+                        }
+                    }
+                }
+            },
+            otherInformation: {
+                select: {
+                    id: true,
+                    otherInfo: true,
+                    declaration: true
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'asc'
+        }
+    });
+    const count = await db.student.count();
     if (students) {
-        return students;
+        return { students, count };
     } else {
-        throw new Error('student not found');
+        throw new Error('All students did not return anythin :error @ksm');
     }
 }
 export async function deleteManyStudents() {
@@ -81,14 +152,18 @@ export async function createStudent(data: NewStudentSchema['body']) {
                 subjects: {
                     create: {
                         subjects: {
-                            create: subjects.map((subject) => ({
-                                subjectName: subject
-                            }))
+                            createMany: {
+                                data: subjects.map((subject) => ({
+                                    subjectName: subject
+                                }))
+                            }
                         },
                         subjectRelated: {
-                            create: subjectRelated.map((subjectRel) => ({
-                                subjectRelated: subjectRel
-                            }))
+                            createMany: {
+                                data: subjectRelated.map((subjectRel) => ({
+                                    subjectRelated: subjectRel
+                                }))
+                            }
                         }
                     }
                 },
