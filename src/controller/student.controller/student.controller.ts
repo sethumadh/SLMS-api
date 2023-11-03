@@ -15,7 +15,7 @@ export const findUniqueStudentHandler = asyncErrorHandler(async (req: Request<{ 
     const student = await findUniqueStudent(id);
     res.status(200).json(student);
 });
-export const findStudentsHandler = asyncErrorHandler(async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
+export const findAllStudentsHandler = asyncErrorHandler(async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
     try {
         const newStudent = await findAllStudents();
         res.status(200).json(newStudent);
