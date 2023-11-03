@@ -90,11 +90,25 @@ model HealthInformation {
 }
 
 model Subjects {
-  id             Int      @id @default(autoincrement())
-  subjects       String[]
-  subjectRelated String[]
-  Student        Student? @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         Int      @unique
+  id             Int                  @id @default(autoincrement())
+  subjects       SubjectsList[]
+  subjectRelated SubjectRelatedList[]
+  Student        Student?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         Int                  @unique
+}
+
+model SubjectsList {
+  id          Int       @id @default(autoincrement())
+  subjectName String
+  Subjects    Subjects? @relation(fields: [subjectsId], references: [id], onDelete: Cascade)
+  subjectsId  Int?
+}
+
+model SubjectRelatedList {
+  id             Int       @id @default(autoincrement())
+  subjectRelated String
+  Subjects       Subjects? @relation(fields: [subjectsId], references: [id], onDelete: Cascade)
+  subjectsId     Int?
 }
 
 model OtherInformation {

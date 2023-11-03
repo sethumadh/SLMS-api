@@ -69,11 +69,27 @@ CREATE TABLE "HealthInformation" (
 -- CreateTable
 CREATE TABLE "Subjects" (
     "id" SERIAL NOT NULL,
-    "subjects" TEXT[],
-    "subjectRelated" TEXT[],
     "userId" INTEGER NOT NULL,
 
     CONSTRAINT "Subjects_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SubjectsList" (
+    "id" SERIAL NOT NULL,
+    "subjectName" TEXT NOT NULL,
+    "subjectsId" INTEGER,
+
+    CONSTRAINT "SubjectsList_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SubjectRelatedList" (
+    "id" SERIAL NOT NULL,
+    "subjectRelated" TEXT NOT NULL,
+    "subjectsId" INTEGER,
+
+    CONSTRAINT "SubjectRelatedList_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -138,6 +154,12 @@ ALTER TABLE "HealthInformation" ADD CONSTRAINT "HealthInformation_studentId_fkey
 
 -- AddForeignKey
 ALTER TABLE "Subjects" ADD CONSTRAINT "Subjects_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Student"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SubjectsList" ADD CONSTRAINT "SubjectsList_subjectsId_fkey" FOREIGN KEY ("subjectsId") REFERENCES "Subjects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SubjectRelatedList" ADD CONSTRAINT "SubjectRelatedList_subjectsId_fkey" FOREIGN KEY ("subjectsId") REFERENCES "Subjects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OtherInformation" ADD CONSTRAINT "OtherInformation_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE CASCADE ON UPDATE CASCADE;

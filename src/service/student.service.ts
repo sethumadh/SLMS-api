@@ -9,7 +9,12 @@ export async function findStudents() {
             parentsDetails: true,
             emergencyContact: true,
             healthInformation: true,
-            subjects: true,
+            subjects: {
+                include: {
+                    subjectRelated: true,
+                    subjects: true
+                }
+            },
             otherInformation: true
         }
     });
@@ -38,6 +43,7 @@ export async function createStudent(data: NewStudentSchema['body']) {
                     create: {
                         firstName,
                         lastName,
+                        DOB,
                         gender,
                         email,
                         contact,
@@ -74,8 +80,16 @@ export async function createStudent(data: NewStudentSchema['body']) {
                 },
                 subjects: {
                     create: {
-                        subjects,
-                        subjectRelated
+                        subjects: {
+                            create: subjects.map((subject) => ({
+                                subjectName: subject
+                            }))
+                        },
+                        subjectRelated: {
+                            create: subjectRelated.map((subjectRel) => ({
+                                subjectRelated: subjectRel
+                            }))
+                        }
                     }
                 },
 
@@ -88,6 +102,7 @@ export async function createStudent(data: NewStudentSchema['body']) {
             }
         });
     } catch (e) {
+        console.log(e);
         throw new Error('Application cannot be created');
     }
 }
