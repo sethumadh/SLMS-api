@@ -4,10 +4,78 @@ import { db } from '../utils/db.server';
 
 export async function findUniqueStudent(id: string) {
     const stdId = parseInt(id);
-    console.log(stdId);
     const student = await db.student.findUnique({
         where: {
             id: stdId
+        },
+        include: {
+            personalDetails: {
+                select: {
+                    id: true,
+                    role: true,
+                    firstName: true,
+                    lastName: true,
+                    DOB: true,
+                    gender: true,
+                    email: true,
+                    contact: true,
+                    address: true,
+                    suburb: true,
+                    state: true,
+                    country: true,
+                    postcode: true,
+                    image: true
+                }
+            },
+            parentsDetails: {
+                select: {
+                    id: true,
+                    fatherName: true,
+                    motherName: true,
+                    parentEmail: true,
+                    parentContact: true
+                }
+            },
+            emergencyContact: {
+                select: {
+                    id: true,
+                    contactPerson: true,
+                    contactNumber: true,
+                    relationship: true
+                }
+            },
+            healthInformation: {
+                select: {
+                    id: true,
+                    medicareNumber: true,
+                    ambulanceMembershipNumber: true,
+                    medicalCondition: true,
+                    allergy: true
+                }
+            },
+            subjects: {
+                select: {
+                    subjectRelated: {
+                        select: {
+                            id: true,
+                            subjectRelated: true
+                        }
+                    },
+                    subjects: {
+                        select: {
+                            id: true,
+                            subjectName: true
+                        }
+                    }
+                }
+            },
+            otherInformation: {
+                select: {
+                    id: true,
+                    otherInfo: true,
+                    declaration: true
+                }
+            }
         }
     });
     return student;
@@ -92,7 +160,7 @@ export async function findAllStudents() {
     if (students) {
         return { students, count };
     } else {
-        throw new Error('All students did not return anythin :error @ksm');
+        throw new Error('All students queryAPI did not return anything :error @ksm');
     }
 }
 export async function deleteManyStudents() {
@@ -178,6 +246,6 @@ export async function createStudent(data: NewStudentSchema['body']) {
         });
     } catch (e) {
         console.log(e);
-        throw new Error('Application cannot be created');
+        throw new Error('Failed to create application'); // Return an error message.
     }
 }

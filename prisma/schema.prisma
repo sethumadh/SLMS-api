@@ -58,6 +58,8 @@ model PersonalDetails {
   image     String?
   Student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId Int     @unique
+
+  @@index([email])
 }
 
 model ParentsDetails {
@@ -121,7 +123,7 @@ model OtherInformation {
 
 model Feedback {
   id        Int      @id @default(autoincrement())
-  feedback  String[]
+  feedback  String
   Student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId Int
   createdAt DateTime @default(now())
