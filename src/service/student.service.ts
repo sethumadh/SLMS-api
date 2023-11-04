@@ -1,6 +1,70 @@
 import { error } from 'console';
 import { NewStudentSchema } from '../schema/student.dto';
 import { db } from '../utils/db.server';
+// import { PrismaClient } from '@prisma/client';
+// const dblog = new PrismaClient({
+//     log: ['query'],
+// });
+export async function filterStudentsBySubjects(subjects: string[]) {
+    const students = await db.student.findMany({
+        where: {
+            subjects: {
+                subjects: {
+                    some: {
+                        subjectName: {
+                            in: subjects
+                        }
+                    }
+                }
+            }
+        }
+    });
+    console.log(students);
+}
+export async function findStudentsByEmail(email: string) {
+    const students = await db.student.findFirst({
+        where: {
+            personalDetails: {
+                email: email
+            }
+        }
+    });
+    console.log(students);
+}
+export async function findStudentsBySearch(search: string) {
+    const students = await db.student.findMany({
+        where: {
+            OR: [
+                {
+                    personalDetails: {
+                        OR: [
+                            { firstName: { contains: search, mode: 'insensitive' } },
+                            { lastName: { contains: search, mode: 'insensitive' } },
+                            { email: { contains: search, mode: 'insensitive' } },
+                            { contact: { contains: search, mode: 'insensitive' } },
+                            { postcode: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }
+                },
+                {
+                    parentsDetails: {
+                        OR: [
+                            { fatherName: { contains: search, mode: 'insensitive' } },
+                            { motherName: { contains: search, mode: 'insensitive' } },
+                            { parentEmail: { contains: search, mode: 'insensitive' } },
+                            { parentContact: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }
+                }
+            ]
+        }
+    });
+    console.log(students);
+}
+
+// filterStudentsBySubjects(['Science', 'Math']);
+// findStudentsByEmail('p@dq.com');
+// findStudentsBySearch('.com');
 
 export async function findUniqueStudent(id: string) {
     const stdId = parseInt(id);

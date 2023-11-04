@@ -24,7 +24,8 @@ export const findAllStudentsHandler = asyncErrorHandler(async (req: Request<{}, 
         next(error);
     }
 });
-export const deleteManyStudentsHandler = async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
+
+export const  deleteManyStudentsHandler = async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
     const newStudent = await deleteManyStudents();
     res.status(200).json('deleted all students');
 };
