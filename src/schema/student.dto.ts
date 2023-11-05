@@ -1,4 +1,4 @@
-import { string, z } from 'zod';
+import { z } from 'zod';
 
 export const PersonalSchema = z.object({
     firstName: z.string({ required_error: 'First name is required' }).min(3, { message: 'Name should be minimum 3 Characters' }),
@@ -68,6 +68,6 @@ export type NewStudentSchema = z.infer<typeof studentSchema>;
 
 export const findUniqueStudentSchema = z.object({
     params: z.object({
-        id:z.string().min(1,{message:"Atleast one param string value required @ksm"})
+        id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
     })
 });

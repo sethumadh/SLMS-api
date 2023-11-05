@@ -21,6 +21,22 @@ export async function filterStudentsBySubjects(subjects: string[]) {
     });
     console.log(students);
 }
+export async function filterStudentsBySubjectRelated(subjectRelated: string[]) {
+    const students = await db.student.findMany({
+        where: {
+            subjects: {
+                subjects: {
+                    some: {
+                        subjectName: {
+                            in: subjectRelated
+                        }
+                    }
+                }
+            }
+        }
+    });
+    console.log(students);
+}
 export async function findStudentsByEmail(email: string) {
     const students = await db.student.findFirst({
         where: {
@@ -63,8 +79,8 @@ export async function findStudentsBySearch(search: string) {
 }
 
 // filterStudentsBySubjects(['Science', 'Math']);
-// findStudentsByEmail('p@dq.com');
-// findStudentsBySearch('.com');
+// findStudentsByEmail('b@b.com');
+// findStudentsBySearch('e');
 
 export async function findUniqueStudent(id: string) {
     const stdId = parseInt(id);
