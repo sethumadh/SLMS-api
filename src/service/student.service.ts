@@ -1,10 +1,32 @@
-import { error } from 'console';
 import { NewStudentSchema } from '../schema/student.dto';
+import { customError } from '../utils/customError';
 import { db } from '../utils/db.server';
-// import { PrismaClient } from '@prisma/client';
-// const dblog = new PrismaClient({
-//     log: ['query'],
-// });
+
+// findAllStudents()--
+// createStudent(data)--
+// findStudentById('1')--
+
+// findByEmail('en@example.com');
+// filterStudentsBySubjects(['Science', 'Math']);
+// findStudentByEmail('b@b.com');
+// findStudentsBySearch('e');
+// findUniqueStudent('1')
+// findFeedbackByStudentId('1')?
+// createStudentFeedback('feedback for student 3', '3')
+
+export async function findFeedbackByStudentId(id: string) {
+    const students = await db.feedback.findMany({
+        where: {
+            Student: {
+                is: {
+                    id: parseInt(id)
+                }
+            }
+        }
+    });
+    console.log(students);
+}
+
 export async function filterStudentsBySubjects(subjects: string[]) {
     const students = await db.student.findMany({
         where: {
@@ -21,32 +43,20 @@ export async function filterStudentsBySubjects(subjects: string[]) {
     });
     console.log(students);
 }
-export async function filterStudentsBySubjectRelated(subjectRelated: string[]) {
-    const students = await db.student.findMany({
+export async function findStudentByEmail(email: string) {
+    const student = await db.personalDetails.findUnique({
         where: {
-            subjects: {
-                subjects: {
-                    some: {
-                        subjectName: {
-                            in: subjectRelated
-                        }
-                    }
-                }
-            }
+            email
+        },
+        include: {
+            Student: true
         }
     });
-    console.log(students);
+    const studentDetail = await findStudentById(student?.Student?.id!.toString()!);
+    console.log(studentDetail);
+    return studentDetail;
 }
-export async function findStudentsByEmail(email: string) {
-    const students = await db.student.findFirst({
-        where: {
-            personalDetails: {
-                email: email
-            }
-        }
-    });
-    console.log(students);
-}
+
 export async function findStudentsBySearch(search: string) {
     const students = await db.student.findMany({
         where: {
@@ -77,12 +87,7 @@ export async function findStudentsBySearch(search: string) {
     });
     console.log(students);
 }
-
-// filterStudentsBySubjects(['Science', 'Math']);
-// findStudentsByEmail('b@b.com');
-// findStudentsBySearch('e');
-
-export async function findUniqueStudent(id: string) {
+export async function findStudentById(id: string) {
     const stdId = parseInt(id);
     const student = await db.student.findUnique({
         where: {
@@ -155,9 +160,16 @@ export async function findUniqueStudent(id: string) {
                     otherInfo: true,
                     declaration: true
                 }
+            },
+            feedback: {
+                select: {
+                    id: true,
+                    feedback: true
+                }
             }
         }
     });
+
     return student;
 }
 
@@ -229,6 +241,12 @@ export async function findAllStudents() {
                     id: true,
                     otherInfo: true,
                     declaration: true
+                }
+            },
+            feedback: {
+                select: {
+                    id: true,
+                    feedback: true
                 }
             }
         },
@@ -328,4 +346,18 @@ export async function createStudent(data: NewStudentSchema['body']) {
         console.log(e);
         throw new Error('Failed to create application'); // Return an error message.
     }
+}
+export async function createStudentFeedback(data: string, id: string) {
+    try {
+    } catch (e) {
+        console.log(e);
+        throw new Error(`Feedback connot be create @ksm ${e}`);
+    }
+    const feedback = await db.feedback.create({
+        data: {
+            studentId: parseInt(id),
+            feedback: data
+        }
+    });
+    console.log(feedback);
 }
