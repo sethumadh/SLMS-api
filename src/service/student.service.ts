@@ -12,7 +12,8 @@ import { db } from '../utils/db.server';
 // findStudentsBySearch('e');
 // findUniqueStudent('1')
 // findFeedbackByStudentId('1')?
-// createStudentFeedback('feedback for student 3', '3')
+// createStudentFeedback('feedback for student 3', '3')?
+// findSiblingsByParentEmail('david@example.com')?
 
 export async function findFeedbackByStudentId(id: string) {
     const students = await db.feedback.findMany({
@@ -176,6 +177,7 @@ export async function findStudentById(id: string) {
 export async function findAllStudents() {
     const students = await db.student.findMany({
         select: {
+            id: true,
             personalDetails: {
                 select: {
                     id: true,
@@ -349,15 +351,41 @@ export async function createStudent(data: NewStudentSchema['body']) {
 }
 export async function createStudentFeedback(data: string, id: string) {
     try {
+        const feedback = await db.feedback.create({
+            data: {
+                studentId: parseInt(id),
+                feedback: data
+            }
+        });
+        console.log(feedback);
     } catch (e) {
         console.log(e);
         throw new Error(`Feedback connot be create @ksm ${e}`);
     }
-    const feedback = await db.feedback.create({
-        data: {
-            studentId: parseInt(id),
-            feedback: data
+}
+
+export async function findSiblingsByParentEmail(email: string) {
+    try {
+        const siblings = await db.student.groupBy({
+            by: ['id'],
+            where: {
+                parentsDetails: {
+                    is: {
+                        parentEmail: email
+                    }
+                }
+            }
+        });
+        console.log(siblings);
+        let siblingsDetails: any = [];
+        for (let sibling of siblings) {
+            const data = await findStudentById(sibling.id.toString());
+            siblingsDetails = [...siblingsDetails, data];
+            // console.log(data);
         }
-    });
-    console.log(feedback);
+        console.log('details:', siblingsDetails);
+    } catch (e) {
+        console.log(e);
+        throw new Error(`Feedback connot be create @ksm ${e}`);
+    }
 }
