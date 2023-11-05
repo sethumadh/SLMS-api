@@ -71,3 +71,10 @@ export const findUniqueStudentSchema = z.object({
         id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
     })
 });
+export const findAllStudentSchema = z.object({
+    query: z.object({
+        page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()
+    })
+});
+
+export type FindAllStudentSchema = z.infer<typeof findAllStudentSchema>;

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 
 import { customError } from '../../utils/customError';
-import { NewStudentSchema } from '../../schema/student.dto';
+import { NewStudentSchema, FindAllStudentSchema } from '../../schema/student.dto';
 import { createStudent, deleteManyStudents, findAllStudents, findStudentById } from '../../service/student.service';
 import { asyncErrorHandler } from '../../utils/asyncErrorHandler';
 
@@ -15,12 +15,19 @@ export const findStudentByIdHandler = asyncErrorHandler(async (req: Request<{ id
     const student = await findStudentById(id);
     res.status(200).json(student);
 });
-export const findAllStudentsHandler = asyncErrorHandler(async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
+export const findAllStudentsHandler = asyncErrorHandler(async (req: Request<{}, {}, {}, FindAllStudentSchema['query']>, res: Response, next: NextFunction) => {
+    const { page } = req.query;
     try {
-        const newStudent = await findAllStudents();
-        res.status(200).json(newStudent);
+        if (page) {
+            const allStudent = await findAllStudents(+page);
+            res.status(200).json(allStudent);
+        } else {
+            const page = 0;
+            const allStudent = await findAllStudents(page);
+            res.status(200).json(allStudent);
+        }
     } catch (e) {
-        const error = customError('students not found', 'Fail', 400, false);
+        const error = customError('students not found @ ksm ', 'Fail', 400, false);
         next(error);
     }
 });

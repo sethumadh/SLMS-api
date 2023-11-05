@@ -7,20 +7,26 @@ import { db } from '../utils/db.server';
 // findStudentById('1')--
 
 // findByEmail('en@example.com');
-// filterStudentsBySubjects(['Science', 'Math']);
-// findStudentByEmail('b@b.com');
-// findStudentsBySearch('e');
-// findUniqueStudent('1')
+// filterStudentsBySubjects(['Science', 'Math']);?
+// findStudentByEmail('b@b.com');?
+// findStudentsBySearch('e');?
+// findUniqueStudent('1')?
 // findFeedbackByStudentId('1')?
 // createStudentFeedback('feedback for student 3', '3')?
 // findSiblingsByParentEmail('david@example.com')?
 
-export async function findFeedbackByStudentId(id: string) {
+export async function findFeedbackByStudentId(id: string, page: number) {
+    const take = 5;
+    // const page = 2; // coming from request
+    const pageNum: number = page ?? 0;
+    const skip = pageNum * take;
     const students = await db.feedback.findMany({
+        skip,
+        take,
         where: {
             Student: {
                 is: {
-                    id: parseInt(id)
+                    id: +id
                 }
             }
         }
@@ -28,8 +34,14 @@ export async function findFeedbackByStudentId(id: string) {
     console.log(students);
 }
 
-export async function filterStudentsBySubjects(subjects: string[]) {
+export async function filterStudentsBySubjects(subjects: string[], page: number) {
+    const take = 5;
+    // const page = 2; // coming from request
+    const pageNum: number = page ?? 0;
+    const skip = pageNum * take;
     const students = await db.student.findMany({
+        skip,
+        take,
         where: {
             subjects: {
                 subjects: {
@@ -58,8 +70,14 @@ export async function findStudentByEmail(email: string) {
     return studentDetail;
 }
 
-export async function findStudentsBySearch(search: string) {
+export async function findStudentsBySearch(search: string, page: number) {
+    const take = 5;
+    // const page = 2; // coming from request
+    const pageNum: number = page ?? 0;
+    const skip = pageNum * take;
     const students = await db.student.findMany({
+        skip,
+        take,
         where: {
             OR: [
                 {
@@ -89,10 +107,9 @@ export async function findStudentsBySearch(search: string) {
     console.log(students);
 }
 export async function findStudentById(id: string) {
-    const stdId = parseInt(id);
     const student = await db.student.findUnique({
         where: {
-            id: stdId
+            id: +id
         },
         include: {
             personalDetails: {
@@ -174,8 +191,14 @@ export async function findStudentById(id: string) {
     return student;
 }
 
-export async function findAllStudents() {
+export async function findAllStudents(page: number) {
+    const take = 5;
+    // const page = 2; // coming from request
+    const pageNum: number = page ?? 0;
+    const skip = pageNum * take;
     const students = await db.student.findMany({
+        skip,
+        take,
         select: {
             id: true,
             personalDetails: {
@@ -256,15 +279,19 @@ export async function findAllStudents() {
             createdAt: 'asc'
         }
     });
-    const count = await db.student.count();
-    if (students) {
+    const count = await db.student.aggregate({
+        _count: {
+            id: true
+        }
+    });
+    if (students && students.length != 0) {
         return { students, count };
     } else {
         throw new Error('All students queryAPI did not return anything :error @ksm');
     }
 }
 export async function deleteManyStudents() {
-    const student = await db.student.deleteMany({});
+    const student = await db.student.deleteMany();
 }
 export async function createStudent(data: NewStudentSchema['body']) {
     try {
@@ -353,7 +380,7 @@ export async function createStudentFeedback(data: string, id: string) {
     try {
         const feedback = await db.feedback.create({
             data: {
-                studentId: parseInt(id),
+                studentId: +id,
                 feedback: data
             }
         });
