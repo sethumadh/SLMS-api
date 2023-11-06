@@ -17,6 +17,7 @@ import { db } from '../../utils/db.server';
 // createStudentFeedback('feedback for student 3', '3')?
 // findSiblingsByParentEmail('david@example.com')?
 
+//  find feedback for a student for admin and teacher
 export async function findFeedbackByStudentId(id: string, page: number) {
     const take = 5;
     // const page = 2; // coming from request
@@ -36,6 +37,7 @@ export async function findFeedbackByStudentId(id: string, page: number) {
     console.log(students);
 }
 
+// filter students using subjetcs --> drop down at the student table
 export async function filterStudentsBySubjects(subjects: string[], page: number) {
     const take = 5;
     // const page = 2; // coming from request
@@ -58,6 +60,8 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
     });
     console.log(students);
 }
+
+// fins unique student using email
 export async function findStudentByEmail(email: string) {
     const student = await db.personalDetails.findUnique({
         where: {
@@ -72,6 +76,7 @@ export async function findStudentByEmail(email: string) {
     return studentDetail;
 }
 
+// find student using general search  for search fnction in student table
 export async function findStudentsBySearch(search: string, page: number) {
     const take = 5;
     // const page = 2; // coming from request
@@ -108,6 +113,8 @@ export async function findStudentsBySearch(search: string, page: number) {
     });
     console.log(students);
 }
+
+// find unqiue student by ID for internal queries
 export async function findStudentById(id: string) {
     const student = await db.student.findUnique({
         where: {
@@ -193,6 +200,7 @@ export async function findStudentById(id: string) {
     return student;
 }
 
+// Find all student for the admin
 export async function findAllStudents(page: number) {
     const take = 5;
     // const page = 2; // coming from request
@@ -293,92 +301,13 @@ export async function findAllStudents(page: number) {
         throw new Error('All students queryAPI did not return anything :error @ksm');
     }
 }
+
+// delete student
 export async function deleteManyStudents() {
     const student = await db.student.deleteMany();
 }
-export async function createStudent(data: NewStudentSchema['body']) {
-    const {
-        emergencyContact: { contactNumber, contactPerson, relationship },
-        healthInformation: { allergy, medicalCondition, medicareNumber, ambulanceMembershipNumber },
-        otherInformation: { declaration, otherInfo },
-        parentsDetails: { fatherName, motherName, parentContact, parentEmail },
-        personalDetails: { email, address, contact, country, firstName, gender, lastName, postcode, state, suburb, DOB, image },
-        subjects: { subjects, subjectRelated }
-    } = data;
-    try {
-        const student = await db.student.create({
-            data: {
-                personalDetails: {
-                    create: {
-                        firstName,
-                        lastName,
-                        DOB,
-                        gender,
-                        email,
-                        contact,
-                        address,
-                        suburb,
-                        state,
-                        country,
-                        postcode,
-                        image
-                    }
-                },
-                parentsDetails: {
-                    create: {
-                        fatherName,
-                        motherName,
-                        parentContact,
-                        parentEmail
-                    }
-                },
-                emergencyContact: {
-                    create: {
-                        contactPerson,
-                        contactNumber,
-                        relationship
-                    }
-                },
-                healthInformation: {
-                    create: {
-                        medicareNumber,
-                        ambulanceMembershipNumber,
-                        medicalCondition,
-                        allergy
-                    }
-                },
-                subjects: {
-                    create: {
-                        subjects: {
-                            createMany: {
-                                data: subjects.map((subject) => ({
-                                    subjectName: subject
-                                }))
-                            }
-                        },
-                        subjectRelated: {
-                            createMany: {
-                                data: subjectRelated.map((subjectRel) => ({
-                                    subjectRelated: subjectRel
-                                }))
-                            }
-                        }
-                    }
-                },
 
-                otherInformation: {
-                    create: {
-                        otherInfo: otherInfo ? otherInfo : 'No information provided',
-                        declaration
-                    }
-                }
-            }
-        });
-    } catch (e) {
-        console.log(e);
-        throw new Error('Failed to create application'); // Return an error message.
-    }
-}
+// create student feedback for admin or teachers using student id
 export async function createStudentFeedback(data: string, id: string) {
     try {
         const feedback = await db.feedback.create({
@@ -394,6 +323,7 @@ export async function createStudentFeedback(data: string, id: string) {
     }
 }
 
+// Find siblings of a student using parent email
 export async function findSiblingsByParentEmail(email: string) {
     try {
         const siblings = await db.student.groupBy({
@@ -420,6 +350,7 @@ export async function findSiblingsByParentEmail(email: string) {
     }
 }
 
+// update student personal details service
 export async function updateStudentPersonalDetail(id: string, data: UpdateStudentPersonalDetailSchema['body']['personalDetails']) {
     const RoleEnum = z.enum(['ADMIN', 'TEACHER', 'STUDENT', 'ALUMNI']);
     type RoleEnum = z.infer<typeof RoleEnum>;
@@ -468,3 +399,5 @@ export async function updateStudentPersonalDetail(id: string, data: UpdateStuden
         }
     }
 }
+
+// update student parents details service

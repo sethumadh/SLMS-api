@@ -68,7 +68,7 @@ export const FeedbackSchema = z
             .optional()
     )
     .optional();
-// //To update student PERSONAL details at the admin level
+//To update student PERSONAL details at the admin level
 export const updateStudentPersonalDetailSchema = z.object({
     body: z.object(
         {
@@ -82,3 +82,18 @@ export const updateStudentPersonalDetailSchema = z.object({
 });
 
 export type UpdateStudentPersonalDetailSchema = z.infer<typeof updateStudentPersonalDetailSchema>;
+
+// to update parent Details
+
+export const updateStudentParentsDetailSchema = z.object({
+    body: z.object(
+        {
+            parentsdetails: ParentsSchema
+        },
+        { required_error: 'Some or all of Parents data is missing which are required is required' }
+    ),
+    params: z.object({
+        id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    })
+});
+export type UpdateStudentParentsDetailSchema = z.infer<typeof updateStudentParentsDetailSchema>;
