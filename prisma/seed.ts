@@ -785,34 +785,13 @@
 
 // const prisma = new PrismaClient();
 
-// const studentsData: Prisma.StudentCreateInput[] = studentsList;
+// const studentData: Prisma.StudentCreateInput;
 
 // async function seedStudents() {
 //     console.log('Start seeding students...');
-//     for (const studentData of studentsData) {
+//     for (const studentData of studentData) {
 //       const student = await prisma.student.create({
-//         data: {
-//           personalDetails: {
-//             connect:{
-
-//             }
-//           },
-//           parentsDetails: {
-//             create: studentData.parentsDetails,
-//           },
-//           emergencyContact: {
-//             create: studentData.emergencyContact,
-//           },
-//           healthInformation: {
-//             create: studentData.healthInformation,
-//           },
-//           subjects: {
-//             create: studentData.subjects,
-//           },
-//           otherInformation: {
-//             create: studentData.otherInformation,
-//           },
-//         },
+//         data: {}
 //       });
 //       console.log(`Created student with id: ${student.id}`);
 //     }

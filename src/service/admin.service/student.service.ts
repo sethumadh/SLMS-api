@@ -1,6 +1,8 @@
-import { NewStudentSchema } from '../schema/student.dto';
-import { customError } from '../utils/customError';
-import { db } from '../utils/db.server';
+// import { UpdateStudentDetailSchema } from '../schema/admin.dto/admin.dto';
+import { z } from 'zod';
+import { UpdateStudentPersonalDetailSchema } from '../../schema/admin.dto/admin.dto';
+import { NewStudentSchema } from '../../schema/newStudent.dto/newStudent.dto';
+import { db } from '../../utils/db.server';
 
 // findAllStudents()--
 // createStudent(data)--
@@ -247,6 +249,7 @@ export async function findAllStudents(page: number) {
             },
             subjects: {
                 select: {
+                    id: true,
                     subjectRelated: {
                         select: {
                             id: true,
@@ -294,15 +297,15 @@ export async function deleteManyStudents() {
     const student = await db.student.deleteMany();
 }
 export async function createStudent(data: NewStudentSchema['body']) {
+    const {
+        emergencyContact: { contactNumber, contactPerson, relationship },
+        healthInformation: { allergy, medicalCondition, medicareNumber, ambulanceMembershipNumber },
+        otherInformation: { declaration, otherInfo },
+        parentsDetails: { fatherName, motherName, parentContact, parentEmail },
+        personalDetails: { email, address, contact, country, firstName, gender, lastName, postcode, state, suburb, DOB, image },
+        subjects: { subjects, subjectRelated }
+    } = data;
     try {
-        const {
-            emergencyContact: { contactNumber, contactPerson, relationship },
-            healthInformation: { allergy, medicalCondition, medicareNumber, ambulanceMembershipNumber },
-            otherInformation: { declaration, otherInfo },
-            parentsDetails: { fatherName, motherName, parentContact, parentEmail },
-            personalDetails: { email, address, contact, country, firstName, gender, lastName, postcode, state, suburb, DOB, image },
-            subjects: { subjects, subjectRelated }
-        } = data;
         const student = await db.student.create({
             data: {
                 personalDetails: {
@@ -413,6 +416,55 @@ export async function findSiblingsByParentEmail(email: string) {
         console.log('details:', siblingsDetails);
     } catch (e) {
         console.log(e);
-        throw new Error(`Feedback connot be create @ksm ${e}`);
+        return new Error(`Feedback connot be create @ksm ${e}`);
+    }
+}
+
+export async function updateStudentPersonalDetail(id: string, data: UpdateStudentPersonalDetailSchema['body']['personalDetails']) {
+    const RoleEnum = z.enum(['ADMIN', 'TEACHER', 'STUDENT', 'ALUMNI']);
+    type RoleEnum = z.infer<typeof RoleEnum>;
+    const roleResult = RoleEnum.safeParse(data.role);
+    if (!RoleEnum.safeParse(data.role).success) {
+        throw new Error('Invalid role value');
+    }
+
+    const { firstName, role, lastName, DOB, gender, email, contact, address, suburb, state, country, postcode, image } = data;
+    const existingStudent = await db.personalDetails.findFirst({
+        where: {
+            OR: [{ email }, { contact }]
+        }
+    });
+    if (existingStudent?.id != +id) {
+        throw new Error(`email or contact already exists`);
+    } else {
+        try {
+            const updateStudent = await db.student.update({
+                where: {
+                    id: +id
+                },
+                data: {
+                    personalDetails: {
+                        update: {
+                            role: role as RoleEnum,
+                            firstName,
+                            lastName,
+                            DOB,
+                            gender,
+                            email,
+                            contact,
+                            address,
+                            suburb,
+                            state,
+                            country,
+                            postcode,
+                            image
+                        }
+                    }
+                }
+            });
+            return updateStudent;
+        } catch (e) {
+            throw new Error(`Failed to update student personal details @ksm${e}`);
+        }
     }
 }

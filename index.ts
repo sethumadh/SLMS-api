@@ -10,7 +10,7 @@ import { config } from './src/config/config';
 import log from './src/utils/logger';
 import { customError } from './src/utils/customError';
 import { db } from './src/utils/db.server';
-import studentRoutes from './src/route/student.route';
+import studentRoutes from './src/route/newStudent.route/newStudent.route';
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';
 
 const app = express();
@@ -44,29 +44,8 @@ process.on('uncaughtException', (err: Err) => {
     process.exit(1);
 });
 
-//Routes
-// app.use('/one', validate(userSchema), async (req: Request<{}, {}, UserSchema['body']>, res: Response) => {
-//     const { name }  = req.body;
-//     if (!name) {
-//         return res.status(400).json({ error: 'Name parameter is missing' });
-//     }
-//     const user = await findUser(req.body)
-//     if (user) {
-//         console.log(user, 'hello');
-//         res.json(user);
-//     } else {
-//         console.log('User not found');
-//         res.status(404).json({ error: 'User not found' });
-//     }
-// });
 app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
 app.use('/api/v1/student', studentRoutes);
-// app.get('/', async (req: Request, res: Response) => {
-//     // const user = await db.user.findUnique({name:req.body.name});
-//     const user = await db.student.findMany({});
-//     // console.log(req.body.name, 'hello');
-//     res.json(user);
-// });
 
 // Server frontend static assets and handle catch-all route
 if (process.env.NODE_ENV === 'production') {
@@ -81,8 +60,8 @@ app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(error);
 });
 
-
-
+// Global Error handler middleware
+app.use(globalErrorHandler);
 // server setup to listen to port
 
 const server = app.listen(config.server.port, () => log.info(`Server Port: http://localhost:${config.server.port}`));
@@ -91,6 +70,7 @@ const server = app.listen(config.server.port, () => log.info(`Server Port: http:
 process.on('unhandledRejection', (err: Err) => {
     log.info('->>>>', err.name, err.message);
     log.info('unhandled rejection! shutting down.. @ksm');
+    console.log(err);
 
     server.close(() => {
         process.exit(1);
