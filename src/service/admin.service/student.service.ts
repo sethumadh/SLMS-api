@@ -1,6 +1,6 @@
 // import { UpdateStudentDetailSchema } from '../schema/admin.dto/admin.dto';
 import { z } from 'zod';
-import { UpdateStudentPersonalDetailSchema } from '../../schema/admin.dto/admin.dto';
+import { UpdateStudentPersonalDetailSchema } from '../../schema/admin.dto/student.dto';
 import { NewStudentSchema } from '../../schema/newStudent.dto/newStudent.dto';
 import { db } from '../../utils/db.server';
 
