@@ -1,4 +1,4 @@
-import { NewStudentSchema } from '../../schema/newStudent.dto/newStudent.dto';
+import { NewStudentSchema } from '../../schema/new.student.dto/new.student.dto';
 import { db } from '../../utils/db.server';
 
 //  create new student for application

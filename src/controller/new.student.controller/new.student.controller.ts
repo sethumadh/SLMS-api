@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 
 import { customError } from '../../utils/customError';
-import { NewStudentSchema } from '../../schema/newStudent.dto/newStudent.dto';
-import { createStudent, deleteManyStudents, findAllStudents, findStudentById, updateStudentPersonalDetail } from '../../service/admin.service/student.service';
+import { NewStudentSchema } from '../../schema/new.student.dto/new.student.dto';
+
 import { asyncErrorHandler } from '../../utils/asyncErrorHandler';
-import { FindAllStudentSchema, FindUniqueStudentSchema, UpdateStudentPersonalDetailSchema } from '../../schema/admin.dto/student.dto';
+import { FindAllStudentSchema, FindUniqueStudentSchema, UpdateStudentPersonalDetailSchema } from '../../schema/admin.dto/admin.student.dto/admin.student.dto';
+import { createStudent } from '../../service/newStudent.service/newStudent.service';
 
 export const createStudentHandler = async (req: Request<{}, {}, NewStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
     const data = req.body;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EmergencyContactSchema, HealthInformationSchema, OtherInformationSchema, ParentsSchema } from '../newStudent.dto/newStudent.dto';
+import { EmergencyContactSchema, HealthInformationSchema, OtherInformationSchema, ParentsSchema } from '../../new.student.dto/new.student.dto';
 
 // To find a student by ID
 export const findUniqueStudentSchema = z.object({
@@ -68,6 +68,7 @@ export const FeedbackSchema = z
             .optional()
     )
     .optional();
+
 //To update student PERSONAL details at the admin level
 export const updateStudentPersonalDetailSchema = z.object({
     body: z.object(
@@ -83,12 +84,11 @@ export const updateStudentPersonalDetailSchema = z.object({
 
 export type UpdateStudentPersonalDetailSchema = z.infer<typeof updateStudentPersonalDetailSchema>;
 
-// to update parent Details
-
+// Update student parents details schema at the admin level
 export const updateStudentParentsDetailSchema = z.object({
     body: z.object(
         {
-            parentsdetails: ParentsSchema
+            parentsDetails: ParentsSchema
         },
         { required_error: 'Some or all of Parents data is missing which are required is required' }
     ),
@@ -97,3 +97,18 @@ export const updateStudentParentsDetailSchema = z.object({
     })
 });
 export type UpdateStudentParentsDetailSchema = z.infer<typeof updateStudentParentsDetailSchema>;
+
+// Update Emergency and health Details
+export const updateStudentHealthDetailSchema = z.object({
+    body: z.object(
+        {
+            healthInformation: HealthInformationSchema,
+            emergencyContact: EmergencyContactSchema
+        },
+        { required_error: 'Some or all of health and emergency contact data is missing which are required is required' }
+    ),
+    params: z.object({
+        id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    })
+});
+export type UpdateStudentHealthDetailSchema = z.infer<typeof updateStudentHealthDetailSchema>;

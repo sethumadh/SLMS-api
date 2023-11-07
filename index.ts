@@ -10,7 +10,8 @@ import { config } from './src/config/config';
 import log from './src/utils/logger';
 import { customError } from './src/utils/customError';
 import { db } from './src/utils/db.server';
-import studentRoutes from './src/route/newStudent.route/newStudent.route';
+import newStudentRoute from './src/route/new.student.route/new.student.route';
+import adminStudentRoute from './src/route/admin.route/admin.student.route/admin.student.route';
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';
 
 const app = express();
@@ -45,7 +46,8 @@ process.on('uncaughtException', (err: Err) => {
 });
 
 app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
-app.use('/api/v1/student', studentRoutes);
+app.use('/api/v1/new-student', newStudentRoute);
+app.use('/api/v1/admin/student', adminStudentRoute);
 
 // Server frontend static assets and handle catch-all route
 if (process.env.NODE_ENV === 'production') {

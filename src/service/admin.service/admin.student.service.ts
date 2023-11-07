@@ -1,7 +1,7 @@
 // import { UpdateStudentDetailSchema } from '../schema/admin.dto/admin.dto';
 import { z } from 'zod';
-import { UpdateStudentPersonalDetailSchema } from '../../schema/admin.dto/student.dto';
-import { NewStudentSchema } from '../../schema/newStudent.dto/newStudent.dto';
+
+import { UpdateStudentHealthDetailSchema, UpdateStudentParentsDetailSchema, UpdateStudentPersonalDetailSchema } from '../../schema/admin.dto/admin.student.dto/admin.student.dto';
 import { db } from '../../utils/db.server';
 
 // findAllStudents()--
@@ -401,3 +401,62 @@ export async function updateStudentPersonalDetail(id: string, data: UpdateStuden
 }
 
 // update student parents details service
+export async function updateStudentParentsDetail(id: string, data: UpdateStudentParentsDetailSchema['body']['parentsDetails']) {
+    const { parentContact, parentEmail } = data;
+    try {
+        const updateStudent = await db.student.update({
+            where: {
+                id: +id
+            },
+            data: {
+                parentsDetails: {
+                    update: {
+                        parentContact,
+                        parentEmail
+                    }
+                }
+            }
+        });
+        if (!updateStudent) throw new Error('student does not exist with given ID');
+        return updateStudent;
+    } catch (e) {
+        throw new Error(`Failed to update student parents details @ksm${e}`);
+    }
+}
+
+// Update Emergency and health Details
+export async function updateStudentHealthInformation(id: string, data: UpdateStudentHealthDetailSchema['body']) {
+    const { contactNumber, contactPerson, relationship } = data.emergencyContact;
+    const { allergy, medicalCondition, medicareNumber, ambulanceMembershipNumber } = data.healthInformation;
+    const existingStudent = await db.healthInformation.findFirst({
+        where: {
+            OR: [{ medicareNumber }]
+        }
+    });
+    if (existingStudent?.id != +id) {
+        throw new Error(`Medicare already exists already exists`);
+    }
+    try {
+        const updateStudent = await db.student.update({
+            where: {
+                id: +id
+            },
+            data: {
+                healthInformation: {
+                    update: { allergy, medicalCondition, medicareNumber, ambulanceMembershipNumber }
+                },
+                emergencyContact: {
+                    update: {
+                        contactNumber,
+                        contactPerson,
+                        relationship
+                    }
+                }
+            }
+        });
+        if (!updateStudent) throw new Error('student does not exist with given ID');
+        return updateStudent;
+    } catch (e) {
+        throw new Error(`Failed to update student health and emergency details @ksm${e}`);
+    }
+}

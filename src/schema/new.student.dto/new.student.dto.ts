@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const PersonalSchema = z.object({
-    id: z.string().optional(),
+    id: z.number().optional(),
     firstName: z.string({ required_error: 'First name is required' }).min(3, { message: 'Name should be minimum 3 Characters' }),
     lastName: z.string({ required_error: 'Last name is required' }).min(3, { message: 'Last Name should be minimum 3 Characters' }),
     // DOB: z.date({ required_error: 'Please select a date ' }).min(new Date('2005-01-01'), { message: 'Age cannot be more than 18' }).max(new Date('2013-01-01'), { message: 'Age should be more 10' }).optional(),
@@ -18,7 +18,7 @@ export const PersonalSchema = z.object({
 });
 
 export const ParentsSchema = z.object({
-    id: z.string().optional(),
+    id: z.number().optional(),
     fatherName: z.string({ required_error: "Father's Name is required" }).min(3, { message: 'Minimum 3 characters' }),
     motherName: z.string({ required_error: "Mother's Name is required" }).min(3, { message: 'Minimum 3 characters' }),
     parentEmail: z.string({ required_error: "Parent's Email is required" }).email({ message: 'Invalid email address' }),
@@ -26,13 +26,13 @@ export const ParentsSchema = z.object({
 });
 
 export const EmergencyContactSchema = z.object({
-    id: z.string().optional(),
+    id: z.number().optional(),
     contactPerson: z.string({ required_error: "Contact person's name is required" }).min(3, { message: 'Minimum 3 characters' }),
     contactNumber: z.string({ required_error: "Contact person's Mobile number is required" }).regex(/^0\d{9}$/, 'Please provide a valid Number!'),
     relationship: z.string({ required_error: 'Relationship with children is required' }).min(3, { message: 'Minimum 3 characters' })
 });
 export const HealthInformationSchema = z.object({
-    id: z.string().optional(),
+    id: z.number().optional(),
     medicareNumber: z.string({ required_error: 'Post code is required' }).min(10, { message: 'Medicare number is minimum 10 digits' }).max(10, { message: 'Medicare number is maximum 10 digits' }),
     ambulanceMembershipNumber: z.string().optional(),
     medicalCondition: z.string({ required_error: 'Please give a valid answer' }).min(3, { message: 'Mininum 3 characters' }),
@@ -40,7 +40,7 @@ export const HealthInformationSchema = z.object({
 });
 
 export const SubjectSchema = z.object({
-    id: z.string().optional(),
+    id: z.number().optional(),
     subjects: z.array(z.string()).refine((subjects) => subjects.length > 0, {
         message: 'Please select at least one subject'
     }),
@@ -50,13 +50,12 @@ export const SubjectSchema = z.object({
 });
 
 export const OtherInformationSchema = z.object({
-    id: z.string().optional(),
+    id: z.number().optional(),
     otherInfo: z.string().optional(),
     declaration: z.array(z.string()).refine((subjectRelated) => subjectRelated.length > 0, {
         message: 'Please give your declaration'
     })
 });
-
 
 // To create a new student at the application level
 export const newStudentSchema = z.object({
@@ -73,6 +72,3 @@ export const newStudentSchema = z.object({
     )
 });
 export type NewStudentSchema = z.infer<typeof newStudentSchema>;
-
-
-
