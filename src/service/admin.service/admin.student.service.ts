@@ -202,103 +202,104 @@ export async function findStudentById(id: string) {
 
 // Find all student for the admin
 export async function findAllStudents(page: number) {
-    const take = 5;
-    // const page = 2; // coming from request
-    const pageNum: number = page ?? 0;
-    const skip = pageNum * take;
-    const students = await db.student.findMany({
-        skip,
-        take,
-        select: {
-            id: true,
-            personalDetails: {
-                select: {
-                    id: true,
-                    role: true,
-                    firstName: true,
-                    lastName: true,
-                    DOB: true,
-                    gender: true,
-                    email: true,
-                    contact: true,
-                    address: true,
-                    suburb: true,
-                    state: true,
-                    country: true,
-                    postcode: true,
-                    image: true
-                }
-            },
-            parentsDetails: {
-                select: {
-                    id: true,
-                    fatherName: true,
-                    motherName: true,
-                    parentEmail: true,
-                    parentContact: true
-                }
-            },
-            emergencyContact: {
-                select: {
-                    id: true,
-                    contactPerson: true,
-                    contactNumber: true,
-                    relationship: true
-                }
-            },
-            healthInformation: {
-                select: {
-                    id: true,
-                    medicareNumber: true,
-                    ambulanceMembershipNumber: true,
-                    medicalCondition: true,
-                    allergy: true
-                }
-            },
-            subjects: {
-                select: {
-                    id: true,
-                    subjectRelated: {
-                        select: {
-                            id: true,
-                            subjectRelated: true
+    try {
+        const take = 5;
+        // const page = 2; // coming from request
+        const pageNum: number = page ?? 0;
+        const skip = pageNum * take;
+        const students = await db.student.findMany({
+            skip,
+            take,
+            select: {
+                id: true,
+                personalDetails: {
+                    select: {
+                        id: true,
+                        role: true,
+                        firstName: true,
+                        lastName: true,
+                        DOB: true,
+                        gender: true,
+                        email: true,
+                        contact: true,
+                        address: true,
+                        suburb: true,
+                        state: true,
+                        country: true,
+                        postcode: true,
+                        image: true
+                    }
+                },
+                parentsDetails: {
+                    select: {
+                        id: true,
+                        fatherName: true,
+                        motherName: true,
+                        parentEmail: true,
+                        parentContact: true
+                    }
+                },
+                emergencyContact: {
+                    select: {
+                        id: true,
+                        contactPerson: true,
+                        contactNumber: true,
+                        relationship: true
+                    }
+                },
+                healthInformation: {
+                    select: {
+                        id: true,
+                        medicareNumber: true,
+                        ambulanceMembershipNumber: true,
+                        medicalCondition: true,
+                        allergy: true
+                    }
+                },
+                subjects: {
+                    select: {
+                        id: true,
+                        subjectRelated: {
+                            select: {
+                                id: true,
+                                subjectRelated: true
+                            }
+                        },
+                        subjects: {
+                            select: {
+                                id: true,
+                                subjectName: true
+                            }
                         }
-                    },
-                    subjects: {
-                        select: {
-                            id: true,
-                            subjectName: true
-                        }
+                    }
+                },
+                otherInformation: {
+                    select: {
+                        id: true,
+                        otherInfo: true,
+                        declaration: true
+                    }
+                },
+                feedback: {
+                    select: {
+                        id: true,
+                        feedback: true
                     }
                 }
             },
-            otherInformation: {
-                select: {
-                    id: true,
-                    otherInfo: true,
-                    declaration: true
-                }
-            },
-            feedback: {
-                select: {
-                    id: true,
-                    feedback: true
-                }
+            orderBy: {
+                createdAt: 'asc'
             }
-        },
-        orderBy: {
-            createdAt: 'asc'
-        }
-    });
-    const count = await db.student.aggregate({
-        _count: {
-            id: true
-        }
-    });
-    if (students && students.length != 0) {
+        });
+        const count = await db.student.aggregate({
+            _count: {
+                id: true
+            }
+        });
+
         return { students, count };
-    } else {
-        throw new Error('All students queryAPI did not return anything :error @ksm');
+    } catch (err: any) {
+        throw new Error('INTERNAL-ERROR');
     }
 }
 
@@ -306,6 +307,7 @@ export async function findAllStudents(page: number) {
 export async function deleteManyStudents() {
     const student = await db.student.deleteMany();
 }
+// deleteManyStudents();
 
 // create student feedback for admin or teachers using student id
 export async function createStudentFeedback(data: string, id: string) {
@@ -365,40 +367,41 @@ export async function updateStudentPersonalDetail(id: string, data: UpdateStuden
             OR: [{ email }, { contact }]
         }
     });
-    if (existingStudent?.id != +id) {
-        throw new Error(`email or contact already exists`);
-    } else {
-        try {
-            const updateStudent = await db.student.update({
-                where: {
-                    id: +id
-                },
-                data: {
-                    personalDetails: {
-                        update: {
-                            role: role as RoleEnum,
-                            firstName,
-                            lastName,
-                            DOB,
-                            gender,
-                            email,
-                            contact,
-                            address,
-                            suburb,
-                            state,
-                            country,
-                            postcode,
-                            image
-                        }
+    console.log(existingStudent);
+    // if (existingStudent?.id != +id) {
+    //     throw new Error(`email or contact already exists`);
+    // } else {
+    try {
+        const updateStudent = await db.student.update({
+            where: {
+                id: +id
+            },
+            data: {
+                personalDetails: {
+                    update: {
+                        role: role as RoleEnum,
+                        firstName,
+                        lastName,
+                        DOB,
+                        gender,
+                        email,
+                        contact,
+                        address,
+                        suburb,
+                        state,
+                        country,
+                        postcode,
+                        image
                     }
                 }
-            });
-            return updateStudent;
-        } catch (e) {
-            throw new Error(`Failed to update student personal details @ksm${e}`);
-        }
+            }
+        });
+        return updateStudent;
+    } catch (e) {
+        throw new Error(`Failed to update student personal details @ksm${e}`);
     }
 }
+// }
 
 // update student parents details service
 export async function updateStudentParentsDetail(id: string, data: UpdateStudentParentsDetailSchema['body']['parentsDetails']) {
@@ -460,3 +463,5 @@ export async function updateStudentHealthInformation(id: string, data: UpdateStu
         throw new Error(`Failed to update student health and emergency details @ksm${e}`);
     }
 }
+
+//Create subjects for admin

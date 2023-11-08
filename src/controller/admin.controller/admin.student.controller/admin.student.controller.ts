@@ -37,8 +37,18 @@ export const findAllStudentsHandler = async (req: Request<{}, {}, {}, FindAllStu
             const allStudent = await findAllStudents(page);
             res.status(200).json(allStudent);
         }
-    } catch (e) {
-        const error = customError(`students not found @ ksm${e}`, 'Fail', 400, false);
+    } catch (err: any) {
+        if (err.message == 'INTERNAL-ERROR') {
+            if (process.env.NODE_ENV == 'development') {
+                const error = customError(`students data cannot be fetched from DB  @ksm${err}`, 'Fail', 400, false);
+                console.log(error);
+                return next(error);
+            } else if (process.env.NODE_ENV == 'production') {
+                res.status(200).json({ message: 'SOmething went wrong.Student data is not available' });
+                next(err);
+            }
+        }
+        const error = customError(`students not found @ ksm${err}`, 'Fail', 400, false);
         next(error);
     }
 };
