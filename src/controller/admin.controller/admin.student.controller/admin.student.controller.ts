@@ -8,7 +8,7 @@ import {
     updateStudentHealthInformation,
     updateStudentParentsDetail,
     updateStudentPersonalDetail
-} from '../../../service/admin.service/admin.student.service';
+} from '../../../service/admin.service/admin.student.service/admin.student.service';
 import { asyncErrorHandler } from '../../../utils/asyncErrorHandler';
 import {
     FindAllStudentSchema,

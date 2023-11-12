@@ -1,8 +1,8 @@
 // import { UpdateStudentDetailSchema } from '../schema/admin.dto/admin.dto';
 import { z } from 'zod';
 
-import { UpdateStudentHealthDetailSchema, UpdateStudentParentsDetailSchema, UpdateStudentPersonalDetailSchema } from '../../schema/admin.dto/admin.student.dto/admin.student.dto';
-import { db } from '../../utils/db.server';
+import { UpdateStudentHealthDetailSchema, UpdateStudentParentsDetailSchema, UpdateStudentPersonalDetailSchema } from '../../../schema/admin.dto/admin.student.dto/admin.student.dto';
+import { db } from '../../../utils/db.server';
 
 // findAllStudents()--
 // createStudent(data)--
@@ -47,15 +47,15 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
         skip,
         take,
         where: {
-            subjects: {
-                subjects: {
-                    some: {
-                        subjectName: {
-                            in: subjects
-                        }
-                    }
-                }
-            }
+            // subjects: {
+            //     subjects: {
+            //         some: {
+            //             subjectName: {
+            //                 in: subjects
+            //             }
+            //         }
+            //     }
+            // }
         }
     });
     console.log(students);
@@ -165,22 +165,22 @@ export async function findStudentById(id: string) {
                     allergy: true
                 }
             },
-            subjects: {
-                select: {
-                    subjectRelated: {
-                        select: {
-                            id: true,
-                            subjectRelated: true
-                        }
-                    },
-                    subjects: {
-                        select: {
-                            id: true,
-                            subjectName: true
-                        }
-                    }
-                }
-            },
+            // subjects: {
+            //     select: {
+            //         subjectRelated: {
+            //             select: {
+            //                 id: true,
+            //                 subjectRelated: true
+            //             }
+            //         },
+            //         subjects: {
+            //             select: {
+            //                 id: true,
+            //                 subjectName: true
+            //             }
+            //         }
+            //     }
+            // },
             otherInformation: {
                 select: {
                     id: true,
@@ -256,23 +256,23 @@ export async function findAllStudents(page: number) {
                         allergy: true
                     }
                 },
-                subjects: {
-                    select: {
-                        id: true,
-                        subjectRelated: {
-                            select: {
-                                id: true,
-                                subjectRelated: true
-                            }
-                        },
-                        subjects: {
-                            select: {
-                                id: true,
-                                subjectName: true
-                            }
-                        }
-                    }
-                },
+                // subjects: {
+                //     select: {
+                //         id: true,
+                //         subjectRelated: {
+                //             select: {
+                //                 id: true,
+                //                 subjectRelated: true
+                //             }
+                //         },
+                //         subjects: {
+                //             select: {
+                //                 id: true,
+                //                 subjectName: true
+                //             }
+                //         }
+                //     }
+                // },
                 otherInformation: {
                     select: {
                         id: true,
@@ -348,7 +348,7 @@ export async function findSiblingsByParentEmail(email: string) {
         console.log('details:', siblingsDetails);
     } catch (e) {
         console.log(e);
-        return new Error(`Feedback connot be create @ksm ${e}`);
+        return new Error(`cannot find sibling data @ksm ${e}`);
     }
 }
 
@@ -368,9 +368,14 @@ export async function updateStudentPersonalDetail(id: string, data: UpdateStuden
         }
     });
     console.log(existingStudent);
+
+    /***********************************************************/
+
+    // check this part
     // if (existingStudent?.id != +id) {
     //     throw new Error(`email or contact already exists`);
     // } else {
+    /***********************************************************/
     try {
         const updateStudent = await db.student.update({
             where: {
@@ -465,3 +470,8 @@ export async function updateStudentHealthInformation(id: string, data: UpdateStu
 }
 
 //Create subjects for admin
+
+// function foo() {
+//     console.log('foo');
+// }
+// foo();

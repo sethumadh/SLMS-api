@@ -53,24 +53,24 @@ export async function createStudent(data: NewStudentSchema['body']) {
                         allergy
                     }
                 },
-                subjects: {
-                    create: {
-                        subjects: {
-                            createMany: {
-                                data: subjects.map((subject) => ({
-                                    subjectName: subject
-                                }))
-                            }
-                        },
-                        subjectRelated: {
-                            createMany: {
-                                data: subjectRelated.map((subjectRel) => ({
-                                    subjectRelated: subjectRel
-                                }))
-                            }
-                        }
-                    }
-                },
+                // subjects: {
+                //     create: {
+                //         subjects: {
+                //             createMany: {
+                //                 data: subjects.map((subject) => ({
+                //                     subjectName: subject
+                //                 }))
+                //             }
+                //         },
+                //         subjectRelated: {
+                //             createMany: {
+                //                 data: subjectRelated.map((subjectRel) => ({
+                //                     subjectRelated: subjectRel
+                //                 }))
+                //             }
+                //         }
+                //     }
+                // },
 
                 otherInformation: {
                     create: {
