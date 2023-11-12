@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AnyZodObject } from 'zod';
+import { customError } from '../utils/customError';
 
 const validate = (schema: AnyZodObject) => async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -10,8 +11,13 @@ const validate = (schema: AnyZodObject) => async (req: Request, res: Response, n
         });
         next();
     } catch (e: any) {
-        // next(e);
-        return res.status(400).send(e.errors);
+        if (process.env.NODE_ENV === 'development') {
+            const error = customError(`Validation error : ${e}`, 'fail', 400, false);
+            next(error);
+        } else {
+            const error = customError(`Something went wrong:Validation`, 'fail', 500, false);
+            next(error);
+        }
     }
 };
 

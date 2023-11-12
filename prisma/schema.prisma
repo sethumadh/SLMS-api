@@ -19,12 +19,12 @@ enum Role {
 
 model Student {
   id                Int                @id @default(autoincrement())
+  enrollments       Enrollment[]
   personalDetails   PersonalDetails?
   parentsDetails    ParentsDetails?
   emergencyContact  EmergencyContact?
-  subjects          Subjects?
-  otherInformation  OtherInformation?
   healthInformation HealthInformation?
+  otherInformation  OtherInformation?
   feedback          Feedback[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -80,34 +80,65 @@ model HealthInformation {
   Student                   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
-model Subjects {
-  id             Int                  @id @default(autoincrement())
-  subjects       SubjectsList[]
-  subjectRelated SubjectRelatedList[]
-  Student        Student?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         Int                  @unique
-}
-
-model SubjectsList {
-  id          Int       @id @default(autoincrement())
-  subjectName String
-  Subjects    Subjects? @relation(fields: [subjectsId], references: [id], onDelete: Cascade)
-  subjectsId  Int?
-}
-
-model SubjectRelatedList {
-  id             Int       @id @default(autoincrement())
-  subjectRelated String
-  Subjects       Subjects? @relation(fields: [subjectsId], references: [id], onDelete: Cascade)
-  subjectsId     Int?
-}
-
 model OtherInformation {
   id          Int      @id @default(autoincrement())
   otherInfo   String   @default("No information provided")
   declaration String[]
   Student     Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId   Int      @unique
+}
+
+model Subject {
+  id          Int          @id @default(autoincrement())
+  name        String
+  isActive    Boolean      @default(true)
+  levels      Level[]
+  enrollments Enrollment[]
+  fees        Fee? // Fees associated with the subject
+}
+
+model Term {
+  id          Int          @id @default(autoincrement())
+  currentTerm Boolean      @default(true)
+  name        String       @unique // e.g., Q1-2024
+  startDate   DateTime // The start date of the term
+  endDate     DateTime // The end date of the term, which would be startDate + 3 months
+  enrollments Enrollment[]
+}
+
+model Level {
+  id          Int          @id @default(autoincrement())
+  name        String // e.g., Beginner, Intermediate, Advanced
+  subjects    Subject[]
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  subjectId Int
+  levelId   Int
+  termId    Int      @unique
+  dueDate   DateTime // Add this line to store due date
+  fee       Fee? // Optional, if you want to link a fee directly to an enrollment
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id])
+  level   Level   @relation(fields: [levelId], references: [id])
+  term    Term    @relation(fields: [termId], references: [id])
+
+  @@unique([studentId, subjectId, levelId, termId])
+}
+
+model Fee {
+  id           Int @id @default(autoincrement())
+  amount       Int
+  enrollmentId Int @unique
+  // dueDate is removed since it's calculated from Term's startDate
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+  Subject    Subject    @relation(fields: [subjectId], references: [id])
+  subjectId  Int        @unique
 }
 
 model Feedback {

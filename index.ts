@@ -13,6 +13,7 @@ import { db } from './src/utils/db.server';
 import newStudentRoute from './src/route/new.student.route/new.student.route';
 import adminStudentRoute from './src/route/admin.route/admin.student.route/admin.student.route';
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';
+import adminAdministrationtRoute from './src/route/admin.route/admin.administration.route/admin.administration.route';
 
 const app = express();
 app.use(cookieParser());
@@ -44,9 +45,12 @@ process.on('uncaughtException', (err: Err) => {
 
     process.exit(1);
 });
-
+app.get('/test', (req, res, next) => {
+    throw new Error('internal error')
+});
 app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
 app.use('/api/v1/new-student', newStudentRoute);
+app.use('/api/v1/admin/administration', adminAdministrationtRoute);
 app.use('/api/v1/admin/student', adminStudentRoute);
 
 // Server frontend static assets and handle catch-all route

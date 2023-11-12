@@ -1,11 +1,12 @@
 import express, { Express, NextFunction, Request, Response } from 'express';
 
 import { Err } from '../../types/type';
+import { customError } from '../../utils/customError';
 
 const devErrors = (err: any, res: Response) => {
     res.status(err.statusCode).json({ status: err.status, message: `${err.message}`, stackTrace: err.stack, error: err });
 };
-const prodErrors = (err: any, res: Response) => {
+const prodErrors = (err: Err, res: Response) => {
     if (err.isOperational) {
         res.status(err.statusCode).json({ status: err.status, message: err.message });
     } else {
@@ -20,5 +21,7 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
     err.status = err.statusCode >= 400 && err.statusCode < 500 ? 'Fail' : 'server error';
     Error.captureStackTrace(err);
     if (process.env.NODE_ENV === 'development') devErrors(err, res);
-    else if (process.env.NODE_ENV === 'production') prodErrors(err, res);
+    else if (process.env.NODE_ENV === 'production') {
+        prodErrors(err, res);
+    }
 };
