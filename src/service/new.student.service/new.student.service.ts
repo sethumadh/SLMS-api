@@ -1,4 +1,5 @@
 import { NewStudentSchema } from '../../schema/new.student.dto/new.student.dto';
+import { customError } from '../../utils/customError';
 import { db } from '../../utils/db.server';
 
 //  create new student for application
@@ -80,8 +81,44 @@ export async function createStudent(data: NewStudentSchema['body']) {
                 }
             }
         });
+        return student;
     } catch (e) {
         console.log(e);
-        throw new Error('Failed to create application'); // Return an error message.
+        throw customError('Failed to create application', 'fail', 404, true); // Return an error message.
     }
+}
+
+/*To select the active term and its subjects and to display it in Application subjects section*/
+export async function findActiveTerm() {
+    const uniqueTerm = await db.term.findFirst({
+        where: {
+            currentTerm: true
+        },
+        select: {
+            id: true,
+            name: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            TermSubject: {
+                select: {
+                    subject: {
+                        select: {
+                            name: true,
+                            fee: true,
+                            isActive: true,
+                            _count: true,
+                            id: true
+                        }
+                    }
+                }
+            },
+            _count: true
+        }
+    });
+    if (!uniqueTerm) {
+        throw customError(`Active Term could not found. Please try again later`, 'fail', 404, true);
+    }
+    return uniqueTerm;
 }

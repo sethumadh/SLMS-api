@@ -49,7 +49,7 @@ app.get('/test', (req, res, next) => {
     throw new Error('internal error')
 });
 app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
-app.use('/api/v1/new-student', newStudentRoute);
+app.use('/api/v1/application', newStudentRoute);
 app.use('/api/v1/admin/administration', adminAdministrationtRoute);
 app.use('/api/v1/admin/student', adminStudentRoute);
 

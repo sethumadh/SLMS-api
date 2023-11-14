@@ -18,24 +18,24 @@ import { db } from '../../../utils/db.server';
 // findSiblingsByParentEmail('david@example.com')?
 
 //  find feedback for a student for admin and teacher
-export async function findFeedbackByStudentId(id: string, page: number) {
-    const take = 5;
-    // const page = 2; // coming from request
-    const pageNum: number = page ?? 0;
-    const skip = pageNum * take;
-    const students = await db.feedback.findMany({
-        skip,
-        take,
-        where: {
-            Student: {
-                is: {
-                    id: +id
-                }
-            }
-        }
-    });
-    console.log(students);
-}
+// export async function findFeedbackByStudentId(id: string, page: number) {
+//     const take = 5;
+//     // const page = 2; // coming from request
+//     const pageNum: number = page ?? 0;
+//     const skip = pageNum * take;
+//     const students = await db.feedback.findMany({
+//         skip,
+//         take,
+//         where: {
+//             Student: {
+//                 is: {
+//                     id: +id
+//                 }
+//             }
+//         }
+//     });
+//     console.log(students);
+// }
 
 // filter students using subjetcs --> drop down at the student table
 export async function filterStudentsBySubjects(subjects: string[], page: number) {
@@ -188,12 +188,12 @@ export async function findStudentById(id: string) {
                     declaration: true
                 }
             },
-            feedback: {
-                select: {
-                    id: true,
-                    feedback: true
-                }
-            }
+            // feedback: {
+            //     select: {
+            //         id: true,
+            //         feedback: true
+            //     }
+            // }
         }
     });
 
@@ -280,12 +280,12 @@ export async function findAllStudents(page: number) {
                         declaration: true
                     }
                 },
-                feedback: {
-                    select: {
-                        id: true,
-                        feedback: true
-                    }
-                }
+                // feedback: {
+                //     select: {
+                //         id: true,
+                //         feedback: true
+                //     }
+                // }
             },
             orderBy: {
                 createdAt: 'asc'
@@ -310,20 +310,20 @@ export async function deleteManyStudents() {
 // deleteManyStudents();
 
 // create student feedback for admin or teachers using student id
-export async function createStudentFeedback(data: string, id: string) {
-    try {
-        const feedback = await db.feedback.create({
-            data: {
-                studentId: +id,
-                feedback: data
-            }
-        });
-        console.log(feedback);
-    } catch (e) {
-        console.log(e);
-        throw new Error(`Feedback connot be create @ksm ${e}`);
-    }
-}
+// export async function createStudentFeedback(data: string, id: string) {
+//     try {
+//         const feedback = await db.feedback.create({
+//             data: {
+//                 studentId: +id,
+//                 feedback: data
+//             }
+//         });
+//         console.log(feedback);
+//     } catch (e) {
+//         console.log(e);
+//         throw new Error(`Feedback connot be create @ksm ${e}`);
+//     }
+// }
 
 // Find siblings of a student using parent email
 export async function findSiblingsByParentEmail(email: string) {

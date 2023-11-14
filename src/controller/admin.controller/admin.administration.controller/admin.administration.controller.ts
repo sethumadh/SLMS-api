@@ -1,10 +1,28 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { createNewterm, deleteTerm, endCurrentTerm, findAllTerm, findUniqueTerm } from '../../../service/admin.service/admin.administration.service/admin.administration.service';
-import { FindUniqueTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+import {
+    SetupOrgDataType,
+    createNewTermSetup,
+    createNewterm,
+    deleteTerm,
+    endCurrentTerm,
+    findAllTerm,
+    findUniqueTerm
+} from '../../../service/admin.service/admin.administration.service/admin.administration.service';
+import { CreateNewTermSetupSchema, CreateTermSchema, FindUniqueTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
 
-export const createNewTermHandler = async (req: Request, res: Response, next: NextFunction) => {
-    const newterm = await createNewterm();
+export const createTermHandler = async (req: Request<{}, {}, CreateTermSchema['body'], {}>, res: Response, next: NextFunction) => {
+    /*
+        example data
+        const termData = {
+        name: 'Spring 2024',
+        startDate: '2024-03-01T00:00:00.000Z',
+        endDate: '2024-06-30T00:00:00.000Z'
+    };
+    */
+
+    const termData = req.body;
+    const newterm = await createNewterm(termData);
     res.status(200).json(newterm);
 };
 
@@ -29,4 +47,10 @@ export const deleteTermHandler = async (req: Request<FindUniqueTermSchema['param
     const { id } = req.params;
     const deletedTerm = await deleteTerm(id);
     res.status(200).json({ message: 'The Term is deleted', deletedTerm });
+};
+export const createNewTermSetupHandler = async (req: Request<{}, {}, CreateNewTermSetupSchema['body'], {}>, res: Response, next: NextFunction) => {
+    const setupOrgData = req.body;
+
+    const newTermwithSubjects = await createNewTermSetup(setupOrgData);
+    res.status(200).json(newTermwithSubjects);
 };

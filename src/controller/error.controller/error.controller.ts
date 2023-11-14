@@ -1,7 +1,6 @@
 import express, { Express, NextFunction, Request, Response } from 'express';
 
 import { Err } from '../../types/type';
-import { customError } from '../../utils/customError';
 
 const devErrors = (err: any, res: Response) => {
     res.status(err.statusCode).json({ status: err.status, message: `${err.message}`, stackTrace: err.stack, error: err });

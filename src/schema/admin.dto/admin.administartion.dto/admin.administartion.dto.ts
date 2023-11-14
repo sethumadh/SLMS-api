@@ -6,3 +6,27 @@ export const findUniqueTermSchema = z.object({
     })
 });
 export type FindUniqueTermSchema = z.infer<typeof findUniqueTermSchema>;
+
+export const createTermSchema = z.object({
+    body: z.object({
+        name: z.string(),
+        startDate: z.string(),
+        endDate: z.string()
+    })
+});
+export type CreateTermSchema = z.infer<typeof createTermSchema>;
+
+export const createNewTermSetupSchema = z.object({
+    body: z.object({
+        termName: z.string(),
+        subjects: z.array(
+            z.object({
+                subject: z.string(),
+                fee: z.number(),
+                feeInterval: z.string(),
+                levels: z.array(z.string())
+            })
+        )
+    })
+});
+export type CreateNewTermSetupSchema = z.infer<typeof createNewTermSetupSchema>;

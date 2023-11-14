@@ -564,3 +564,26 @@ export const studentSeedData = [
         }
     }
 ];
+export const setupOrgData = {
+    termName: 'Spring 2023',
+    subjects: [
+        {
+            subject: 'viloin',
+            fee: 300,
+            feeInterval: 'month',
+            levels: ['beginner', 'intermediate', 'advanced']
+        },
+        {
+            subject: 'classical song',
+            fee: 200,
+            feeInterval: 'term',
+            levels: ['beginner', 'intermediate']
+        },
+        {
+            subject: 'music',
+            fee: 500,
+            feeInterval: 'month',
+            levels: ['beginner']
+        }
+    ]
+};

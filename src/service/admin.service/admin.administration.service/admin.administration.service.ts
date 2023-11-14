@@ -1,7 +1,76 @@
+import { CreateNewTermSetupSchema, CreateTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
 import { customError } from '../../../utils/customError';
 import { db } from '../../../utils/db.server';
-import { getNextTermName } from '../../../utils/getNextTermName';
 
+export type SetupOrgDataType = {
+    termName: string;
+    subjects: { subject: string; fee: number; feeInterval: string; levels: string[] }[];
+};
+
+/* ORGANISTAION SET UP*/
+
+export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['body']) => {
+    // create new term
+    // create new subject with fee and fee interval with levels
+    let createdSubjects = [];
+
+    for (const subject of setupData.subjects) {
+        const existingSubject = await db.subject.findUnique({
+            where: {
+                name: subject.subject
+            }
+        });
+        console.log({ existingSubject });
+        if (existingSubject?.name) {
+            throw customError(`${existingSubject.name} - The subject name you are trying to create already exists in the database`, 'fail', 404, true);
+        }
+    }
+
+    for (const subject of setupData.subjects) {
+        const newSubject = await db.subject.create({
+            data: {
+                name: subject.subject,
+                fee: {
+                    create: {
+                        amount: subject.fee,
+                        paymentType: subject.feeInterval === 'month' ? 'MONTHLY' : 'TERM'
+                    }
+                },
+                SubjectLevel: {
+                    create: subject.levels.map((level) => ({
+                        level: {
+                            connectOrCreate: {
+                                where: { name: level },
+                                create: { name: level }
+                            }
+                        },
+                        fee: subject.fee,
+                        paymentType: subject.feeInterval === 'month' ? 'MONTHLY' : 'TERM'
+                    }))
+                },
+                TermSubject: {
+                    create: {
+                        term: {
+                            connect: {
+                                name: setupData.termName
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (!newSubject) {
+            throw customError(`Unable to create new term with subjects. Please try again later`, 'fail', 404, true);
+        }
+        createdSubjects.push(newSubject);
+    }
+    return createdSubjects;
+};
+// const m=findAllTerm().then(res=>console.log(res))
+
+// createNewTermSetup(setupOrgData);
+
+/* ORGANISTAION SET UP*/
 /*
 Terms CRUD
 // rename term(*)
@@ -12,10 +81,39 @@ Terms CRUD
 // add enrollment only if the term is open.(*)
 // create a new term
 */
-
+/*
+subjects CRUD
+discontinue subjects -> make iActive flag toggle
+*/
 //list all terms
 export async function findAllTerm() {
-    const allTerms = await db.term.findMany();
+    const allTerms = await db.term.findMany({
+        select: {
+            id: true,
+            name: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            TermSubject: {
+                select: {
+                    subject: {
+                        select: {
+                            name: true,
+                            fee: true,
+                            isActive: true,
+                            _count: true,
+                            id: true
+                        }
+                    }
+                }
+            },
+            _count: true
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
     if (!allTerms) {
         throw customError(`Unable to fetch terms. Please try again later`, 'fail', 404, true);
     }
@@ -24,21 +122,28 @@ export async function findAllTerm() {
 }
 
 //create a new term
-export async function createNewterm() {
-    const newTermName = await getNextTermName();
-    const startDate = new Date();
-    startDate.setHours(0, 0, 0, 0); // Set time to 00:00:00 for consistency
+export async function createNewterm(data: CreateTermSchema['body']) {
+    const { name, startDate, endDate } = data;
+    const sDate = new Date(startDate);
+    const eDate = new Date(endDate);
+    // Check if a term with the same name already exists
+    const existingTerm = await db.term.findUnique({
+        where: {
+            name: name
+        }
+    });
 
-    // Set endDate to 3 months from the startDate
-    const endDate = new Date(startDate);
-    endDate.setMonth(startDate.getMonth() + 3);
-    endDate.setSeconds(-1); // Set to one second before midnight on the day before the term ends
+    if (existingTerm) {
+        throw customError(`Term with this name -${existingTerm.name} already exists. Please choose another name`, 'fail', 400, true);
+    }
+    sDate.setHours(0, 0, 0, 0); // Set time to 00:00:00 for consistency
+    eDate.setHours(23, 59, 59, 999); // Set to one second before midnight on the day before the term ends
 
     const newTerm = await db.term.create({
         data: {
-            name: newTermName,
-            startDate,
-            endDate
+            name: name,
+            startDate: sDate,
+            endDate: eDate
         }
     });
 
@@ -98,7 +203,7 @@ export async function deleteTerm(id: string) {
         }
     });
     if (!termExists) {
-        throw new Error('Term not found or could not be deleted');
+        throw customError('Term not found or could not be deleted', 'fail', 400, true);
     }
     const deletedTerm = await db.term.delete({
         where: {
@@ -109,7 +214,17 @@ export async function deleteTerm(id: string) {
     return deletedTerm;
 }
 
+/*Create organistaion set up by cretaing subject, levels and fee*/
+/* Always check if the term is active*/
 
-/*Create organistaion set up by cretaing subject, levels and fee*/ 
-/* Always check if the term is active*/ 
+/* Subjects */
 
+//discontinue a subject
+// export async function discontinueSubject(subjectId: string) {
+//     const updatedSubject = await db.subject.update({
+//         where: { id: +subjectId },
+//         data: { isActive: false }
+//     });
+
+//     return updatedSubject;
+// }
