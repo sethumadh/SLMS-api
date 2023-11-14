@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EmergencyContactSchema, HealthInformationSchema, OtherInformationSchema, ParentsSchema } from '../../new.student.dto/new.student.dto';
+import { EmergencyContactSchema, HealthInformationSchema, OtherInformationSchema, ParentsSchema } from '../../new.applicant.dto/new.applicant.dto';
 
 // To find a student by ID
 export const findUniqueStudentSchema = z.object({

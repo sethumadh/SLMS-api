@@ -1,9 +1,9 @@
-import { NewStudentSchema } from '../../schema/new.student.dto/new.student.dto';
+import { NewApplicantSchema } from '../../schema/new.applicant.dto/new.applicant.dto';
 import { customError } from '../../utils/customError';
 import { db } from '../../utils/db.server';
 
-//  create new student for application
-export async function createStudent(data: NewStudentSchema['body']) {
+//  create new application
+export async function createApplicant(data: NewApplicantSchema['body']) {
     const {
         emergencyContact: { contactNumber, contactPerson, relationship },
         healthInformation: { allergy, medicalCondition, medicareNumber, ambulanceMembershipNumber },

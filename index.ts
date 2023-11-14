@@ -10,7 +10,7 @@ import { config } from './src/config/config';
 import log from './src/utils/logger';
 import { customError } from './src/utils/customError';
 import { db } from './src/utils/db.server';
-import newStudentRoute from './src/route/new.student.route/new.student.route';
+import newApplicantRoute from './src/route/new.applicant.route/new.applicant.route';
 import adminStudentRoute from './src/route/admin.route/admin.student.route/admin.student.route';
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';
 import adminAdministrationtRoute from './src/route/admin.route/admin.administration.route/admin.administration.route';
@@ -49,7 +49,7 @@ app.get('/test', (req, res, next) => {
     throw new Error('internal error')
 });
 app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
-app.use('/api/v1/application', newStudentRoute);
+app.use('/api/v1/application', newApplicantRoute);
 app.use('/api/v1/admin/administration', adminAdministrationtRoute);
 app.use('/api/v1/admin/student', adminStudentRoute);
 

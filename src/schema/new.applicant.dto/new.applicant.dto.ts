@@ -58,7 +58,7 @@ export const OtherInformationSchema = z.object({
 });
 
 // To create a new student at the application level
-export const newStudentSchema = z.object({
+export const newApplicantSchema = z.object({
     body: z.object(
         {
             personalDetails: PersonalSchema,
@@ -71,4 +71,4 @@ export const newStudentSchema = z.object({
         { required_error: 'Some or all of Student data is missing which are required is required' }
     )
 });
-export type NewStudentSchema = z.infer<typeof newStudentSchema>;
+export type NewApplicantSchema = z.infer<typeof newApplicantSchema>;
