@@ -107,8 +107,7 @@ export async function findAllTerm() {
                         }
                     }
                 }
-            },
-            _count: true
+            }
         },
         orderBy: {
             createdAt: 'desc'

@@ -108,13 +108,11 @@ export async function findActiveTerm() {
                             name: true,
                             fee: true,
                             isActive: true,
-                            _count: true,
                             id: true
                         }
                     }
                 }
-            },
-            _count: true
+            }
         }
     });
     if (!uniqueTerm) {
