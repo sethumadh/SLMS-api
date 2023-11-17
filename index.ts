@@ -26,7 +26,7 @@ app.use(
     cors({
         credentials: true,
         origin: origin,
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         optionsSuccessStatus: 200
     })
 );

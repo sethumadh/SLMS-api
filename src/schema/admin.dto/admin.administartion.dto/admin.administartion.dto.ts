@@ -40,3 +40,13 @@ export const changeCurrentTermNameSchema = z.object({
     })
 });
 export type ChangeCurrentTermNameSchema = z.infer<typeof changeCurrentTermNameSchema>;
+
+export const extendCurrentTermSchema = z.object({
+    body: z.object({
+        date: z.string()
+    }),
+    params: z.object({
+        id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    })
+});
+export type ExtendCurrentTermSchema = z.infer<typeof extendCurrentTermSchema>;

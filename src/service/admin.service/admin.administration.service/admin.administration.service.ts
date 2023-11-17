@@ -1,4 +1,4 @@
-import { ChangeCurrentTermNameSchema, CreateNewTermSetupSchema, CreateTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+import { ChangeCurrentTermNameSchema, CreateNewTermSetupSchema, CreateTermSchema, ExtendCurrentTermSchema, FindUniqueTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
 import { customError } from '../../../utils/customError';
 import { db } from '../../../utils/db.server';
 
@@ -153,7 +153,7 @@ export async function createNewterm(data: CreateTermSchema['body']) {
 }
 
 // find a unique term
-export async function findUniqueTerm(id: string) {
+export async function findUniqueTerm(id: FindUniqueTermSchema['params']['id']) {
     const uniqueTerm = await db.term.findUnique({
         where: {
             id: +id
@@ -164,9 +164,41 @@ export async function findUniqueTerm(id: string) {
     }
     return uniqueTerm;
 }
+// extend current term
+
+export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['id'], endDate: ExtendCurrentTermSchema['body']['date']) {
+    const eDate = new Date(endDate);
+    const currentTerm = await db.term.findUnique({
+        where: {
+            id: +id
+        }
+    });
+
+    if (!currentTerm?.name) {
+        throw customError(`Term with this name -${currentTerm?.name} does not already.`, 'fail', 400, true);
+    }
+    if (!currentTerm?.currentTerm) {
+        throw customError(`Term with this name -${currentTerm?.name} already expired.`, 'fail', 400, true);
+    }
+    const startDate = new Date(currentTerm.startDate);
+    if (eDate <= startDate) {
+        throw customError(`The new end date must be later than the start date (${currentTerm.startDate}).`, 'fail', 400, true);
+    }
+    eDate.setHours(23, 59, 59, 999); // Set to one second before midnight on the day before the term ends
+    const updatedTerm = await db.term.update({
+        where: {
+            id: +id // or use name if you're updating by term name
+        },
+        data: {
+            endDate: eDate, // Setting the end date to now
+            currentTerm: true
+        }
+    });
+    return updatedTerm.endDate;
+}
 
 // end term
-export async function endCurrentTerm(id: string) {
+export async function endCurrentTerm(id: FindUniqueTermSchema['params']['id']) {
     const currentDate = new Date(); // Current date
     const currentTerm = await db.term.findUnique({
         where: {
@@ -193,8 +225,8 @@ export async function endCurrentTerm(id: string) {
 
     return updatedTerm;
 }
-export async function changeCurrentTermName(params: ChangeCurrentTermNameSchema['params'], name: ChangeCurrentTermNameSchema['body']['name']) {
-    const { id } = params;
+export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['params']['id'], name: ChangeCurrentTermNameSchema['body']['name']) {
+
     const existingTermWithGivenName = await db.term.findUnique({
         where: {
             name: name
@@ -227,7 +259,7 @@ export async function changeCurrentTermName(params: ChangeCurrentTermNameSchema[
 }
 
 //delete a new term
-export async function deleteTerm(id: string) {
+export async function deleteTerm(id: FindUniqueTermSchema['params']['id']) {
     const termExists = await db.term.findUnique({
         where: {
             id: +id
