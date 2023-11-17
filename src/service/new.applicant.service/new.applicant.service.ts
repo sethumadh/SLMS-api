@@ -101,6 +101,7 @@ export async function findActiveTerm() {
             startDate: true,
             endDate: true,
             createdAt: true,
+            updatedAt: true,
             TermSubject: {
                 select: {
                     subject: {
@@ -108,7 +109,12 @@ export async function findActiveTerm() {
                             name: true,
                             fee: true,
                             isActive: true,
-                            id: true
+                            id: true,
+                            SubjectLevel: {
+                                select: {
+                                    level: true
+                                }
+                            }
                         }
                     }
                 }

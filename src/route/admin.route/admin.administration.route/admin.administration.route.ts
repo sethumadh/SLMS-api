@@ -8,9 +8,10 @@ import {
     deleteTermHandler,
     endTermHandler,
     findAllTermHandler,
-    findUniqueTermHandler
+    findUniqueTermHandler,
+    changeCurrentTermNameHandler
 } from '../../../controller/admin.controller/admin.administration.controller/admin.administration.controller';
-import { createNewTermSetupSchema, createTermSchema, findUniqueTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+import { changeCurrentTermNameSchema, createNewTermSetupSchema, createTermSchema, findUniqueTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
 
 const adminAdministrationtRoute = express.Router();
 
@@ -20,6 +21,7 @@ adminAdministrationtRoute.route('/find-all-terms').get(asyncErrorHandler(findAll
 adminAdministrationtRoute.route('/find/term-detail/:id').get(validate(findUniqueTermSchema), asyncErrorHandler(findUniqueTermHandler));
 adminAdministrationtRoute.route('/update/end-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(endTermHandler));
 adminAdministrationtRoute.route('/delete-term/:id').delete(validate(findUniqueTermSchema), asyncErrorHandler(deleteTermHandler));
+adminAdministrationtRoute.route('/update/term-name/:id').post(validate(changeCurrentTermNameSchema), asyncErrorHandler(changeCurrentTermNameHandler));
 
 /*create organization set up*/
 adminAdministrationtRoute.route('/create-new-term-setup').post(validate(createNewTermSetupSchema), asyncErrorHandler(createNewTermSetupHandler));

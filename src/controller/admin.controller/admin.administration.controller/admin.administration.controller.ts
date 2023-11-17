@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 
 import {
-    SetupOrgDataType,
+    changeCurrentTermName,
     createNewTermSetup,
     createNewterm,
     deleteTerm,
@@ -9,7 +9,7 @@ import {
     findAllTerm,
     findUniqueTerm
 } from '../../../service/admin.service/admin.administration.service/admin.administration.service';
-import { CreateNewTermSetupSchema, CreateTermSchema, FindUniqueTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+import { ChangeCurrentTermNameSchema, CreateNewTermSetupSchema, CreateTermSchema, FindUniqueTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
 
 export const createTermHandler = async (req: Request<{}, {}, CreateTermSchema['body'], {}>, res: Response, next: NextFunction) => {
     /*
@@ -41,6 +41,12 @@ export const findAllTermHandler = async (req: Request, res: Response, next: Next
 export const endTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const updatedTerm = await endCurrentTerm(id);
+    res.status(200).json(updatedTerm);
+};
+export const changeCurrentTermNameHandler = async (req: Request<ChangeCurrentTermNameSchema['params'], {}, ChangeCurrentTermNameSchema['body'], {}>, res: Response, next: NextFunction) => {
+    const id  = req.params;
+    const name= req.body.name
+    const updatedTerm = await changeCurrentTermName(id, name);
     res.status(200).json(updatedTerm);
 };
 export const deleteTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {

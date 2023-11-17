@@ -1,4 +1,4 @@
-import { CreateNewTermSetupSchema, CreateTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+import { ChangeCurrentTermNameSchema, CreateNewTermSetupSchema, CreateTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
 import { customError } from '../../../utils/customError';
 import { db } from '../../../utils/db.server';
 
@@ -188,6 +188,38 @@ export async function endCurrentTerm(id: string) {
         data: {
             endDate: currentDate, // Setting the end date to now
             currentTerm: false
+        }
+    });
+
+    return updatedTerm;
+}
+export async function changeCurrentTermName(params: ChangeCurrentTermNameSchema['params'], name: ChangeCurrentTermNameSchema['body']['name']) {
+    const { id } = params;
+    const existingTermWithGivenName = await db.term.findUnique({
+        where: {
+            name: name
+        }
+    });
+    if (existingTermWithGivenName?.name) {
+        throw customError(`This term name - ${name} already exists for a term`, 'fail', 404, true);
+    }
+    const currentTerm = await db.term.findUnique({
+        where: {
+            id: +id
+            // currentTerm: true
+        }
+    });
+
+    if (!currentTerm) {
+        throw customError(`Term not found or could not be updated. Please try again later`, 'fail', 404, true);
+    }
+
+    const updatedTerm = await db.term.update({
+        where: {
+            id: +id // or use name if you're updating by term name
+        },
+        data: {
+            name
         }
     });
 

@@ -30,3 +30,13 @@ export const createNewTermSetupSchema = z.object({
     })
 });
 export type CreateNewTermSetupSchema = z.infer<typeof createNewTermSetupSchema>;
+
+export const changeCurrentTermNameSchema = z.object({
+    body: z.object({
+        name: z.string()
+    }),
+    params: z.object({
+        id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    })
+});
+export type ChangeCurrentTermNameSchema = z.infer<typeof changeCurrentTermNameSchema>;

@@ -6,6 +6,7 @@ import { createApplicant, findActiveTerm } from '../../service/new.applicant.ser
 export const createApplicantHandler = async (req: Request<{}, {}, NewApplicantSchema['body'], {}>, res: Response, next: NextFunction) => {
     const data = req.body;
     const newApplicant = await createApplicant(data);
+    res.status(200).json(newApplicant);
 };
 export const findActiveTermHandler = async (req: Request, res: Response, next: NextFunction) => {
     const activeTerm = await findActiveTerm();
