@@ -43,14 +43,14 @@ export const endTermHandler = async (req: Request<FindUniqueTermSchema['params']
 };
 export const extendCurrentTermHandler = async (req: Request<ExtendCurrentTermSchema['params'], {}, ExtendCurrentTermSchema['body'], {}>, res: Response, next: NextFunction) => {
     const id = req.params.id;
-    const date = req.body.date;
-    const updatedTerm = await extendCurrentTerm(id, date);
+    const termData= req.body.updatedTerm;
+    const updatedTerm = await extendCurrentTerm(id, termData);
     res.status(200).json(updatedTerm);
 };
 export const changeCurrentTermNameHandler = async (req: Request<ChangeCurrentTermNameSchema['params'], {}, ChangeCurrentTermNameSchema['body'], {}>, res: Response, next: NextFunction) => {
     const id = req.params.id;
-    const name = req.body.name;
-    const updatedTerm = await changeCurrentTermName(id, name);
+    const termData = req.body.updatedTerm;
+    const updatedTerm = await changeCurrentTermName(id, termData);
     res.status(200).json(updatedTerm);
 };
 export const deleteTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {

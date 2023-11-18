@@ -1,4 +1,10 @@
-import { ChangeCurrentTermNameSchema, CreateNewTermSetupSchema, CreateTermSchema, ExtendCurrentTermSchema, FindUniqueTermSchema } from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+import {
+    ChangeCurrentTermNameSchema,
+    CreateNewTermSetupSchema,
+    CreateTermSchema,
+    ExtendCurrentTermSchema,
+    FindUniqueTermSchema
+} from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
 import { customError } from '../../../utils/customError';
 import { db } from '../../../utils/db.server';
 
@@ -166,8 +172,8 @@ export async function findUniqueTerm(id: FindUniqueTermSchema['params']['id']) {
 }
 // extend current term
 
-export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['id'], endDate: ExtendCurrentTermSchema['body']['date']) {
-    const eDate = new Date(endDate);
+export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['id'], termData: ExtendCurrentTermSchema['body']['updatedTerm']) {
+    const eDate = new Date(termData.endDate);
     const currentTerm = await db.term.findUnique({
         where: {
             id: +id
@@ -175,7 +181,7 @@ export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['i
     });
 
     if (!currentTerm?.name) {
-        throw customError(`Term with this name -${currentTerm?.name} does not already.`, 'fail', 400, true);
+        throw customError(`Term with this name -${currentTerm?.name} does not exists`, 'fail', 400, true);
     }
     if (!currentTerm?.currentTerm) {
         throw customError(`Term with this name -${currentTerm?.name} already expired.`, 'fail', 400, true);
@@ -192,9 +198,35 @@ export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['i
         data: {
             endDate: eDate, // Setting the end date to now
             currentTerm: true
+        },
+        select: {
+            id: true,
+            name: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            TermSubject: {
+                select: {
+                    subject: {
+                        select: {
+                            name: true,
+                            fee: true,
+                            isActive: true,
+                            id: true,
+                            SubjectLevel: {
+                                select: {
+                                    level: true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     });
-    return updatedTerm.endDate;
+    return updatedTerm;
 }
 
 // end term
@@ -225,8 +257,8 @@ export async function endCurrentTerm(id: FindUniqueTermSchema['params']['id']) {
 
     return updatedTerm;
 }
-export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['params']['id'], name: ChangeCurrentTermNameSchema['body']['name']) {
-
+export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['params']['id'], termData: ChangeCurrentTermNameSchema['body']['updatedTerm']) {
+    const { name } = termData;
     const existingTermWithGivenName = await db.term.findUnique({
         where: {
             name: name
@@ -252,9 +284,35 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
         },
         data: {
             name
+        },
+        select: {
+            id: true,
+            name: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            TermSubject: {
+                select: {
+                    subject: {
+                        select: {
+                            name: true,
+                            fee: true,
+                            isActive: true,
+                            id: true,
+                            SubjectLevel: {
+                                select: {
+                                    level: true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     });
-
+    console.log(updatedTerm);
     return updatedTerm;
 }
 
