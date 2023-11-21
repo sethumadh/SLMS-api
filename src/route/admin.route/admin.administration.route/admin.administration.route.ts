@@ -18,7 +18,7 @@ import {
     createTermSchema,
     extendCurrentTermSchema,
     findUniqueTermSchema
-} from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+} from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
 
 const adminAdministrationtRoute = express.Router();
 

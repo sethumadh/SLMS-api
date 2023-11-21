@@ -1,10 +1,14 @@
+import { PaymentType } from '@prisma/client';
 import {
     ChangeCurrentTermNameSchema,
     CreateNewTermSetupSchema,
     CreateTermSchema,
     ExtendCurrentTermSchema,
-    FindUniqueTermSchema
-} from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+    FindUniqueTermSchema,
+    TermSchema,
+    TermSubjectsArraySchema,
+    createTermSchema
+} from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
 import { customError } from '../../../utils/customError';
 import { db } from '../../../utils/db.server';
 
@@ -15,62 +19,192 @@ export type SetupOrgDataType = {
 
 /* ORGANISTAION SET UP*/
 
+// export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['body']) => {
+//     // create new term
+//     const { termName: name, startDate, endDate } = setupData;
+//     const sDate = new Date(startDate);
+//     const eDate = new Date(endDate);
+
+//     const createdTerm = await db.$transaction(async () => {
+//         const existingTerm = await db.term.findUnique({
+//             where: {
+//                 name: name
+//             }
+//         });
+
+//         if (existingTerm) {
+//             throw customError(`Term with this name -${existingTerm.name} already exists. Please choose another name`, 'fail', 400, true);
+//         }
+//         sDate.setHours(0, 0, 0, 0); // Set time to 00:00:00 for consistency
+//         eDate.setHours(23, 59, 59, 999); // Set to one second before midnight on the day before the term ends
+//         const newTerm = await db.term.create({
+//             data: {
+//                 name: name,
+//                 startDate: sDate,
+//                 endDate: eDate
+//             }
+//         });
+
+//         if (!newTerm) {
+//             throw customError('New term cannot be created', 'fail', 400, true);
+//         }
+//         for (const subject of setupData.subjects) {
+//             // Handle subject creation or retrieval
+//             let existingSubject = await db.subject.findUnique({
+//                 where: { name: subject.subject }
+//             });
+
+//             if (!existingSubject) {
+//                 existingSubject = await db.subject.create({
+//                     data: { name: subject.subject }
+//                 });
+//             }
+
+//             // Create TermSubject and Fee association
+//             const termSubjects = await db.termSubject.create({
+//                 data: {
+//                     term: { connect: { id: createdTerm.id } },
+//                     subject: { connect: { id: existingSubject.id } },
+//                     fee: {
+//                         connectOrCreate: {
+//                             where: {
+//                                 amount_paymentType: {
+//                                     amount: subject.fee,
+//                                     paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
+//                                 }
+//                             },
+//                             create: { amount: subject.fee, paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM' }
+//                         }
+//                     },
+//                     level: {
+//                         connectOrCreate: subject.levels.map((level) => ({
+//                             where: { name: level },
+//                             create: { name: level }
+//                         }))
+//                     }
+//                 },
+//                 select: {
+//                     subject: {
+//                         select: {
+//                             name: true,
+//                             isActive: true,
+//                             id: true
+//                         }
+//                     },
+//                     level: {
+//                         select: {
+//                             name: true
+//                         }
+//                     },
+//                     fee: {
+//                         select: {
+//                             amount: true,
+//                             paymentType: true
+//                         }
+//                     },
+//                     term: {
+//                         select: {
+//                             id: true,
+//                             name: true,
+//                             isPublish: true,
+//                             currentTerm: true,
+//                             startDate: true,
+//                             endDate: true,
+//                             createdAt: true,
+//                             updatedAt: true
+//                         }
+//                     }
+//                 }
+//             });
+//         }
+//  return { termSubjects, createdTerm };;
+//     });
+// };
+
+type TermType = any; // Replace with your actual term type or keep any if not defined
+type TermSubjectType = any; // Replace with your actual term subject type or keep any if not defined
+
 export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['body']) => {
     // create new term
-    const termData = {
-        name: setupData.termName,
-        sDate: setupData.startDate?.toString(),
-        eDate: setupData.endDate?.toString()
-    };
+    const { termName: name, startDate, endDate } = setupData;
+    const sDate = new Date(startDate);
+    const eDate = new Date(endDate);
 
-    const createdTerm = await createNewterm({
-        name: setupData.termName,
-        startDate: setupData.startDate,
-        endDate: setupData.endDate
-    });
-    // create new subject with fee and fee interval with levels
-    let createdSubjects = [];
+    const transactionResult = await db.$transaction(async () => {
+        let createdTerm: TermType; // Declaring the type for createdTerm
 
-    for (const subject of setupData.subjects) {
-        const newSubject = await db.subject.create({
-            data: {
-                name: subject.subject,
-                fee: {
-                    create: {
-                        amount: subject.fee,
-                        paymentType: subject.feeInterval === 'month' ? 'MONTHLY' : 'TERM'
-                    }
-                },
-                SubjectLevel: {
-                    create: subject.levels.map((level) => ({
-                        level: {
-                            connectOrCreate: {
-                                where: { name: level },
-                                create: { name: level }
-                            }
-                        },
-                        fee: subject.fee,
-                        paymentType: subject.feeInterval === 'month' ? 'MONTHLY' : 'TERM'
-                    }))
-                },
-                TermSubject: {
-                    create: {
-                        term: {
-                            connect: {
-                                name: createdTerm.name
-                            }
-                        }
-                    }
-                }
+        const existingTerm = await db.term.findUnique({
+            where: {
+                name: name
             }
         });
-        if (!newSubject) {
-            throw customError(`Unable to create new term with subjects. Please try again later`, 'fail', 404, true);
+
+        if (existingTerm) {
+            throw customError(`Term with this name -${existingTerm.name} already exists. Please choose another name`, 'fail', 400, true);
         }
-        createdSubjects.push(newSubject);
-    }
-    return createdSubjects;
+
+        sDate.setHours(0, 0, 0, 0); // Set time to 00:00:00 for consistency
+        eDate.setHours(23, 59, 59, 999); // Set to one second before midnight on the day before the term ends
+
+        createdTerm = await db.term.create({
+            data: {
+                name: name,
+                startDate: sDate,
+                endDate: eDate
+            }
+        });
+
+        if (!createdTerm) {
+            throw customError('New term cannot be created', 'fail', 400, true);
+        }
+
+        let termSubjects: TermSubjectType[] = []; // Declare termSubjects array
+
+        for (const subject of setupData.subjects) {
+            // Handle subject creation or retrieval
+            let existingSubject = await db.subject.findUnique({
+                where: { name: subject.subject }
+            });
+
+            if (!existingSubject) {
+                existingSubject = await db.subject.create({
+                    data: { name: subject.subject }
+                });
+            }
+
+            const termSubject = await db.termSubject.create({
+                data: {
+                    term: { connect: { id: createdTerm.id } },
+                    subject: { connect: { id: existingSubject.id } },
+                    fee: {
+                        connectOrCreate: {
+                            where: {
+                                amount_paymentType: {
+                                    amount: subject.fee,
+                                    paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
+                                }
+                            },
+                            create: { amount: subject.fee, paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM' }
+                        }
+                    },
+                    level: {
+                        connectOrCreate: subject.levels.map((level) => ({
+                            where: { name: level },
+                            create: { name: level }
+                        }))
+                    }
+                }
+            });
+
+            termSubjects.push(termSubject); // Add termSubject to the array
+        }
+
+        return { termSubjects, createdTerm };
+    });
+    console.log({ transactionResult });
+    return transactionResult;
 };
+
 // const m=findAllTerm().then(res=>console.log(res))
 
 // createNewTermSetup(setupOrgData);
@@ -100,12 +234,11 @@ export async function findAllTerm() {
             startDate: true,
             endDate: true,
             createdAt: true,
-            TermSubject: {
+            termSubject: {
                 select: {
                     subject: {
                         select: {
                             name: true,
-                            fee: true,
                             isActive: true,
                             _count: true,
                             id: true
@@ -206,19 +339,24 @@ export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['i
             endDate: true,
             createdAt: true,
             updatedAt: true,
-            TermSubject: {
+            termSubject: {
                 select: {
                     subject: {
                         select: {
                             name: true,
-                            fee: true,
                             isActive: true,
-                            id: true,
-                            SubjectLevel: {
-                                select: {
-                                    level: true
-                                }
-                            }
+                            id: true
+                        }
+                    },
+                    level: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    fee: {
+                        select: {
+                            amount: true,
+                            paymentType: true
                         }
                     }
                 }
@@ -236,7 +374,6 @@ export async function endCurrentTerm(id: FindUniqueTermSchema['params']['id']) {
             id: +id
         }
     });
-
     if (!currentTerm) {
         throw customError(`Term not found or could not be updated. Please try again later`, 'fail', 404, true);
     }
@@ -292,19 +429,24 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
             endDate: true,
             createdAt: true,
             updatedAt: true,
-            TermSubject: {
+            termSubject: {
                 select: {
                     subject: {
                         select: {
                             name: true,
-                            fee: true,
                             isActive: true,
-                            id: true,
-                            SubjectLevel: {
-                                select: {
-                                    level: true
-                                }
-                            }
+                            id: true
+                        }
+                    },
+                    level: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    fee: {
+                        select: {
+                            amount: true,
+                            paymentType: true
                         }
                     }
                 }
@@ -348,3 +490,59 @@ export async function deleteTerm(id: FindUniqueTermSchema['params']['id']) {
 
 //     return updatedSubject;
 // }
+export const createNewTermSetup1 = async (setupData: CreateNewTermSetupSchema['body']) => {
+    // Start a transaction
+    const result = await db.$transaction(async (prisma) => {
+        // Create new term
+        const createdTerm = await prisma.term.create({
+            data: {
+                name: setupData.termName,
+                startDate: new Date(setupData.startDate),
+                endDate: new Date(setupData.endDate)
+            }
+        });
+
+        // Create subjects, fees, and levels associated with the term
+        for (const subject of setupData.subjects) {
+            // Handle subject creation or retrieval
+            let existingSubject = await prisma.subject.findUnique({
+                where: { name: subject.subject }
+            });
+
+            if (!existingSubject) {
+                existingSubject = await prisma.subject.create({
+                    data: { name: subject.subject }
+                });
+            }
+
+            // Create TermSubject and Fee association
+            await prisma.termSubject.create({
+                data: {
+                    term: { connect: { id: createdTerm.id } },
+                    subject: { connect: { id: existingSubject.id } },
+                    fee: {
+                        connectOrCreate: {
+                            where: {
+                                amount_paymentType: {
+                                    amount: subject.fee,
+                                    paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
+                                }
+                            },
+                            create: { amount: subject.fee, paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM' }
+                        }
+                    },
+                    level: {
+                        connectOrCreate: subject.levels.map((level) => ({
+                            where: { name: level },
+                            create: { name: level }
+                        }))
+                    }
+                }
+            });
+        }
+
+        return createdTerm;
+    });
+
+    return result;
+};

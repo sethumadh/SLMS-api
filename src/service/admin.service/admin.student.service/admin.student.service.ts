@@ -68,10 +68,10 @@ export async function findStudentByEmail(email: string) {
             email
         },
         include: {
-            Student: true
+            student: true
         }
     });
-    const studentDetail = await findStudentById(student?.Student?.id!.toString()!);
+    const studentDetail = await findStudentById(student?.student?.id!.toString()!);
     console.log(studentDetail);
     return studentDetail;
 }
@@ -124,7 +124,6 @@ export async function findStudentById(id: string) {
             personalDetails: {
                 select: {
                     id: true,
-                    role: true,
                     firstName: true,
                     lastName: true,
                     DOB: true,
@@ -187,7 +186,8 @@ export async function findStudentById(id: string) {
                     otherInfo: true,
                     declaration: true
                 }
-            },
+            }
+
             // feedback: {
             //     select: {
             //         id: true,
@@ -212,10 +212,10 @@ export async function findAllStudents(page: number) {
             take,
             select: {
                 id: true,
+                role: true,
                 personalDetails: {
                     select: {
                         id: true,
-                        role: true,
                         firstName: true,
                         lastName: true,
                         DOB: true,
@@ -279,7 +279,7 @@ export async function findAllStudents(page: number) {
                         otherInfo: true,
                         declaration: true
                     }
-                },
+                }
                 // feedback: {
                 //     select: {
                 //         id: true,
@@ -384,7 +384,6 @@ export async function updateStudentPersonalDetail(id: string, data: UpdateStuden
             data: {
                 personalDetails: {
                     update: {
-                        role: role as RoleEnum,
                         firstName,
                         lastName,
                         DOB,
@@ -398,7 +397,8 @@ export async function updateStudentPersonalDetail(id: string, data: UpdateStuden
                         postcode,
                         image
                     }
-                }
+                },
+                role: role as RoleEnum
             }
         });
         return updateStudent;

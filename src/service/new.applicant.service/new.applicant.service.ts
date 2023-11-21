@@ -90,7 +90,7 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
 
 /*To select the active term and its subjects and to display it in Application subjects section*/
 export async function findActiveTerm() {
-    const uniqueTerm = await db.term.findFirst({
+    const activeTerm = await db.term.findFirst({
         where: {
             currentTerm: true
         },
@@ -103,27 +103,34 @@ export async function findActiveTerm() {
             endDate: true,
             createdAt: true,
             updatedAt: true,
-            TermSubject: {
+            termSubject: {
                 select: {
                     subject: {
                         select: {
                             name: true,
-                            fee: true,
                             isActive: true,
-                            id: true,
-                            SubjectLevel: {
-                                select: {
-                                    level: true
-                                }
-                            }
+                            id: true
+                        }
+                    },
+                    level: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    fee: {
+                        select: {
+                            amount: true,
+                            paymentType: true
                         }
                     }
                 }
             }
         }
     });
-    if (!uniqueTerm) {
+
+    if (!activeTerm) {
         throw customError(`Active Term could not found. Please try again later`, 'fail', 404, true);
     }
-    return uniqueTerm;
+
+    return activeTerm;
 }

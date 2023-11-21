@@ -13,6 +13,7 @@ CREATE TYPE "PaymentType" AS ENUM ('MONTHLY', 'TERM');
 -- CreateTable
 CREATE TABLE "Student" (
     "id" SERIAL NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'APPLICANT',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -22,7 +23,6 @@ CREATE TABLE "Student" (
 -- CreateTable
 CREATE TABLE "PersonalDetails" (
     "id" SERIAL NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'STUDENT',
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
     "DOB" TEXT,
@@ -97,6 +97,7 @@ CREATE TABLE "Subject" (
 -- CreateTable
 CREATE TABLE "Term" (
     "id" SERIAL NOT NULL,
+    "isPublish" BOOLEAN NOT NULL DEFAULT true,
     "currentTerm" BOOLEAN NOT NULL DEFAULT true,
     "name" TEXT NOT NULL,
     "startDate" TIMESTAMP(3) NOT NULL,
@@ -108,14 +109,6 @@ CREATE TABLE "Term" (
 );
 
 -- CreateTable
-CREATE TABLE "TermSubject" (
-    "termId" INTEGER NOT NULL,
-    "subjectId" INTEGER NOT NULL,
-
-    CONSTRAINT "TermSubject_pkey" PRIMARY KEY ("termId","subjectId")
-);
-
--- CreateTable
 CREATE TABLE "Level" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
@@ -124,23 +117,24 @@ CREATE TABLE "Level" (
 );
 
 -- CreateTable
-CREATE TABLE "SubjectLevel" (
+CREATE TABLE "TermSubject" (
+    "id" SERIAL NOT NULL,
+    "termId" INTEGER NOT NULL,
     "subjectId" INTEGER NOT NULL,
-    "levelId" INTEGER NOT NULL,
-    "fee" INTEGER NOT NULL,
-    "paymentType" "PaymentType" NOT NULL,
+    "levelId" INTEGER,
+    "feeId" INTEGER,
 
-    CONSTRAINT "SubjectLevel_pkey" PRIMARY KEY ("subjectId","levelId")
+    CONSTRAINT "TermSubject_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Enrollment" (
     "id" SERIAL NOT NULL,
     "studentId" INTEGER NOT NULL,
-    "subjectId" INTEGER NOT NULL,
-    "levelId" INTEGER NOT NULL,
-    "termId" INTEGER NOT NULL,
+    "termSubjectId" INTEGER NOT NULL,
     "dueDate" TIMESTAMP(3) NOT NULL,
+    "termSubjectTermId" INTEGER,
+    "termSubjectSubjectId" INTEGER,
 
     CONSTRAINT "Enrollment_pkey" PRIMARY KEY ("id")
 );
@@ -149,7 +143,6 @@ CREATE TABLE "Enrollment" (
 CREATE TABLE "Fee" (
     "id" SERIAL NOT NULL,
     "amount" INTEGER NOT NULL,
-    "subjectId" INTEGER NOT NULL,
     "paymentType" "PaymentType" NOT NULL,
 
     CONSTRAINT "Fee_pkey" PRIMARY KEY ("id")
@@ -166,6 +159,12 @@ CREATE TABLE "FeePayment" (
     "method" "PaymentMethod" NOT NULL,
 
     CONSTRAINT "FeePayment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "_LevelToTermSubject" (
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL
 );
 
 -- CreateIndex
@@ -205,10 +204,19 @@ CREATE UNIQUE INDEX "Term_name_key" ON "Term"("name");
 CREATE UNIQUE INDEX "Level_name_key" ON "Level"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Enrollment_studentId_subjectId_levelId_termId_key" ON "Enrollment"("studentId", "subjectId", "levelId", "termId");
+CREATE UNIQUE INDEX "TermSubject_termId_subjectId_key" ON "TermSubject"("termId", "subjectId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Fee_subjectId_key" ON "Fee"("subjectId");
+CREATE UNIQUE INDEX "Enrollment_studentId_termSubjectId_key" ON "Enrollment"("studentId", "termSubjectId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Fee_amount_paymentType_key" ON "Fee"("amount", "paymentType");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "_LevelToTermSubject_AB_unique" ON "_LevelToTermSubject"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_LevelToTermSubject_B_index" ON "_LevelToTermSubject"("B");
 
 -- AddForeignKey
 ALTER TABLE "PersonalDetails" ADD CONSTRAINT "PersonalDetails_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -232,25 +240,19 @@ ALTER TABLE "TermSubject" ADD CONSTRAINT "TermSubject_termId_fkey" FOREIGN KEY (
 ALTER TABLE "TermSubject" ADD CONSTRAINT "TermSubject_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SubjectLevel" ADD CONSTRAINT "SubjectLevel_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SubjectLevel" ADD CONSTRAINT "SubjectLevel_levelId_fkey" FOREIGN KEY ("levelId") REFERENCES "Level"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "TermSubject" ADD CONSTRAINT "TermSubject_feeId_fkey" FOREIGN KEY ("feeId") REFERENCES "Fee"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Enrollment" ADD CONSTRAINT "Enrollment_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Enrollment" ADD CONSTRAINT "Enrollment_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Enrollment" ADD CONSTRAINT "Enrollment_levelId_fkey" FOREIGN KEY ("levelId") REFERENCES "Level"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Enrollment" ADD CONSTRAINT "Enrollment_termId_fkey" FOREIGN KEY ("termId") REFERENCES "Term"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Fee" ADD CONSTRAINT "Fee_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Enrollment" ADD CONSTRAINT "Enrollment_termSubjectTermId_termSubjectSubjectId_fkey" FOREIGN KEY ("termSubjectTermId", "termSubjectSubjectId") REFERENCES "TermSubject"("termId", "subjectId") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "FeePayment" ADD CONSTRAINT "FeePayment_enrollmentId_fkey" FOREIGN KEY ("enrollmentId") REFERENCES "Enrollment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_LevelToTermSubject" ADD CONSTRAINT "_LevelToTermSubject_A_fkey" FOREIGN KEY ("A") REFERENCES "Level"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_LevelToTermSubject" ADD CONSTRAINT "_LevelToTermSubject_B_fkey" FOREIGN KEY ("B") REFERENCES "TermSubject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
