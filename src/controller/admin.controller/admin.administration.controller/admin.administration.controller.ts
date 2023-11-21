@@ -16,7 +16,7 @@ import {
     CreateTermSchema,
     ExtendCurrentTermSchema,
     FindUniqueTermSchema
-} from '../../../schema/admin.dto/admin.administartion.dto/admin.administartion.dto';
+} from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
 
 export const createTermHandler = async (req: Request<{}, {}, CreateTermSchema['body'], {}>, res: Response, next: NextFunction) => {
     const termData = req.body;
@@ -43,7 +43,7 @@ export const endTermHandler = async (req: Request<FindUniqueTermSchema['params']
 };
 export const extendCurrentTermHandler = async (req: Request<ExtendCurrentTermSchema['params'], {}, ExtendCurrentTermSchema['body'], {}>, res: Response, next: NextFunction) => {
     const id = req.params.id;
-    const termData= req.body.updatedTerm;
+    const termData = req.body.updatedTerm;
     const updatedTerm = await extendCurrentTerm(id, termData);
     res.status(200).json(updatedTerm);
 };

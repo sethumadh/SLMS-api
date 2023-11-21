@@ -37,20 +37,19 @@ enum PaymentType {
 
 model Student {
   id                Int                @id @default(autoincrement())
+  role              Role               @default(APPLICANT)
   enrollments       Enrollment[]
   personalDetails   PersonalDetails?
   parentsDetails    ParentsDetails?
   emergencyContact  EmergencyContact?
   healthInformation HealthInformation?
   otherInformation  OtherInformation?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model PersonalDetails {
   id        Int     @id @default(autoincrement())
-  role      Role    @default(APPLICANT)
   firstName String
   lastName  String
   DOB       String?
@@ -63,7 +62,7 @@ model PersonalDetails {
   country   String
   postcode  String
   image     String?
-  Student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId Int     @unique
 
   @@index([email])
@@ -76,7 +75,7 @@ model ParentsDetails {
   parentEmail   String
   parentContact String
   studentId     Int     @unique
-  Student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model EmergencyContact {
@@ -85,7 +84,7 @@ model EmergencyContact {
   contactNumber String
   relationship  String
   studentId     Int     @unique
-  Student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model HealthInformation {
@@ -95,25 +94,22 @@ model HealthInformation {
   medicalCondition          String
   allergy                   String
   studentId                 Int     @unique
-  Student                   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student                   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model OtherInformation {
   id          Int      @id @default(autoincrement())
   otherInfo   String   @default("No information provided")
   declaration String[]
-  Student     Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student     Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId   Int      @unique
 }
 
 model Subject {
-  id           Int            @id @default(autoincrement())
-  name         String
-  isActive     Boolean        @default(true)
-  enrollments  Enrollment[]
-  fee          Fee? // Fees associated with the subject
-  SubjectLevel SubjectLevel[]
-  TermSubject  TermSubject[]
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  isActive    Boolean       @default(true)
+  termSubject TermSubject[]
 }
 
 model Term {
@@ -123,65 +119,55 @@ model Term {
   name        String        @unique // e.g., Q1-2024
   startDate   DateTime // The start date of the term
   endDate     DateTime // The end date of the term, which would be startDate + 3 months
-  enrollments Enrollment[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  TermSubject TermSubject[]
-}
-
-model TermSubject {
-  termId    Int
-  subjectId Int
-  term      Term    @relation(fields: [termId], references: [id])
-  subject   Subject @relation(fields: [subjectId], references: [id])
-
-  @@id([termId, subjectId])
+  termSubject TermSubject[]
 }
 
 model Level {
-  id           Int            @id @default(autoincrement())
-  name         String         @unique // e.g., Beginner, Intermediate, Advanced
-  enrollments  Enrollment[]
+  id          Int           @id @default(autoincrement())
+  name        String        @unique // e.g., Beginner, Intermediate, Advanced
+  termSubject TermSubject[]
   // feedback    Feedback[]
-  SubjectLevel SubjectLevel[]
 }
 
-model SubjectLevel {
-  subjectId   Int
-  levelId     Int
-  fee         Int
-  paymentType PaymentType
-  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  level       Level       @relation(fields: [levelId], references: [id], onDelete: Cascade)
+model TermSubject {
+  id         Int          @id @default(autoincrement())
+  termId     Int
+  subjectId  Int
+  levelId    Int?
+  feeId      Int?
+  term       Term         @relation(fields: [termId], references: [id])
+  subject    Subject      @relation(fields: [subjectId], references: [id])
+  level      Level[]
+  fee        Fee?         @relation(fields: [feeId], references: [id])
+  enrollment Enrollment[]
 
-  @@id([subjectId, levelId])
+  @@unique([termId, subjectId])
 }
 
 model Enrollment {
-  id        Int      @id @default(autoincrement())
-  studentId Int
-  subjectId Int
-  levelId   Int
-  termId    Int
-  dueDate   DateTime // Add this line to store due date -> this will be term end date or expire date
+  id                   Int          @id @default(autoincrement())
+  studentId            Int
+  termSubjectId        Int // Reference to a specific TermSubject
+  dueDate              DateTime // Term end date or expiry date
+  student              Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  termSubject          TermSubject? @relation(fields: [termSubjectTermId, termSubjectSubjectId], references: [termId, subjectId])
+  feePayment           FeePayment[]
+  termSubjectTermId    Int?
+  termSubjectSubjectId Int?
 
-  student    Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject    Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  level      Level        @relation(fields: [levelId], references: [id])
-  term       Term         @relation(fields: [termId], references: [id])
-  FeePayment FeePayment[]
-
-  @@unique([studentId, subjectId, levelId, termId])
+  @@unique([studentId, termSubjectId]) // Ensuring uniqueness for the combination
 }
 
 model Fee {
-  id     Int @id @default(autoincrement())
-  amount Int
+  id          Int           @id @default(autoincrement())
+  amount      Int
   // dueDate is removed since it's calculated from Term's startDate
-
-  Subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  subjectId   Int         @unique
   paymentType PaymentType // Indicates if the fee is paid monthly or per term
+  TermSubject TermSubject[]
+
+  @@unique([amount, paymentType])
 }
 
 model FeePayment {

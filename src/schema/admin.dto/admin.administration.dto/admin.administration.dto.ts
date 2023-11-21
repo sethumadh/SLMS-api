@@ -7,6 +7,39 @@ export const findUniqueTermSchema = z.object({
 });
 export type FindUniqueTermSchema = z.infer<typeof findUniqueTermSchema>;
 
+
+
+export const createNewTermSetupSchema = z.object({
+    body: z.object({
+        termName: z.string(),
+        startDate: z.string(),
+        endDate: z.string(),
+        subjects: z.array(
+            z.object({
+                subject: z.string(),
+                fee: z.number(),
+                feeInterval: z.string(),
+                levels: z.array(z.string())
+            })
+        )
+    })
+});
+
+// });
+export type CreateNewTermSetupSchema = z.infer<typeof createNewTermSetupSchema>;
+
+const termSchema = z.object({
+    id: z.number(),
+    isPublish: z.boolean(),
+    currentTerm: z.boolean(),
+    name: z.string(),
+    startDate: z.string(), // Assuming dates are in ISO string format
+    endDate: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string()
+});
+export type TermSchema = z.infer<typeof termSchema>;
+
 export const createTermSchema = z.object({
     body: z.object({
         name: z.string(),
@@ -16,25 +49,38 @@ export const createTermSchema = z.object({
 });
 export type CreateTermSchema = z.infer<typeof createTermSchema>;
 
-export const createNewTermSetupSchema = z
-    .object({
-        body: z.object({
-            termName: z.string(),
-            startDate: z.string(),
-            endDate: z.string(),
-            subjects: z.array(
-                z.object({
-                    subject: z.string(),
-                    fee: z.number(),
-                    feeInterval: z.string(),
-                    levels: z.array(z.string())
-                })
-            )
+const TermSubjectSchema = z.object({
+    id: z.number(),
+    termId: z.number(),
+    subjectId: z.number(),
+    levelId: z.number().optional(),
+    feeId: z.number().optional(),
+    term: termSchema,
+    subject: z.object({
+        id: z.number(),
+        name: z.string(),
+        isActive: z.boolean()
+    }),
+    level: z
+        .array(
+            z.object({
+                id: z.number(),
+                name: z.string()
+            })
+        )
+        .optional(),
+    fee: z
+        .object({
+            id: z.number(),
+            amount: z.number(),
+            paymentType: z.enum(['MONTHLY', 'TERM'])
         })
-    })
+        .optional()
+});
 
-// });
-export type CreateNewTermSetupSchema = z.infer<typeof createNewTermSetupSchema>;
+const TermSubjectsArraySchema = z.array(TermSubjectSchema);
+
+export type TermSubjectsArraySchema = z.infer<typeof TermSubjectsArraySchema>;
 
 const levelSchema = z.object({
     id: z.number(),
@@ -63,18 +109,6 @@ const subjectSchema = z.object({
 const termSubjectSchema = z.object({
     subject: subjectSchema
 });
-
-const termSchema = z.object({
-    id: z.number(),
-    name: z.string(),
-    currentTerm: z.boolean(),
-    startDate: z.string(), // or use z.date() if you want to validate actual Date objects
-    endDate: z.string(), // or use z.date()
-    createdAt: z.string(), // or use z.date()
-    updatedAt: z.string(), // or use z.date()
-    TermSubject: z.array(termSubjectSchema)
-});
-export type TermSchema = z.infer<typeof termSchema>;
 
 export const changeCurrentTermNameSchema = z.object({
     body: z.object({
