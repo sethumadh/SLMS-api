@@ -97,6 +97,7 @@ export async function findActiveTerm() {
         select: {
             id: true,
             name: true,
+            isPublish: true,
             currentTerm: true,
             startDate: true,
             endDate: true,

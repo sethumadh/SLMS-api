@@ -108,7 +108,7 @@ model OtherInformation {
 
 model Subject {
   id           Int            @id @default(autoincrement())
-  name         String         @unique
+  name         String
   isActive     Boolean        @default(true)
   enrollments  Enrollment[]
   fee          Fee? // Fees associated with the subject
@@ -118,6 +118,7 @@ model Subject {
 
 model Term {
   id          Int           @id @default(autoincrement())
+  isPublish   Boolean       @default(true)
   currentTerm Boolean       @default(true)
   name        String        @unique // e.g., Q1-2024
   startDate   DateTime // The start date of the term

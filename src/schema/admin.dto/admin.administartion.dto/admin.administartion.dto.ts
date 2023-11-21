@@ -16,19 +16,24 @@ export const createTermSchema = z.object({
 });
 export type CreateTermSchema = z.infer<typeof createTermSchema>;
 
-export const createNewTermSetupSchema = z.object({
-    body: z.object({
-        termName: z.string(),
-        subjects: z.array(
-            z.object({
-                subject: z.string(),
-                fee: z.number(),
-                feeInterval: z.string(),
-                levels: z.array(z.string())
-            })
-        )
+export const createNewTermSetupSchema = z
+    .object({
+        body: z.object({
+            termName: z.string(),
+            startDate: z.string(),
+            endDate: z.string(),
+            subjects: z.array(
+                z.object({
+                    subject: z.string(),
+                    fee: z.number(),
+                    feeInterval: z.string(),
+                    levels: z.array(z.string())
+                })
+            )
+        })
     })
-});
+
+// });
 export type CreateNewTermSetupSchema = z.infer<typeof createNewTermSetupSchema>;
 
 const levelSchema = z.object({

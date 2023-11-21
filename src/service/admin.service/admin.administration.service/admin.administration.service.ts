@@ -17,20 +17,19 @@ export type SetupOrgDataType = {
 
 export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['body']) => {
     // create new term
+    const termData = {
+        name: setupData.termName,
+        sDate: setupData.startDate?.toString(),
+        eDate: setupData.endDate?.toString()
+    };
+
+    const createdTerm = await createNewterm({
+        name: setupData.termName,
+        startDate: setupData.startDate,
+        endDate: setupData.endDate
+    });
     // create new subject with fee and fee interval with levels
     let createdSubjects = [];
-
-    for (const subject of setupData.subjects) {
-        const existingSubject = await db.subject.findUnique({
-            where: {
-                name: subject.subject
-            }
-        });
-        console.log({ existingSubject });
-        if (existingSubject?.name) {
-            throw customError(`${existingSubject.name} - The subject name you are trying to create already exists in the database`, 'fail', 404, true);
-        }
-    }
 
     for (const subject of setupData.subjects) {
         const newSubject = await db.subject.create({
@@ -58,7 +57,7 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
                     create: {
                         term: {
                             connect: {
-                                name: setupData.termName
+                                name: createdTerm.name
                             }
                         }
                     }
