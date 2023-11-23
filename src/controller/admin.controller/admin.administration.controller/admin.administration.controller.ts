@@ -7,8 +7,10 @@ import {
     deleteTerm,
     endCurrentTerm,
     extendCurrentTerm,
+    findAllLevels,
     findAllTerm,
-    findUniqueTerm
+    findUniqueTerm,
+    makeCurrentTerm
 } from '../../../service/admin.service/admin.administration.service/admin.administration.service';
 import {
     ChangeCurrentTermNameSchema,
@@ -41,6 +43,11 @@ export const endTermHandler = async (req: Request<FindUniqueTermSchema['params']
     const updatedTerm = await endCurrentTerm(id);
     res.status(200).json(updatedTerm);
 };
+export const makeCurrentTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    const updatedTerm = await makeCurrentTerm(id);
+    res.status(200).json(updatedTerm);
+};
 export const extendCurrentTermHandler = async (req: Request<ExtendCurrentTermSchema['params'], {}, ExtendCurrentTermSchema['body'], {}>, res: Response, next: NextFunction) => {
     const id = req.params.id;
     const termData = req.body.updatedTerm;
@@ -60,7 +67,11 @@ export const deleteTermHandler = async (req: Request<FindUniqueTermSchema['param
 };
 export const createNewTermSetupHandler = async (req: Request<{}, {}, CreateNewTermSetupSchema['body'], {}>, res: Response, next: NextFunction) => {
     const setupOrgData = req.body;
-
     const newTermwithSubjects = await createNewTermSetup(setupOrgData);
     res.status(200).json(newTermwithSubjects);
+};
+export const findAllLevelsHandler = async (req:Request,res:Response,next:NextFunction) => {
+    const AllLevels = await findAllLevels()
+    res.status(200).json(AllLevels);
+
 };

@@ -10,7 +10,9 @@ import {
     findAllTermHandler,
     findUniqueTermHandler,
     changeCurrentTermNameHandler,
-    extendCurrentTermHandler
+    extendCurrentTermHandler,
+    findAllLevelsHandler,
+    makeCurrentTermHandler
 } from '../../../controller/admin.controller/admin.administration.controller/admin.administration.controller';
 import {
     changeCurrentTermNameSchema,
@@ -33,5 +35,8 @@ adminAdministrationtRoute.route('/update/extend-term/:id').put(validate(extendCu
 
 /*create organization set up*/
 adminAdministrationtRoute.route('/create-new-term-setup').post(validate(createNewTermSetupSchema), asyncErrorHandler(createNewTermSetupHandler));
+adminAdministrationtRoute.route('/update/make-current-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(makeCurrentTermHandler));
 
+/* Levels*/
+adminAdministrationtRoute.route('/get-all-levels').get( asyncErrorHandler(findAllLevelsHandler));
 export default adminAdministrationtRoute;

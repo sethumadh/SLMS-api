@@ -7,8 +7,6 @@ export const findUniqueTermSchema = z.object({
 });
 export type FindUniqueTermSchema = z.infer<typeof findUniqueTermSchema>;
 
-
-
 export const createNewTermSetupSchema = z.object({
     body: z.object({
         termName: z.string(),
@@ -17,7 +15,7 @@ export const createNewTermSetupSchema = z.object({
         subjects: z.array(
             z.object({
                 subject: z.string(),
-                fee: z.number(),
+                fee: z.string(),
                 feeInterval: z.string(),
                 levels: z.array(z.string())
             })
@@ -25,11 +23,10 @@ export const createNewTermSetupSchema = z.object({
     })
 });
 
-// });
 export type CreateNewTermSetupSchema = z.infer<typeof createNewTermSetupSchema>;
 
 const termSchema = z.object({
-    id: z.number(),
+    id: z.number().optional(),
     isPublish: z.boolean(),
     currentTerm: z.boolean(),
     name: z.string(),
@@ -49,38 +46,38 @@ export const createTermSchema = z.object({
 });
 export type CreateTermSchema = z.infer<typeof createTermSchema>;
 
-const TermSubjectSchema = z.object({
-    id: z.number(),
-    termId: z.number(),
-    subjectId: z.number(),
-    levelId: z.number().optional(),
-    feeId: z.number().optional(),
-    term: termSchema,
-    subject: z.object({
-        id: z.number(),
-        name: z.string(),
-        isActive: z.boolean()
-    }),
-    level: z
-        .array(
-            z.object({
-                id: z.number(),
-                name: z.string()
-            })
-        )
-        .optional(),
-    fee: z
-        .object({
-            id: z.number(),
-            amount: z.number(),
-            paymentType: z.enum(['MONTHLY', 'TERM'])
-        })
-        .optional()
-});
+// const TermSubjectSchema = z.object({
+//     id: z.number(),
+//     termId: z.number(),
+//     subjectId: z.number(),
+//     levelId: z.number().optional(),
+//     feeId: z.number().optional(),
+//     term: termSchema,
+//     subject: z.object({
+//         id: z.number(),
+//         name: z.string(),
+//         isActive: z.boolean()
+//     }),
+//     level: z
+//         .array(
+//             z.object({
+//                 id: z.number(),
+//                 name: z.string()
+//             })
+//         )
+//         .optional(),
+//     fee: z
+//         .object({
+//             id: z.number(),
+//             amount: z.number(),
+//             paymentType: z.enum(['MONTHLY', 'TERM'])
+//         })
+//         .optional()
+// });
 
-const TermSubjectsArraySchema = z.array(TermSubjectSchema);
+// const TermSubjectsArraySchema = z.array(TermSubjectSchema);
 
-export type TermSubjectsArraySchema = z.infer<typeof TermSubjectsArraySchema>;
+// export type TermSubjectsArraySchema = z.infer<typeof TermSubjectsArraySchema>;
 
 const levelSchema = z.object({
     id: z.number(),
