@@ -8,6 +8,7 @@ import {
     endCurrentTerm,
     extendCurrentTerm,
     findAllLevels,
+    findAllSubjects,
     findAllTerm,
     findUniqueTerm,
     makeCurrentTerm
@@ -69,6 +70,12 @@ export const createNewTermSetupHandler = async (req: Request<{}, {}, CreateNewTe
     const setupOrgData = req.body;
     const newTermwithSubjects = await createNewTermSetup(setupOrgData);
     res.status(200).json(newTermwithSubjects);
+};
+
+export const findAllSubjectsHandler = async (req:Request,res:Response,next:NextFunction) => {
+    const AllSubjects = await findAllSubjects()
+    res.status(200).json(AllSubjects);
+
 };
 export const findAllLevelsHandler = async (req:Request,res:Response,next:NextFunction) => {
     const AllLevels = await findAllLevels()

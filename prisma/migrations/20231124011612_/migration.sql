@@ -97,8 +97,8 @@ CREATE TABLE "Subject" (
 -- CreateTable
 CREATE TABLE "Term" (
     "id" SERIAL NOT NULL,
-    "isPublish" BOOLEAN NOT NULL DEFAULT true,
-    "currentTerm" BOOLEAN NOT NULL DEFAULT true,
+    "isPublish" BOOLEAN NOT NULL DEFAULT false,
+    "currentTerm" BOOLEAN NOT NULL DEFAULT false,
     "name" TEXT NOT NULL,
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3) NOT NULL,
@@ -111,6 +111,7 @@ CREATE TABLE "Term" (
 -- CreateTable
 CREATE TABLE "Level" (
     "id" SERIAL NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "name" TEXT NOT NULL,
 
     CONSTRAINT "Level_pkey" PRIMARY KEY ("id")
@@ -121,7 +122,6 @@ CREATE TABLE "TermSubject" (
     "id" SERIAL NOT NULL,
     "termId" INTEGER NOT NULL,
     "subjectId" INTEGER NOT NULL,
-    "levelId" INTEGER,
     "feeId" INTEGER,
 
     CONSTRAINT "TermSubject_pkey" PRIMARY KEY ("id")
@@ -234,7 +234,7 @@ ALTER TABLE "HealthInformation" ADD CONSTRAINT "HealthInformation_studentId_fkey
 ALTER TABLE "OtherInformation" ADD CONSTRAINT "OtherInformation_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TermSubject" ADD CONSTRAINT "TermSubject_termId_fkey" FOREIGN KEY ("termId") REFERENCES "Term"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TermSubject" ADD CONSTRAINT "TermSubject_termId_fkey" FOREIGN KEY ("termId") REFERENCES "Term"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TermSubject" ADD CONSTRAINT "TermSubject_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

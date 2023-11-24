@@ -23,9 +23,12 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
     const transactionResult = await db.$transaction(async () => {
         let createdTerm: TermType; // Declaring the type for createdTerm
 
-        const existingTerm = await db.term.findUnique({
+        const existingTerm = await db.term.findFirst({
             where: {
-                name: name
+                name: {
+                    contains: name,
+                    mode: 'insensitive'
+                }
             }
         });
 
@@ -38,7 +41,7 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
 
         createdTerm = await db.term.create({
             data: {
-                name: name,
+                name: name.toLowerCase(),
                 startDate: sDate,
                 endDate: eDate
             },
@@ -56,13 +59,13 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
 
         for (const subject of setupData.subjects) {
             // Handle subject creation or retrieval
-            let existingSubject = await db.subject.findUnique({
-                where: { name: subject.subject }
+            let existingSubject = await db.subject.findFirst({
+                where: { name: { contains: subject.subject, mode: 'insensitive' } }
             });
 
             if (!existingSubject) {
                 existingSubject = await db.subject.create({
-                    data: { name: subject.subject }
+                    data: { name: subject.subject.toLowerCase() }
                 });
             }
 
@@ -83,8 +86,8 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
                     },
                     level: {
                         connectOrCreate: subject.levels.map((level) => ({
-                            where: { name: level },
-                            create: { name: level }
+                            where: { name: level.toLowerCase() },
+                            create: { name: level.toLowerCase() }
                         }))
                     }
                 }
@@ -323,9 +326,12 @@ export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) 
 // change Current Term Name
 export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['params']['id'], termData: ChangeCurrentTermNameSchema['body']['updatedTerm']) {
     const { name } = termData;
-    const existingTermWithGivenName = await db.term.findUnique({
+    const existingTermWithGivenName = await db.term.findFirst({
         where: {
-            name: name
+            name: {
+                contains: name,
+                mode: 'insensitive'
+            }
         }
     });
     if (existingTermWithGivenName?.name) {
@@ -410,14 +416,21 @@ export async function deleteTerm(id: FindUniqueTermSchema['params']['id']) {
 /* Subjects */
 
 //discontinue a subject
-// export async function discontinueSubject(subjectId: string) {
-//     const updatedSubject = await db.subject.update({
-//         where: { id: +subjectId },
-//         data: { isActive: false }
-//     });
+export async function discontinueSubject(subjectId: string) {
+    const updatedSubject = await db.subject.update({
+        where: { id: +subjectId },
+        data: { isActive: false }
+    });
 
-//     return updatedSubject;
-// }
+    return updatedSubject;
+}
+
+// find all subjects
+export async function findAllSubjects() {
+    const allSubjects = await db.subject.findMany({});
+    if (allSubjects.length == 0) throw customError('Subjects lists cannot be fetched at this time', 'fail', 400, true);
+    return allSubjects;
+}
 
 /*Levels */
 
@@ -429,20 +442,3 @@ export const findAllLevels = async () => {
     }
     return allLevels;
 };
-
-export async function makeTermCurrent(id: number) {
-    return db.$transaction(async (prisma) => {
-        // Step 1: Set currentTerm to false for all terms
-        await prisma.term.updateMany({
-            data: { currentTerm: false }
-        });
-
-        // Step 2: Set currentTerm to true for the specified term
-        const updatedTerm = await prisma.term.update({
-            where: { id: id },
-            data: { currentTerm: true }
-        });
-
-        return updatedTerm;
-    });
-}
