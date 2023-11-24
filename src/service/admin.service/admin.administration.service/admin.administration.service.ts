@@ -131,6 +131,7 @@ export async function findAllTerm() {
             startDate: true,
             endDate: true,
             createdAt: true,
+            updatedAt: true,
             termSubject: {
                 select: {
                     subject: {
@@ -143,14 +144,21 @@ export async function findAllTerm() {
                     },
                     level: {
                         select: {
+                            id: true,
                             name: true
+                        }
+                    },
+                    fee: {
+                        select: {
+                            amount: true,
+                            paymentType: true
                         }
                     }
                 }
             }
         },
         orderBy: {
-            createdAt: 'desc'
+            currentTerm: 'desc'
         }
     });
     if (!allTerms) {
@@ -197,6 +205,38 @@ export async function findUniqueTerm(id: FindUniqueTermSchema['params']['id']) {
     const uniqueTerm = await db.term.findUnique({
         where: {
             id: +id
+        },
+        select: {
+            id: true,
+            name: true,
+            isPublish: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            termSubject: {
+                select: {
+                    subject: {
+                        select: {
+                            name: true,
+                            isActive: true,
+                            id: true
+                        }
+                    },
+                    level: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    fee: {
+                        select: {
+                            amount: true,
+                            paymentType: true
+                        }
+                    }
+                }
+            }
         }
     });
     if (!uniqueTerm) {
