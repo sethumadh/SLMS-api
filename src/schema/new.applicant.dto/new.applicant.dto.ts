@@ -39,9 +39,9 @@ export const HealthInformationSchema = z.object({
     allergy: z.string({ required_error: 'valid' }).min(3, { message: 'Mininum 3 characters' })
 });
 
-export const SubjectSchema = z.object({
+export const SubjectInterest = z.object({
     id: z.number().optional(),
-    subjects: z.array(z.string()).refine((subjects) => subjects.length > 0, {
+    subjectsChosen: z.array(z.string()).refine((subjects) => subjects.length > 0, {
         message: 'Please select at least one subject'
     }),
     subjectRelated: z.array(z.string()).refine((subjectRelated) => subjectRelated.length > 0, {
@@ -65,7 +65,7 @@ export const newApplicantSchema = z.object({
             parentsDetails: ParentsSchema,
             emergencyContact: EmergencyContactSchema,
             healthInformation: HealthInformationSchema,
-            subjects: SubjectSchema,
+            subjectInterest: SubjectInterest,
             otherInformation: OtherInformationSchema
         },
         { required_error: 'Some or all of Student data is missing which are required is required' }

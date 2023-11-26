@@ -9,7 +9,6 @@ import { Err } from './src/types/type';
 import { config } from './src/config/config';
 import log from './src/utils/logger';
 import { customError } from './src/utils/customError';
-import { db } from './src/utils/db.server';
 import newApplicantRoute from './src/route/new.applicant.route/new.applicant.route';
 import adminStudentRoute from './src/route/admin.route/admin.student.route/admin.student.route';
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';

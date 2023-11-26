@@ -2,10 +2,10 @@
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'TEACHER', 'APPLICANT', 'WAITLISTED', 'STUDENT', 'ALUMNI');
 
 -- CreateEnum
-CREATE TYPE "PaymentMethod" AS ENUM ('ONLINE', 'SCHOOL');
+CREATE TYPE "PaymentMethod" AS ENUM ('ONLINE', 'SCHOOL', 'NA');
 
 -- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID');
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'NODUES');
 
 -- CreateEnum
 CREATE TYPE "PaymentType" AS ENUM ('MONTHLY', 'TERM');
@@ -14,6 +14,8 @@ CREATE TYPE "PaymentType" AS ENUM ('MONTHLY', 'TERM');
 CREATE TABLE "Student" (
     "id" SERIAL NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'APPLICANT',
+    "subjectsChosen" TEXT[],
+    "subjectRelated" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -155,8 +157,9 @@ CREATE TABLE "FeePayment" (
     "dueDate" TIMESTAMP(3) NOT NULL,
     "paidDate" TIMESTAMP(3),
     "amount" INTEGER NOT NULL,
-    "status" "PaymentStatus" NOT NULL,
-    "method" "PaymentMethod" NOT NULL,
+    "dueAmount" INTEGER NOT NULL,
+    "status" "PaymentStatus" NOT NULL DEFAULT 'NODUES',
+    "method" "PaymentMethod" NOT NULL DEFAULT 'NA',
 
     CONSTRAINT "FeePayment_pkey" PRIMARY KEY ("id")
 );

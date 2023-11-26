@@ -10,7 +10,7 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
         otherInformation: { declaration, otherInfo },
         parentsDetails: { fatherName, motherName, parentContact, parentEmail },
         personalDetails: { email, address, contact, country, firstName, gender, lastName, postcode, state, suburb, DOB, image },
-        subjects: { subjects, subjectRelated }
+        subjectInterest: { subjectsChosen, subjectRelated }
     } = data;
     try {
         const student = await db.student.create({
@@ -54,25 +54,8 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
                         allergy
                     }
                 },
-                // subjects: {
-                //     create: {
-                //         subjects: {
-                //             createMany: {
-                //                 data: subjects.map((subject) => ({
-                //                     subjectName: subject
-                //                 }))
-                //             }
-                //         },
-                //         subjectRelated: {
-                //             createMany: {
-                //                 data: subjectRelated.map((subjectRel) => ({
-                //                     subjectRelated: subjectRel
-                //                 }))
-                //             }
-                //         }
-                //     }
-                // },
-
+                subjectsChosen,
+                subjectRelated,
                 otherInformation: {
                     create: {
                         otherInfo: otherInfo ? otherInfo : 'No information provided',

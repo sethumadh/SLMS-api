@@ -35,7 +35,6 @@ export const findUniqueTermHandler = async (req: Request<FindUniqueTermSchema['p
 
 export const findAllTermHandler = async (req: Request, res: Response, next: NextFunction) => {
     const allTerms = await findAllTerm();
-    console.log({ allTerms });
     res.status(200).json(allTerms);
 };
 

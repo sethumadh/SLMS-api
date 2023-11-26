@@ -7,7 +7,7 @@ import { createApplicantHandler, findActiveTermHandler } from '../../controller/
 
 const newApplicantRoute = express.Router();
 
-newApplicantRoute.route('/new-create').post(validate(newApplicantSchema), asyncErrorHandler(createApplicantHandler));
+newApplicantRoute.route('/create-applicant').post(validate(newApplicantSchema), asyncErrorHandler(createApplicantHandler));
 newApplicantRoute.route('/find-current-term').get(asyncErrorHandler(findActiveTermHandler));
 
 // router.route('/application/deleteAllStudents');

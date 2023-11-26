@@ -22,12 +22,14 @@ enum Role {
 enum PaymentMethod {
   ONLINE
   SCHOOL
+  NA
   // Add more methods as needed
 }
 
 enum PaymentStatus {
   PENDING
   PAID
+  NODUES
 }
 
 enum PaymentType {
@@ -44,6 +46,8 @@ model Student {
   emergencyContact  EmergencyContact?
   healthInformation HealthInformation?
   otherInformation  OtherInformation?
+  subjectsChosen    String[]
+  subjectRelated    String[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -176,8 +180,9 @@ model FeePayment {
   dueDate      DateTime
   paidDate     DateTime? // Nullable, set when payment is made
   amount       Int
-  status       PaymentStatus
-  method       PaymentMethod // New field for payment method
+  dueAmount    Int // Amount still due (if any)
+  status       PaymentStatus @default(NODUES)
+  method       PaymentMethod @default(NA) // New field for payment method
   enrollment   Enrollment    @relation(fields: [enrollmentId], references: [id])
 }
 
