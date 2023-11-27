@@ -23,24 +23,24 @@ import {
     findUniqueTermSchema
 } from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
 
-const adminAdministrationtRoute = express.Router();
+const adminAdministrationRoute = express.Router();
 
 /*Term CRUD*/
-adminAdministrationtRoute.route('/create-term').post(validate(createTermSchema), asyncErrorHandler(createTermHandler));
-adminAdministrationtRoute.route('/find-all-terms').get(asyncErrorHandler(findAllTermHandler));
-adminAdministrationtRoute.route('/find/term-detail/:id').get(validate(findUniqueTermSchema), asyncErrorHandler(findUniqueTermHandler));
-adminAdministrationtRoute.route('/update/end-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(endTermHandler));
-adminAdministrationtRoute.route('/delete-term/:id').delete(validate(findUniqueTermSchema), asyncErrorHandler(deleteTermHandler));
-adminAdministrationtRoute.route('/update/term-name/:id').put(validate(changeCurrentTermNameSchema), asyncErrorHandler(changeCurrentTermNameHandler));
-adminAdministrationtRoute.route('/update/extend-term/:id').put(validate(extendCurrentTermSchema), asyncErrorHandler(extendCurrentTermHandler));
+adminAdministrationRoute.route('/create-term').post(validate(createTermSchema), asyncErrorHandler(createTermHandler));
+adminAdministrationRoute.route('/find-all-terms').get(asyncErrorHandler(findAllTermHandler));
+adminAdministrationRoute.route('/find/term-detail/:id').get(validate(findUniqueTermSchema), asyncErrorHandler(findUniqueTermHandler));
+adminAdministrationRoute.route('/update/end-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(endTermHandler));
+adminAdministrationRoute.route('/delete-term/:id').delete(validate(findUniqueTermSchema), asyncErrorHandler(deleteTermHandler));
+adminAdministrationRoute.route('/update/term-name/:id').put(validate(changeCurrentTermNameSchema), asyncErrorHandler(changeCurrentTermNameHandler));
+adminAdministrationRoute.route('/update/extend-term/:id').put(validate(extendCurrentTermSchema), asyncErrorHandler(extendCurrentTermHandler));
 
 /*create organization set up*/
-adminAdministrationtRoute.route('/create-new-term-setup').post(validate(createNewTermSetupSchema), asyncErrorHandler(createNewTermSetupHandler));
-adminAdministrationtRoute.route('/update/make-current-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(makeCurrentTermHandler));
+adminAdministrationRoute.route('/create-new-term-setup').post(validate(createNewTermSetupSchema), asyncErrorHandler(createNewTermSetupHandler));
+adminAdministrationRoute.route('/update/make-current-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(makeCurrentTermHandler));
 
 /*Subjects*/
-adminAdministrationtRoute.route('/get-all-subjects').get(asyncErrorHandler(findAllSubjectsHandler));
+adminAdministrationRoute.route('/get-all-subjects').get(asyncErrorHandler(findAllSubjectsHandler));
 
 /* Levels*/
-adminAdministrationtRoute.route('/get-all-levels').get(asyncErrorHandler(findAllLevelsHandler));
-export default adminAdministrationtRoute;
+adminAdministrationRoute.route('/get-all-levels').get(asyncErrorHandler(findAllLevelsHandler));
+export default adminAdministrationRoute;

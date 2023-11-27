@@ -79,7 +79,7 @@ export async function findStudentByEmail(email: string) {
 
 // find student using general search  for search fnction in student table
 export async function findStudentsBySearch(search: string, page: number) {
-    const take = 5;
+    const take = 2;
     // const page = 2; // coming from request
     const pageNum: number = page ?? 0;
     const skip = pageNum * take;
@@ -263,85 +263,6 @@ export async function findAllStudents(page: number) {
     }
 
     return { students, count };
-}
-export async function findAllApplicants(page: number) {
-    const take = 5;
-    // const page = 2; // coming from request
-    const pageNum: number = page ?? 0;
-    const skip = pageNum * take;
-    const applicants = await db.student.findMany({
-        where: {
-            role: 'APPLICANT'
-        },
-        skip,
-        take,
-        select: {
-            id: true,
-            role: true,
-            personalDetails: {
-                select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    DOB: true,
-                    gender: true,
-                    email: true,
-                    contact: true,
-                    address: true,
-                    suburb: true,
-                    state: true,
-                    country: true,
-                    postcode: true,
-                    image: true
-                }
-            },
-            parentsDetails: {
-                select: {
-                    id: true,
-                    fatherName: true,
-                    motherName: true,
-                    parentEmail: true,
-                    parentContact: true
-                }
-            },
-            emergencyContact: {
-                select: {
-                    id: true,
-                    contactPerson: true,
-                    contactNumber: true,
-                    relationship: true
-                }
-            },
-            healthInformation: {
-                select: {
-                    id: true,
-                    medicareNumber: true,
-                    ambulanceMembershipNumber: true,
-                    medicalCondition: true,
-                    allergy: true
-                }
-            },
-            subjectRelated: true,
-            subjectsChosen: true,
-            otherInformation: {
-                select: {
-                    id: true,
-                    otherInfo: true,
-                    declaration: true
-                }
-            }
-        },
-        orderBy: {
-            createdAt: 'asc'
-        }
-    });
-
-    const count = applicants.length;
-    if (applicants.length == 0) {
-        throw customError(`No applicants lists to show`, 'fail', 400, true);
-    }
-
-    return { applicants, count };
 }
 
 // delete student

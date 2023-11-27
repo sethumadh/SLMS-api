@@ -12,7 +12,8 @@ import { customError } from './src/utils/customError';
 import newApplicantRoute from './src/route/new.applicant.route/new.applicant.route';
 import adminStudentRoute from './src/route/admin.route/admin.student.route/admin.student.route';
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';
-import adminAdministrationtRoute from './src/route/admin.route/admin.administration.route/admin.administration.route';
+import adminAdministrationRoute from './src/route/admin.route/admin.administration.route/admin.administration.route';
+import adminEnrollmentRoute from "./src/route/admin.route/admin.enrollment.route/admin.enrollment.route"
 
 const app = express();
 app.use(cookieParser());
@@ -49,8 +50,9 @@ app.get('/test', (req, res, next) => {
 });
 app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
 app.use('/api/v1/application', newApplicantRoute);
-app.use('/api/v1/admin/administration', adminAdministrationtRoute);
+app.use('/api/v1/admin/administration', adminAdministrationRoute);
 app.use('/api/v1/admin/student', adminStudentRoute);
+app.use('/api/v1/admin/applicant', adminEnrollmentRoute);
 
 // Server frontend static assets and handle catch-all route
 if (process.env.NODE_ENV === 'production') {
