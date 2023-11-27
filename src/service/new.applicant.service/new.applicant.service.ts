@@ -12,6 +12,27 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
         personalDetails: { email, address, contact, country, firstName, gender, lastName, postcode, state, suburb, DOB, image },
         subjectInterest: { subjectsChosen, subjectRelated }
     } = data;
+    const existingStudent = await db.personalDetails.findUnique({
+        where: {
+            email
+        },
+        include: {
+            student: {
+                select: {
+                    role: true
+                }
+            }
+        }
+    });
+    if (existingStudent?.email) {
+        if (existingStudent.student.role == 'APPLICANT') {
+            throw customError(`The email is already used for submitting an application. `, 'fail', 404, true);
+        } else if (existingStudent.student.role == 'STUDENT') {
+            throw customError(`The email is belongs to an existing student. `, 'fail', 404, true);
+        } else if (existingStudent.student.role == 'ALUMNI') {
+            throw customError(`The email is belongs to an alumni. please contact the school. `, 'fail', 404, true);
+        }
+    }
     try {
         const student = await db.student.create({
             data: {

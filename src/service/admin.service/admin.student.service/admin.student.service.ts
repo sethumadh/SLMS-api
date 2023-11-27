@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { UpdateStudentHealthDetailSchema, UpdateStudentParentsDetailSchema, UpdateStudentPersonalDetailSchema } from '../../../schema/admin.dto/admin.student.dto/admin.student.dto';
 import { db } from '../../../utils/db.server';
+import { customError } from '../../../utils/customError';
 
 // findAllStudents()--
 // createStudent(data)--
@@ -164,22 +165,6 @@ export async function findStudentById(id: string) {
                     allergy: true
                 }
             },
-            // subjects: {
-            //     select: {
-            //         subjectRelated: {
-            //             select: {
-            //                 id: true,
-            //                 subjectRelated: true
-            //             }
-            //         },
-            //         subjects: {
-            //             select: {
-            //                 id: true,
-            //                 subjectName: true
-            //             }
-            //         }
-            //     }
-            // },
             otherInformation: {
                 select: {
                     id: true,
@@ -202,128 +187,169 @@ export async function findStudentById(id: string) {
 
 // Find all student for the admin
 export async function findAllStudents(page: number) {
-    try {
-        const take = 5;
-        // const page = 2; // coming from request
-        const pageNum: number = page ?? 0;
-        const skip = pageNum * take;
-        const students = await db.student.findMany({
-            skip,
-            take,
-            select: {
-                id: true,
-                role: true,
-                personalDetails: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        DOB: true,
-                        gender: true,
-                        email: true,
-                        contact: true,
-                        address: true,
-                        suburb: true,
-                        state: true,
-                        country: true,
-                        postcode: true,
-                        image: true
-                    }
-                },
-                parentsDetails: {
-                    select: {
-                        id: true,
-                        fatherName: true,
-                        motherName: true,
-                        parentEmail: true,
-                        parentContact: true
-                    }
-                },
-                emergencyContact: {
-                    select: {
-                        id: true,
-                        contactPerson: true,
-                        contactNumber: true,
-                        relationship: true
-                    }
-                },
-                healthInformation: {
-                    select: {
-                        id: true,
-                        medicareNumber: true,
-                        ambulanceMembershipNumber: true,
-                        medicalCondition: true,
-                        allergy: true
-                    }
-                },
-                // subjects: {
-                //     select: {
-                //         id: true,
-                //         subjectRelated: {
-                //             select: {
-                //                 id: true,
-                //                 subjectRelated: true
-                //             }
-                //         },
-                //         subjects: {
-                //             select: {
-                //                 id: true,
-                //                 subjectName: true
-                //             }
-                //         }
-                //     }
-                // },
-                otherInformation: {
-                    select: {
-                        id: true,
-                        otherInfo: true,
-                        declaration: true
-                    }
+    const take = 5;
+    // const page = 2; // coming from request
+    const pageNum: number = page ?? 0;
+    const skip = pageNum * take;
+    const students = await db.student.findMany({
+        where: {
+            role: 'STUDENT'
+        },
+        skip,
+        take,
+        select: {
+            id: true,
+            role: true,
+            personalDetails: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    DOB: true,
+                    gender: true,
+                    email: true,
+                    contact: true,
+                    address: true,
+                    suburb: true,
+                    state: true,
+                    country: true,
+                    postcode: true,
+                    image: true
                 }
-                // feedback: {
-                //     select: {
-                //         id: true,
-                //         feedback: true
-                //     }
-                // }
             },
-            orderBy: {
-                createdAt: 'asc'
+            parentsDetails: {
+                select: {
+                    id: true,
+                    fatherName: true,
+                    motherName: true,
+                    parentEmail: true,
+                    parentContact: true
+                }
+            },
+            emergencyContact: {
+                select: {
+                    id: true,
+                    contactPerson: true,
+                    contactNumber: true,
+                    relationship: true
+                }
+            },
+            healthInformation: {
+                select: {
+                    id: true,
+                    medicareNumber: true,
+                    ambulanceMembershipNumber: true,
+                    medicalCondition: true,
+                    allergy: true
+                }
+            },
+            subjectRelated: true,
+            subjectsChosen: true,
+            otherInformation: {
+                select: {
+                    id: true,
+                    otherInfo: true,
+                    declaration: true
+                }
             }
-        });
-        const count = await db.student.aggregate({
-            _count: {
-                id: true
-            }
-        });
-
-        return { students, count };
-    } catch (err: any) {
-        throw new Error('INTERNAL-ERROR');
+        },
+        orderBy: {
+            createdAt: 'asc'
+        }
+    });
+    const count = students.length;
+    if (students.length == 0) {
+        throw customError(`No students lists to show`, 'fail', 400, true);
     }
+
+    return { students, count };
+}
+export async function findAllApplicants(page: number) {
+    const take = 5;
+    // const page = 2; // coming from request
+    const pageNum: number = page ?? 0;
+    const skip = pageNum * take;
+    const applicants = await db.student.findMany({
+        where: {
+            role: 'APPLICANT'
+        },
+        skip,
+        take,
+        select: {
+            id: true,
+            role: true,
+            personalDetails: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    DOB: true,
+                    gender: true,
+                    email: true,
+                    contact: true,
+                    address: true,
+                    suburb: true,
+                    state: true,
+                    country: true,
+                    postcode: true,
+                    image: true
+                }
+            },
+            parentsDetails: {
+                select: {
+                    id: true,
+                    fatherName: true,
+                    motherName: true,
+                    parentEmail: true,
+                    parentContact: true
+                }
+            },
+            emergencyContact: {
+                select: {
+                    id: true,
+                    contactPerson: true,
+                    contactNumber: true,
+                    relationship: true
+                }
+            },
+            healthInformation: {
+                select: {
+                    id: true,
+                    medicareNumber: true,
+                    ambulanceMembershipNumber: true,
+                    medicalCondition: true,
+                    allergy: true
+                }
+            },
+            subjectRelated: true,
+            subjectsChosen: true,
+            otherInformation: {
+                select: {
+                    id: true,
+                    otherInfo: true,
+                    declaration: true
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'asc'
+        }
+    });
+
+    const count = applicants.length;
+    if (applicants.length == 0) {
+        throw customError(`No applicants lists to show`, 'fail', 400, true);
+    }
+
+    return { applicants, count };
 }
 
 // delete student
 export async function deleteManyStudents() {
     const student = await db.student.deleteMany();
 }
-// deleteManyStudents();
 
-// create student feedback for admin or teachers using student id
-// export async function createStudentFeedback(data: string, id: string) {
-//     try {
-//         const feedback = await db.feedback.create({
-//             data: {
-//                 studentId: +id,
-//                 feedback: data
-//             }
-//         });
-//         console.log(feedback);
-//     } catch (e) {
-//         console.log(e);
-//         throw new Error(`Feedback connot be create @ksm ${e}`);
-//     }
-// }
+// deleteManyStudents();
 
 // Find siblings of a student using parent email
 export async function findSiblingsByParentEmail(email: string) {
@@ -343,7 +369,6 @@ export async function findSiblingsByParentEmail(email: string) {
         for (let sibling of siblings) {
             const data = await findStudentById(sibling.id.toString());
             siblingsDetails = [...siblingsDetails, data];
-            // console.log(data);
         }
         console.log('details:', siblingsDetails);
     } catch (e) {
@@ -370,11 +395,6 @@ export async function updateStudentPersonalDetail(id: string, data: UpdateStuden
     console.log(existingStudent);
 
     /***********************************************************/
-
-    // check this part
-    // if (existingStudent?.id != +id) {
-    //     throw new Error(`email or contact already exists`);
-    // } else {
     /***********************************************************/
     try {
         const updateStudent = await db.student.update({
@@ -406,7 +426,6 @@ export async function updateStudentPersonalDetail(id: string, data: UpdateStuden
         throw new Error(`Failed to update student personal details @ksm${e}`);
     }
 }
-// }
 
 // update student parents details service
 export async function updateStudentParentsDetail(id: string, data: UpdateStudentParentsDetailSchema['body']['parentsDetails']) {
@@ -468,10 +487,3 @@ export async function updateStudentHealthInformation(id: string, data: UpdateStu
         throw new Error(`Failed to update student health and emergency details @ksm${e}`);
     }
 }
-
-//Create subjects for admin
-
-// function foo() {
-//     console.log('foo');
-// }
-// foo();

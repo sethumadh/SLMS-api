@@ -3,6 +3,7 @@ import { AnyZodObject } from 'zod';
 import { customError } from '../utils/customError';
 
 const validate = (schema: AnyZodObject) => async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body, 'body inside req');
     try {
         schema.parse({
             body: req.body,

@@ -28,28 +28,14 @@ export const findStudentByIdHandler = async (req: Request<FindUniqueStudentSchem
 // Find all student for the admin
 export const findAllStudentsHandler = async (req: Request<{}, {}, {}, FindAllStudentSchema['query']>, res: Response, next: NextFunction) => {
     const { page } = req.query;
-    try {
-        if (page) {
-            const allStudent = await findAllStudents(+page);
-            res.status(200).json(allStudent);
-        } else {
-            const page = 0;
-            const allStudent = await findAllStudents(page);
-            res.status(200).json(allStudent);
-        }
-    } catch (err: any) {
-        if (err.message == 'INTERNAL-ERROR') {
-            if (process.env.NODE_ENV == 'development') {
-                const error = customError(`students data cannot be fetched from DB  @ksm${err}`, 'Fail', 400, false);
-                console.log(error);
-                return next(error);
-            } else if (process.env.NODE_ENV == 'production') {
-                res.status(200).json({ message: 'SOmething went wrong.Student data is not available' });
-                next(err);
-            }
-        }
-        const error = customError(`students not found @ ksm${err}`, 'Fail', 400, false);
-        next(error);
+
+    if (page) {
+        const allStudent = await findAllStudents(+page);
+        res.status(200).json(allStudent);
+    } else {
+        const page = 0;
+        const allStudent = await findAllStudents(page);
+        res.status(200).json(allStudent);
     }
 };
 
