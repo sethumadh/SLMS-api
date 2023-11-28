@@ -95,7 +95,7 @@ async function seedStudents() {
                 },
                 healthInformation: {
                     create: {
-                        medicareNumber,
+                        medicareNumber: medicareNumber ? medicareNumber : 'No Medicare Number provided',
                         ambulanceMembershipNumber,
                         medicalCondition,
                         allergy

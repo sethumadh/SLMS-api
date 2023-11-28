@@ -69,7 +69,7 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
                 },
                 healthInformation: {
                     create: {
-                        medicareNumber,
+                        medicareNumber: medicareNumber ? medicareNumber : 'No Medicare Number provided',
                         ambulanceMembershipNumber,
                         medicalCondition,
                         allergy

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { findAllStudentSchema } from '../admin.student.dto/admin.student.dto';
+import { findAllStudentSchema, findUniqueStudentSchema } from '../admin.student.dto/admin.student.dto';
 
 export const findAllApplicantSchema = findAllStudentSchema;
 
@@ -10,3 +10,7 @@ export const searchApplicantSchema = z.object({
     })
 });
 export type SearchApplicantSchema = z.infer<typeof searchApplicantSchema>;
+
+export const findUniqueApplicantSchema = findUniqueStudentSchema;
+
+export type FindUniqueApplicantSchema = z.infer<typeof findUniqueApplicantSchema>;

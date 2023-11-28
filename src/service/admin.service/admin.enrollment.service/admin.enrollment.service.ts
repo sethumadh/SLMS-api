@@ -69,7 +69,7 @@ export async function findAllApplicants(page: number) {
             }
         },
         orderBy: {
-            createdAt: 'asc'
+            createdAt: 'desc'
         }
     });
     const count = await db.student.aggregate({
@@ -179,7 +179,7 @@ export async function searchApplicants(search: string, page: number) {
             }
         },
         orderBy: {
-            createdAt: 'asc'
+            createdAt: 'desc'
         }
     });
 
@@ -194,4 +194,70 @@ export async function searchApplicants(search: string, page: number) {
     }
 
     return { applicants, count };
+}
+
+/*find applicant by ID*/
+export async function findApplicantById(id: string) {
+    const applicant = await db.student.findUnique({
+        where: {
+            id: +id,
+            role: 'APPLICANT'
+        },
+        include: {
+            personalDetails: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    DOB: true,
+                    gender: true,
+                    email: true,
+                    contact: true,
+                    address: true,
+                    suburb: true,
+                    state: true,
+                    country: true,
+                    postcode: true,
+                    image: true
+                }
+            },
+
+            parentsDetails: {
+                select: {
+                    id: true,
+                    fatherName: true,
+                    motherName: true,
+                    parentEmail: true,
+                    parentContact: true
+                }
+            },
+            emergencyContact: {
+                select: {
+                    id: true,
+                    contactPerson: true,
+                    contactNumber: true,
+                    relationship: true
+                }
+            },
+            healthInformation: {
+                select: {
+                    id: true,
+                    medicareNumber: true,
+                    ambulanceMembershipNumber: true,
+                    medicalCondition: true,
+                    allergy: true
+                }
+            },
+
+            otherInformation: {
+                select: {
+                    id: true,
+                    otherInfo: true,
+                    declaration: true
+                }
+            }
+        }
+    });
+
+    return applicant;
 }
