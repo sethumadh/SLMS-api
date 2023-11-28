@@ -93,7 +93,7 @@ model EmergencyContact {
 
 model HealthInformation {
   id                        Int     @id @default(autoincrement())
-  medicareNumber            String? @default("Medicare Number not provided")
+  medicareNumber            String? @default("Medicare Number not provided") // change to optional
   ambulanceMembershipNumber String?
   medicalCondition          String
   allergy                   String

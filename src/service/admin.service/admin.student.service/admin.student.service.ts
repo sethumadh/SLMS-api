@@ -16,7 +16,7 @@ import { customError } from '../../../utils/customError';
 // findUniqueStudent('1')?
 // findFeedbackByStudentId('1')?
 // createStudentFeedback('feedback for student 3', '3')?
-// findSiblingsByParentEmail('david@example.com')?
+findSiblingsByParentEmail('b@b.com');
 
 //  find feedback for a student for admin and teacher
 // export async function findFeedbackByStudentId(id: string, page: number) {
@@ -273,18 +273,26 @@ export async function deleteManyStudents() {
 // deleteManyStudents();
 
 // Find siblings of a student using parent email
+
 export async function findSiblingsByParentEmail(email: string) {
     try {
-        const siblings = await db.student.groupBy({
-            by: ['id'],
+        const siblings = await db.student.findMany({
             where: {
-                parentsDetails: {
-                    is: {
-                        parentEmail: email
+                OR: [
+                    {
+                        parentsDetails: {
+                            parentEmail: email
+                        }
+                    },
+                    {
+                        personalDetails: {
+                            email: email
+                        }
                     }
-                }
+                ]
             }
         });
+
         console.log(siblings);
         let siblingsDetails: any = [];
         for (let sibling of siblings) {
