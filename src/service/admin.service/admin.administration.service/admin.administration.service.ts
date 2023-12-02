@@ -13,93 +13,103 @@ import { db } from '../../../utils/db.server';
 
 type TermType = any; // Replace with your actual term type or keep any if not defined
 type TermSubjectType = any; // Replace with your actual term subject type or keep any if not defined
+export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['body']) => {
+    const { termName, startDate, endDate, groupSubjects } = setupData;
 
-export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['body']): Promise<{ termSubjects: TermSubjectType[]; createdTerm: TermType }> => {
-    // create new term
-    const { termName: name, startDate, endDate } = setupData;
     const sDate = new Date(startDate);
+    sDate.setHours(0, 0, 0, 0);
     const eDate = new Date(endDate);
+    eDate.setHours(23, 59, 59, 999);
 
     const transactionResult = await db.$transaction(async () => {
-        let createdTerm: TermType; // Declaring the type for createdTerm
-
+        // Check and create term
         const existingTerm = await db.term.findFirst({
-            where: {
-                name: {
-                    contains: name,
-                    mode: 'insensitive'
-                }
-            }
+            where: { name: termName }
         });
 
         if (existingTerm) {
-            throw customError(`Term with this name -${existingTerm.name} already exists. Please choose another name`, 'fail', 400, true);
+            throw new Error(`Term with name ${termName} already exists.`);
         }
 
-        sDate.setHours(0, 0, 0, 0); // Set time to 00:00:00 for consistency
-        eDate.setHours(23, 59, 59, 999); // Set to one second before midnight on the day before the term ends
-
-        createdTerm = await db.term.create({
+        const createdTerm = await db.term.create({
             data: {
-                name: name.toLowerCase(),
+                name: termName.toLowerCase(),
                 startDate: sDate,
                 endDate: eDate
             },
             select: {
                 id: true,
-                name: true
+                name: true,
+                currentTerm: true,
+                isPublish: true
             }
         });
 
-        if (!createdTerm) {
-            throw customError('New term cannot be created', 'fail', 400, true);
-        }
-
-        let termSubjects: TermSubjectType[] = []; // Declare termSubjects array
-
-        for (const subject of setupData.subjects) {
-            // Handle subject creation or retrieval
-            let existingSubject = await db.subject.findFirst({
-                where: { name: { contains: subject.subject, mode: 'insensitive' } }
+        for (const group of groupSubjects) {
+            // Upsert subject group
+            const subjectGroup = await db.subjectGroup.upsert({
+                where: { groupName: group.groupName },
+                update: {},
+                create: { groupName: group.groupName.toLowerCase() }
             });
 
-            if (!existingSubject) {
-                existingSubject = await db.subject.create({
-                    data: { name: subject.subject.toLowerCase() }
-                });
-            }
-
-            const termSubject = await db.termSubject.create({
-                data: {
-                    term: { connect: { id: createdTerm.id } },
-                    subject: { connect: { id: existingSubject.id } },
-                    fee: {
-                        connectOrCreate: {
-                            where: {
-                                amount_paymentType: {
-                                    amount: parseInt(subject.fee),
-                                    paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
-                                }
-                            },
-                            create: { amount: parseInt(subject.fee), paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM' }
-                        }
-                    },
-                    level: {
-                        connectOrCreate: subject.levels.map((level) => ({
-                            where: { name: level.toLowerCase() },
-                            create: { name: level.toLowerCase() }
-                        }))
+            // Process fee for the subject group
+            const fee = await db.fee.upsert({
+                where: {
+                    amount_paymentType: {
+                        amount: parseInt(group.fee),
+                        paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
                     }
+                },
+                update: {},
+                create: {
+                    amount: parseInt(group.fee),
+                    paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
                 }
             });
 
-            termSubjects.push(termSubject); // Add termSubject to the array
+            // Create TermSubjectGroup with Fee
+            const termSubjectGroup = await db.termSubjectGroup.create({
+                data: {
+                    termId: createdTerm.id,
+                    subjectGroupId: subjectGroup.id,
+                    feeId: fee.id
+                }
+            });
+
+            for (const subjectData of group.subjects) {
+                // Upsert subject
+                const subject = await db.subject.upsert({
+                    where: { name: subjectData.subjectName },
+                    update: {},
+                    create: { name: subjectData.subjectName }
+                });
+
+                // Handle levels for each subject
+                for (const levelName of subjectData.levels) {
+                    const level = await db.level.upsert({
+                        where: { name: levelName },
+                        update: {},
+                        create: { name: levelName }
+                    });
+
+                    // Create TermSubject for each level
+                    await db.termSubject.create({
+                        data: {
+                            termSubjectGroupId: termSubjectGroup.id,
+                            subjectId: subject.id,
+                            levelId: level.id
+                        }
+                    });
+                }
+            }
         }
 
-        return { termSubjects, createdTerm };
+        return createdTerm;
     });
+
     console.log({ transactionResult });
-    return transactionResult;
+    return { transactionResult };
 };
 
 // const m=findAllTerm().then(res=>console.log(res))
@@ -128,30 +138,37 @@ export async function findAllTerm() {
             id: true,
             name: true,
             currentTerm: true,
+            isPublish: true,
             startDate: true,
             endDate: true,
             createdAt: true,
             updatedAt: true,
-            termSubject: {
+            termSubjectGroup: {
                 select: {
-                    subject: {
+                    subjectGroup: {
                         select: {
-                            name: true,
-                            isActive: true,
-                            _count: true,
-                            id: true
-                        }
-                    },
-                    level: {
-                        select: {
-                            id: true,
-                            name: true
+                            groupName: true
                         }
                     },
                     fee: {
                         select: {
                             amount: true,
                             paymentType: true
+                        }
+                    },
+                    termSubject: {
+                        select: {
+                            subject: {
+                                select: {
+                                    name: true,
+                                    isActive: true
+                                }
+                            },
+                            level: {
+                                select: {
+                                    name: true
+                                }
+                            }
                         }
                     }
                 }
@@ -161,50 +178,19 @@ export async function findAllTerm() {
             currentTerm: 'desc'
         }
     });
+
     if (!allTerms) {
         throw customError(`Unable to fetch terms. Please try again later`, 'fail', 404, true);
     }
-    // console.log({allTerms})
+
     return allTerms;
-}
-
-//create a new term
-export async function createNewterm(data: CreateTermSchema['body']) {
-    const { name, startDate, endDate } = data;
-    const sDate = new Date(startDate);
-    const eDate = new Date(endDate);
-    // Check if a term with the same name already exists
-    const existingTerm = await db.term.findUnique({
-        where: {
-            name: name
-        }
-    });
-
-    if (existingTerm) {
-        throw customError(`Term with this name -${existingTerm.name} already exists. Please choose another name`, 'fail', 400, true);
-    }
-    sDate.setHours(0, 0, 0, 0); // Set time to 00:00:00 for consistency
-    eDate.setHours(23, 59, 59, 999); // Set to one second before midnight on the day before the term ends
-
-    const newTerm = await db.term.create({
-        data: {
-            name: name,
-            startDate: sDate,
-            endDate: eDate
-        }
-    });
-
-    if (!newTerm) {
-        throw customError('New term cannot be created', 'fail', 400, true);
-    }
-    return newTerm;
 }
 
 // find a unique term
 export async function findUniqueTerm(id: FindUniqueTermSchema['params']['id']) {
     const uniqueTerm = await db.term.findUnique({
         where: {
-            id: +id
+            id: +id // Ensure id is a number
         },
         select: {
             id: true,
@@ -215,18 +201,11 @@ export async function findUniqueTerm(id: FindUniqueTermSchema['params']['id']) {
             endDate: true,
             createdAt: true,
             updatedAt: true,
-            termSubject: {
+            termSubjectGroup: {
                 select: {
-                    subject: {
+                    subjectGroup: {
                         select: {
-                            name: true,
-                            isActive: true,
-                            id: true
-                        }
-                    },
-                    level: {
-                        select: {
-                            name: true
+                            groupName: true
                         }
                     },
                     fee: {
@@ -234,16 +213,34 @@ export async function findUniqueTerm(id: FindUniqueTermSchema['params']['id']) {
                             amount: true,
                             paymentType: true
                         }
+                    },
+                    termSubject: {
+                        select: {
+                            subject: {
+                                select: {
+                                    name: true,
+                                    isActive: true
+                                }
+                            },
+                            level: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     });
+
     if (!uniqueTerm) {
-        throw customError(`Term could not found. Please try again later`, 'fail', 404, true);
+        throw new Error(`Term with ID ${id} could not be found. Please try again later.`);
     }
+
     return uniqueTerm;
 }
+
 // extend current term
 
 export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['id'], termData: ExtendCurrentTermSchema['body']['updatedTerm']) {
@@ -254,45 +251,40 @@ export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['i
         }
     });
 
-    if (!currentTerm?.name) {
-        throw customError(`Term with this name -${currentTerm?.name} does not exists`, 'fail', 400, true);
+    if (!currentTerm) {
+        throw new Error(`Term with ID ${id} does not exist.`);
     }
-    if (!currentTerm?.currentTerm) {
-        throw customError(`Term with this name -${currentTerm?.name} already expired.`, 'fail', 400, true);
+    if (!currentTerm.currentTerm) {
+        throw new Error(`Term with ID ${id} already expired.`);
     }
     const startDate = new Date(currentTerm.startDate);
     if (eDate <= startDate) {
-        throw customError(`The new end date must be later than the start date (${currentTerm.startDate}).`, 'fail', 400, true);
+        throw new Error(`The new end date must be later than the start date (${currentTerm.startDate}).`);
     }
     eDate.setHours(23, 59, 59, 999); // Set to one second before midnight on the day before the term ends
+
     const updatedTerm = await db.term.update({
         where: {
-            id: +id // or use name if you're updating by term name
+            id: +id
         },
         data: {
-            endDate: eDate, // Setting the end date to now
-            currentTerm: true
+            endDate: eDate,
+            currentTerm: true // Update only if needed based on your logic
         },
         select: {
             id: true,
             name: true,
             currentTerm: true,
+            isPublish: true,
             startDate: true,
             endDate: true,
             createdAt: true,
             updatedAt: true,
-            termSubject: {
+            termSubjectGroup: {
                 select: {
-                    subject: {
+                    subjectGroup: {
                         select: {
-                            name: true,
-                            isActive: true,
-                            id: true
-                        }
-                    },
-                    level: {
-                        select: {
-                            name: true
+                            groupName: true
                         }
                     },
                     fee: {
@@ -300,14 +292,31 @@ export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['i
                             amount: true,
                             paymentType: true
                         }
+                    },
+                    termSubject: {
+                        // Changed to termSubject
+                        select: {
+                            subject: {
+                                select: {
+                                    name: true,
+                                    isActive: true,
+                                    id: true
+                                }
+                            },
+                            level: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     });
+
     return updatedTerm;
 }
-
 // end term
 export async function endCurrentTerm(id: FindUniqueTermSchema['params']['id']) {
     const currentDate = new Date(); // Current date
@@ -336,6 +345,36 @@ export async function endCurrentTerm(id: FindUniqueTermSchema['params']['id']) {
     return updatedTerm;
 }
 
+export async function makePublishTerm(id: FindUniqueTermSchema['params']['id']) {
+    return db.$transaction(async () => {
+        await db.term.updateMany({
+            data: {
+                isPublish: false
+            }
+        });
+        const currentTerm = await db.term.findUnique({
+            where: {
+                id: +id
+            }
+        });
+        if (!currentTerm) {
+            throw customError(`Term not found or could not be updated. Please try again later`, 'fail', 404, true);
+        }
+        if (currentTerm.endDate < new Date()) {
+            throw customError(`Term cannot be publlished , if it is expired. Please try again later`, 'fail', 404, true);
+        }
+        const updatedTerm = await db.term.update({
+            where: {
+                id: +id // or use name if you're updating by term name
+            },
+            data: {
+                isPublish: true
+            }
+        });
+        console.log(updatedTerm);
+        return updatedTerm;
+    });
+}
 export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) {
     return db.$transaction(async () => {
         await db.term.updateMany({
@@ -366,6 +405,8 @@ export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) 
 // change Current Term Name
 export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['params']['id'], termData: ChangeCurrentTermNameSchema['body']['updatedTerm']) {
     const { name } = termData;
+
+    // Check if a term with the new name already exists
     const existingTermWithGivenName = await db.term.findFirst({
         where: {
             name: {
@@ -374,13 +415,15 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
             }
         }
     });
+
     if (existingTermWithGivenName?.name) {
         throw customError(`This term name - ${name} already exists for a term`, 'fail', 404, true);
     }
+
+    // Fetch the current term
     const currentTerm = await db.term.findUnique({
         where: {
             id: +id
-            // currentTerm: true
         }
     });
 
@@ -388,9 +431,10 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
         throw customError(`Term not found or could not be updated. Please try again later`, 'fail', 404, true);
     }
 
+    // Update the term name
     const updatedTerm = await db.term.update({
         where: {
-            id: +id // or use name if you're updating by term name
+            id: +id
         },
         data: {
             name
@@ -398,23 +442,17 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
         select: {
             id: true,
             name: true,
+            isPublish: true,
             currentTerm: true,
             startDate: true,
             endDate: true,
             createdAt: true,
             updatedAt: true,
-            termSubject: {
+            termSubjectGroup: {
                 select: {
-                    subject: {
+                    subjectGroup: {
                         select: {
-                            name: true,
-                            isActive: true,
-                            id: true
-                        }
-                    },
-                    level: {
-                        select: {
-                            name: true
+                            groupName: true
                         }
                     },
                     fee: {
@@ -422,11 +460,27 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
                             amount: true,
                             paymentType: true
                         }
+                    },
+                    termSubject: {
+                        select: {
+                            subject: {
+                                select: {
+                                    name: true,
+                                    isActive: true
+                                }
+                            },
+                            level: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     });
+
     console.log(updatedTerm);
     return updatedTerm;
 }
@@ -452,6 +506,14 @@ export async function deleteTerm(id: FindUniqueTermSchema['params']['id']) {
 
 /*Create organistaion set up by cretaing subject, levels and fee*/
 /* Always check if the term is active*/
+
+/*Groups*/
+
+export async function findAllGroups() {
+    const allGroups = await db.subjectGroup.findMany({});
+    if (allGroups.length == 0) throw customError('Groups lists cannot be fetched at this time', 'fail', 400, true);
+    return allGroups;
+}
 
 /* Subjects */
 

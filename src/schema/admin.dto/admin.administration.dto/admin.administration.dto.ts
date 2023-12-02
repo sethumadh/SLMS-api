@@ -7,17 +7,25 @@ export const findUniqueTermSchema = z.object({
 });
 export type FindUniqueTermSchema = z.infer<typeof findUniqueTermSchema>;
 
+
+
+
 export const createNewTermSetupSchema = z.object({
     body: z.object({
-        termName: z.string(),
+        termName: z.string().min(4, { message: 'Minimum 4 characters required' }),
         startDate: z.string(),
         endDate: z.string(),
-        subjects: z.array(
+        groupSubjects: z.array(
             z.object({
-                subject: z.string(),
-                fee: z.string(),
-                feeInterval: z.string(),
-                levels: z.array(z.string())
+                groupName: z.string().min(4, { message: 'Minimum 4 characters required' }),
+                fee: z.string({ required_error: 'fee is required' }).regex(/^\d+$/, { message: 'Please enter a valid amount' }).min(1, { message: 'Please enter a fee' }),
+                feeInterval: z.string().default('TERM'),
+                subjects: z.array(
+                    z.object({
+                        subjectName: z.string().min(4, { message: 'Minimum 4 characters required' }),
+                        levels: z.array(z.string()).min(1, { message: 'Minimum 4 characters required' })
+                    })
+                )
             })
         )
     })

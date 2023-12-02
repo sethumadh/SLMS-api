@@ -12,8 +12,11 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
         personalDetails: { email, address, contact, country, firstName, gender, lastName, postcode, state, suburb, DOB, image },
         subjectInterest: { subjectsChosen, subjectRelated }
     } = data;
-    const existingStudent = await db.personalDetails.findUnique({
+    const existingStudent = await db.personalDetails.findFirst({
         where: {
+            firstName,
+            lastName,
+            DOB,
             email
         },
         include: {
@@ -26,11 +29,11 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
     });
     if (existingStudent?.email) {
         if (existingStudent.student.role == 'APPLICANT') {
-            throw customError(`The email is already used for submitting an application. `, 'fail', 404, true);
+            throw customError(`The name, DOB and email given is already used for submitting an application. `, 'fail', 404, true);
         } else if (existingStudent.student.role == 'STUDENT') {
-            throw customError(`The email is belongs to an existing student. `, 'fail', 404, true);
+            throw customError(`TThe name, DOB and email given belongs to an existing student. `, 'fail', 404, true);
         } else if (existingStudent.student.role == 'ALUMNI') {
-            throw customError(`The email is belongs to an alumni. please contact the school. `, 'fail', 404, true);
+            throw customError(`The name, DOB and email given belongs to an alumni. please contact the school. `, 'fail', 404, true);
         }
     }
     try {
@@ -93,6 +96,65 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
 }
 
 /*To select the active term and its subjects and to display it in Application subjects section*/
+export async function findPublishTerm() {
+    const publishTerm = await db.term.findFirst({
+        where: {
+            isPublish: true
+        },
+        select: {
+            id: true,
+            name: true,
+            isPublish: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            termSubjectGroup: {
+                select: {
+                    subjectGroup: {
+                        select: {
+                            groupName: true,
+                            subjects: {
+                                select: {
+                                    name: true,
+                                    isActive: true
+                                }
+                            }
+                        }
+                    },
+                    fee: {
+                        select: {
+                            amount: true,
+                            paymentType: true
+                        }
+                    },
+                    termSubject: {
+                        select: {
+                            subject: {
+                                select: {
+                                    name: true,
+                                    isActive: true
+                                }
+                            },
+                            level: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    if (!publishTerm) {
+        throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
+    }
+
+    return publishTerm;
+}
 export async function findActiveTerm() {
     const activeTerm = await db.term.findFirst({
         where: {
@@ -107,24 +169,32 @@ export async function findActiveTerm() {
             endDate: true,
             createdAt: true,
             updatedAt: true,
-            termSubject: {
+            termSubjectGroup: {
                 select: {
-                    subject: {
+                    subjectGroup: {
                         select: {
-                            name: true,
-                            isActive: true,
-                            id: true
-                        }
-                    },
-                    level: {
-                        select: {
-                            name: true
+                            groupName: true
                         }
                     },
                     fee: {
                         select: {
                             amount: true,
                             paymentType: true
+                        }
+                    },
+                    termSubject: {
+                        select: {
+                            subject: {
+                                select: {
+                                    name: true,
+                                    isActive: true
+                                }
+                            },
+                            level: {
+                                select: {
+                                    name: true
+                                }
+                            }
                         }
                     }
                 }

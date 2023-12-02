@@ -3,15 +3,16 @@ import { NextFunction, Request, Response } from 'express';
 import {
     changeCurrentTermName,
     createNewTermSetup,
-    createNewterm,
     deleteTerm,
     endCurrentTerm,
     extendCurrentTerm,
+    findAllGroups,
     findAllLevels,
     findAllSubjects,
     findAllTerm,
     findUniqueTerm,
-    makeCurrentTerm
+    makeCurrentTerm,
+    makePublishTerm
 } from '../../../service/admin.service/admin.administration.service/admin.administration.service';
 import {
     ChangeCurrentTermNameSchema,
@@ -20,12 +21,6 @@ import {
     ExtendCurrentTermSchema,
     FindUniqueTermSchema
 } from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
-
-export const createTermHandler = async (req: Request<{}, {}, CreateTermSchema['body'], {}>, res: Response, next: NextFunction) => {
-    const termData = req.body;
-    const newterm = await createNewterm(termData);
-    res.status(200).json(newterm);
-};
 
 export const findUniqueTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
     const id = req.params.id;
@@ -46,6 +41,11 @@ export const endTermHandler = async (req: Request<FindUniqueTermSchema['params']
 export const makeCurrentTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
     const id = req.params.id;
     const updatedTerm = await makeCurrentTerm(id);
+    res.status(200).json(updatedTerm);
+};
+export const makePublishTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    const updatedTerm = await makePublishTerm(id);
     res.status(200).json(updatedTerm);
 };
 export const extendCurrentTermHandler = async (req: Request<ExtendCurrentTermSchema['params'], {}, ExtendCurrentTermSchema['body'], {}>, res: Response, next: NextFunction) => {
@@ -71,13 +71,15 @@ export const createNewTermSetupHandler = async (req: Request<{}, {}, CreateNewTe
     res.status(200).json(newTermwithSubjects);
 };
 
-export const findAllSubjectsHandler = async (req:Request,res:Response,next:NextFunction) => {
-    const AllSubjects = await findAllSubjects()
-    res.status(200).json(AllSubjects);
-
+export const findAllGroupsHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const allGroups = await findAllGroups();
+    res.status(200).json(allGroups);
 };
-export const findAllLevelsHandler = async (req:Request,res:Response,next:NextFunction) => {
-    const AllLevels = await findAllLevels()
-    res.status(200).json(AllLevels);
-
+export const findAllSubjectsHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const allSubjects = await findAllSubjects();
+    res.status(200).json(allSubjects);
+};
+export const findAllLevelsHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const allLevels = await findAllLevels();
+    res.status(200).json(allLevels);
 };

@@ -16,7 +16,7 @@ import { customError } from '../../../utils/customError';
 // findUniqueStudent('1')?
 // findFeedbackByStudentId('1')?
 // createStudentFeedback('feedback for student 3', '3')?
-findSiblingsByParentEmail('b@b.com');
+// findSiblingsByParentEmail('b@b.com');
 
 //  find feedback for a student for admin and teacher
 // export async function findFeedbackByStudentId(id: string, page: number) {
@@ -60,21 +60,6 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
         }
     });
     console.log(students);
-}
-
-// fins unique student using email
-export async function findStudentByEmail(email: string) {
-    const student = await db.personalDetails.findUnique({
-        where: {
-            email
-        },
-        include: {
-            student: true
-        }
-    });
-    const studentDetail = await findStudentById(student?.student?.id!.toString()!);
-    console.log(studentDetail);
-    return studentDetail;
 }
 
 // find student using general search  for search fnction in student table

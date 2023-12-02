@@ -38,7 +38,7 @@ for (let i = 1; i <= 10; i++) {
             allergy: 'None'
         },
         subjectInterest: {
-            subjectsChosen: ['Math', 'Science'],
+            subjectsChosen: ['Math', 'English'],
             subjectRelated: ['option-1', 'option-2']
         },
         otherInformation: {
