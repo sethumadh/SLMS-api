@@ -11,8 +11,6 @@ import { db } from '../../../utils/db.server';
 
 /* ORGANISTAION SET UP*/
 
-type TermType = any; // Replace with your actual term type or keep any if not defined
-type TermSubjectType = any; // Replace with your actual term subject type or keep any if not defined
 export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['body']) => {
     const { termName, startDate, endDate, groupSubjects } = setupData;
 
@@ -24,7 +22,7 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
     const transactionResult = await db.$transaction(async () => {
         // Check and create term
         const existingTerm = await db.term.findFirst({
-            where: { name: termName }
+            where: { name: termName.toLowerCase() }
         });
 
         if (existingTerm) {
@@ -39,77 +37,98 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
             },
             select: {
                 id: true,
-                name: true,
                 currentTerm: true,
-                isPublish: true
+                isPublish: true,
+                name: true
             }
         });
 
         for (const group of groupSubjects) {
-            // Upsert subject group
-            const subjectGroup = await db.subjectGroup.upsert({
-                where: { groupName: group.groupName },
-                update: {},
-                create: { groupName: group.groupName.toLowerCase() }
+            // Find or create subject group
+            let subjectGroup = await db.subjectGroup.findUnique({
+                where: { groupName: group.groupName.toLowerCase() }
             });
+            if (!subjectGroup) {
+                subjectGroup = await db.subjectGroup.create({
+                    data: { groupName: group.groupName.toLowerCase() }
+                });
+            }
 
-            // Process fee for the subject group
-            const fee = await db.fee.upsert({
+            // Find or create fee for the subject group
+            let fee = await db.fee.findFirst({
                 where: {
-                    amount_paymentType: {
-                        amount: parseInt(group.fee),
-                        paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
-                    }
-                },
-                update: {},
-                create: {
                     amount: parseInt(group.fee),
                     paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
                 }
             });
+            if (!fee) {
+                fee = await db.fee.create({
+                    data: {
+                        amount: parseInt(group.fee),
+                        paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
+                    }
+                });
+            }
 
-            // Create TermSubjectGroup with Fee
+            // Create TermSubjectGroup
             const termSubjectGroup = await db.termSubjectGroup.create({
                 data: {
                     termId: createdTerm.id,
                     subjectGroupId: subjectGroup.id,
-                    feeId: fee.id
+                    feeId: fee.id,
+                    subject: {
+                        connectOrCreate: group.subjects.map((sub) => ({
+                            where: { name: sub.subjectName.toLowerCase() },
+                            create: {
+                                name: sub.subjectName.toLowerCase()
+                            }
+                        }))
+                    }
                 }
             });
 
             for (const subjectData of group.subjects) {
-                // Upsert subject
-                const subject = await db.subject.upsert({
-                    where: { name: subjectData.subjectName },
-                    update: {},
-                    create: { name: subjectData.subjectName }
+                // Find or create subject
+                let subject = await db.subject.findUnique({
+                    where: { name: subjectData.subjectName.toLowerCase() }
                 });
-
-                // Handle levels for each subject
-                for (const levelName of subjectData.levels) {
-                    const level = await db.level.upsert({
-                        where: { name: levelName },
-                        update: {},
-                        create: { name: levelName }
-                    });
-
-                    // Create TermSubject for each level
-                    await db.termSubject.create({
-                        data: {
-                            termSubjectGroupId: termSubjectGroup.id,
-                            subjectId: subject.id,
-                            levelId: level.id
-                        }
+                if (!subject) {
+                    subject = await db.subject.create({
+                        data: { name: subjectData.subjectName.toLowerCase() }
                     });
                 }
+
+                // Create TermSubjectGroupSubject
+                await db.termSubjectGroupSubject.create({
+                    data: {
+                        termId: createdTerm.id,
+                        subjectGroupId: subjectGroup.id,
+                        termSubjectGroupId: termSubjectGroup.id,
+                        subjectId: subject.id
+                    }
+                });
+                console.log(termSubjectGroup.id, 'ide termsubjectgroup');
+                // Create TermSubject with levels
+                await db.termSubject.create({
+                    data: {
+                        termSubjectGroupId: termSubjectGroup.id,
+                        subjectId: subject.id,
+                        termId: createdTerm.id,
+                        level: {
+                            connectOrCreate: subjectData.levels.map((levelName) => ({
+                                where: { name: levelName },
+                                create: { name: levelName }
+                            }))
+                        }
+                    }
+                });
             }
         }
 
         return createdTerm;
     });
 
-    console.log({ transactionResult });
-    return { transactionResult };
+    return transactionResult;
 };
 
 // const m=findAllTerm().then(res=>console.log(res))
@@ -143,6 +162,13 @@ export async function findAllTerm() {
             endDate: true,
             createdAt: true,
             updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    level: true,
+                    subject: true
+                }
+            },
             termSubjectGroup: {
                 select: {
                     subjectGroup: {
@@ -156,19 +182,10 @@ export async function findAllTerm() {
                             paymentType: true
                         }
                     },
-                    termSubject: {
+                    subject: {
                         select: {
-                            subject: {
-                                select: {
-                                    name: true,
-                                    isActive: true
-                                }
-                            },
-                            level: {
-                                select: {
-                                    name: true
-                                }
-                            }
+                            id: true,
+                            name: true
                         }
                     }
                 }
@@ -201,34 +218,18 @@ export async function findUniqueTerm(id: FindUniqueTermSchema['params']['id']) {
             endDate: true,
             createdAt: true,
             updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    subject: true,
+                    level: true
+                }
+            },
             termSubjectGroup: {
                 select: {
-                    subjectGroup: {
-                        select: {
-                            groupName: true
-                        }
-                    },
-                    fee: {
-                        select: {
-                            amount: true,
-                            paymentType: true
-                        }
-                    },
-                    termSubject: {
-                        select: {
-                            subject: {
-                                select: {
-                                    name: true,
-                                    isActive: true
-                                }
-                            },
-                            level: {
-                                select: {
-                                    name: true
-                                }
-                            }
-                        }
-                    }
+                    id: true,
+                    fee: true,
+                    subjectGroup: true
                 }
             }
         }
@@ -280,6 +281,13 @@ export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['i
             endDate: true,
             createdAt: true,
             updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    level: true,
+                    subject: true
+                }
+            },
             termSubjectGroup: {
                 select: {
                     subjectGroup: {
@@ -293,21 +301,10 @@ export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['i
                             paymentType: true
                         }
                     },
-                    termSubject: {
-                        // Changed to termSubject
+                    subject: {
                         select: {
-                            subject: {
-                                select: {
-                                    name: true,
-                                    isActive: true,
-                                    id: true
-                                }
-                            },
-                            level: {
-                                select: {
-                                    name: true
-                                }
-                            }
+                            id: true,
+                            name: true
                         }
                     }
                 }
@@ -442,12 +439,19 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
         select: {
             id: true,
             name: true,
-            isPublish: true,
             currentTerm: true,
+            isPublish: true,
             startDate: true,
             endDate: true,
             createdAt: true,
             updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    level: true,
+                    subject: true
+                }
+            },
             termSubjectGroup: {
                 select: {
                     subjectGroup: {
@@ -461,19 +465,10 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
                             paymentType: true
                         }
                     },
-                    termSubject: {
+                    subject: {
                         select: {
-                            subject: {
-                                select: {
-                                    name: true,
-                                    isActive: true
-                                }
-                            },
-                            level: {
-                                select: {
-                                    name: true
-                                }
-                            }
+                            id: true,
+                            name: true
                         }
                     }
                 }
@@ -530,7 +525,6 @@ export async function discontinueSubject(subjectId: string) {
 // find all subjects
 export async function findAllSubjects() {
     const allSubjects = await db.subject.findMany({});
-    if (allSubjects.length == 0) throw customError('Subjects lists cannot be fetched at this time', 'fail', 400, true);
     return allSubjects;
 }
 
@@ -539,8 +533,64 @@ export async function findAllSubjects() {
 // find all levels
 export const findAllLevels = async () => {
     const allLevels = await db.level.findMany({});
-    if (allLevels.length == 0) {
-        throw customError('No levels found', 'fail', 400, true);
-    }
     return allLevels;
 };
+
+// export const createNewTermSetu11p = async (setupData: CreateNewTermSetupSchema['body']): Promise<{ termSubjects: TermSubjectType[]; createdTerm: TermType }> => {
+//     // ... rest of your code remains the same
+
+//     const transactionResult = await db.$transaction(async () => {
+//         // ... existing term creation logic
+
+//         let termSubjects: TermSubjectType[] = [];
+//         let feeRecords = new Map();
+
+//         for (const subject of setupData.subjects) {
+//             let existingSubject = await db.subject.findFirst({
+//                 where: { name: { contains: subject.subject, mode: 'insensitive' } }
+//             });
+
+//             if (!existingSubject) {
+//                 existingSubject = await db.subject.create({
+//                     data: { name: subject.subject.toLowerCase() }
+//                 });
+//             }
+
+//             // Check if fee record exists, else create one
+//             const feeKey = `${subject.fee}-${subject.feeInterval}`;
+//             let feeRecord;
+//             if (!feeRecords.has(feeKey)) {
+//                 feeRecord = await db.fee.create({
+//                     data: {
+//                         amount: parseInt(subject.fee),
+//                         paymentType: subject.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
+//                     }
+//                 });
+//                 feeRecords.set(feeKey, feeRecord);
+//             } else {
+//                 feeRecord = feeRecords.get(feeKey);
+//             }
+
+//             const termSubject = await db.termSubject.create({
+//                 data: {
+//                     term: { connect: { id: createdTerm.id } },
+//                     subject: { connect: { id: existingSubject.id } },
+//                     fee: { connect: { id: feeRecord.id } },
+//                     level: {
+//                         connectOrCreate: subject.levels.map((level) => ({
+//                             where: { name: level.toLowerCase() },
+//                             create: { name: level.toLowerCase() }
+//                         }))
+//                     }
+//                 }
+//             });
+
+//             termSubjects.push(termSubject);
+//         }
+
+//         return { termSubjects, createdTerm };
+//     });
+
+//     console.log({ transactionResult });
+//     return transactionResult;
+// };

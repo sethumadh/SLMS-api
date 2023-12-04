@@ -43,7 +43,7 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
                     create: {
                         firstName,
                         lastName,
-                        DOB,
+                        DOB: new Date(DOB),
                         gender,
                         email,
                         contact,
@@ -110,40 +110,18 @@ export async function findPublishTerm() {
             endDate: true,
             createdAt: true,
             updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    subject: true,
+                    level: true
+                }
+            },
             termSubjectGroup: {
                 select: {
-                    subjectGroup: {
-                        select: {
-                            groupName: true,
-                            subjects: {
-                                select: {
-                                    name: true,
-                                    isActive: true
-                                }
-                            }
-                        }
-                    },
-                    fee: {
-                        select: {
-                            amount: true,
-                            paymentType: true
-                        }
-                    },
-                    termSubject: {
-                        select: {
-                            subject: {
-                                select: {
-                                    name: true,
-                                    isActive: true
-                                }
-                            },
-                            level: {
-                                select: {
-                                    name: true
-                                }
-                            }
-                        }
-                    }
+                    id: true,
+                    fee: true,
+                    subjectGroup: true
                 }
             }
         }
@@ -169,34 +147,18 @@ export async function findActiveTerm() {
             endDate: true,
             createdAt: true,
             updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    subject: true,
+                    level: true
+                }
+            },
             termSubjectGroup: {
                 select: {
-                    subjectGroup: {
-                        select: {
-                            groupName: true
-                        }
-                    },
-                    fee: {
-                        select: {
-                            amount: true,
-                            paymentType: true
-                        }
-                    },
-                    termSubject: {
-                        select: {
-                            subject: {
-                                select: {
-                                    name: true,
-                                    isActive: true
-                                }
-                            },
-                            level: {
-                                select: {
-                                    name: true
-                                }
-                            }
-                        }
-                    }
+                    id: true,
+                    fee: true,
+                    subjectGroup: true
                 }
             }
         }

@@ -50,10 +50,11 @@ model Student {
 }
 
 model PersonalDetails {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
+  studentId Int      @unique
   firstName String
   lastName  String
-  DOB       String?
+  DOB       DateTime
   gender    String
   email     String
   contact   String
@@ -63,8 +64,7 @@ model PersonalDetails {
   country   String
   postcode  String
   image     String?
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId Int     @unique
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model ParentsDetails {
@@ -100,26 +100,23 @@ model OtherInformation {
   id          Int      @id @default(autoincrement())
   otherInfo   String   @default("No information provided")
   declaration String[]
-  student     Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId   Int      @unique
+  student     Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Subject {
   id                      Int                       @id @default(autoincrement())
   name                    String                    @unique
   isActive                Boolean                   @default(true)
-  subjectGroups           SubjectGroup[]
   termSubject             TermSubject[]
   termSubjectGroupSubject TermSubjectGroupSubject[]
-  TermSubjectGroup        TermSubjectGroup?         @relation(fields: [termSubjectGroupId], references: [id])
-  termSubjectGroupId      Int?
+  TermSubjectGroup        TermSubjectGroup[]
 }
 
 model SubjectGroup {
   id                      Int                       @id @default(autoincrement())
   isActive                Boolean                   @default(true)
   groupName               String                    @unique
-  subjects                Subject[]
   termSubjectGroup        TermSubjectGroup[]
   termSubjectGroupSubject TermSubjectGroupSubject[]
 }
@@ -133,6 +130,7 @@ model Term {
   endDate                 DateTime
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
+  termSubject             TermSubject[]
   termSubjectGroup        TermSubjectGroup[]
   termSubjectGroupSubject TermSubjectGroupSubject[]
 }
@@ -144,6 +142,7 @@ model Level {
   termSubject TermSubject[]
 }
 
+//
 model TermSubjectGroup {
   id                      Int                       @id @default(autoincrement())
   termId                  Int
@@ -151,7 +150,7 @@ model TermSubjectGroup {
   subjectGroupId          Int
   fee                     Fee?                      @relation(fields: [feeId], references: [id], onDelete: Cascade)
   term                    Term                      @relation(fields: [termId], references: [id], onDelete: Cascade)
-  subjectGroup            SubjectGroup              @relation(fields: [subjectGroupId], references: [id] )
+  subjectGroup            SubjectGroup              @relation(fields: [subjectGroupId], references: [id])
   enrollment              Enrollment[]
   subject                 Subject[]
   termSubject             TermSubject[]
@@ -164,10 +163,13 @@ model TermSubject {
   id                 Int              @id @default(autoincrement())
   termSubjectGroupId Int
   subjectId          Int
-  levelId            Int
+  termId             Int
+  level              Level[]
   subject            Subject          @relation(fields: [subjectId], references: [id])
-  level              Level            @relation(fields: [levelId], references: [id])
-  termSubjectGroup   TermSubjectGroup @relation(fields: [termSubjectGroupId], references: [id], onDelete: Cascade)
+  term               Term             @relation(fields: [termId], references: [id])
+  TermSubjectGroup   TermSubjectGroup @relation(fields: [termSubjectGroupId], references: [id])
+
+  @@unique([termId, subjectId, termSubjectGroupId])
 }
 
 model Enrollment {
@@ -208,14 +210,14 @@ model TermSubjectGroupSubject {
   id                 Int               @id @default(autoincrement())
   termId             Int
   subjectGroupId     Int
+  termSubjectGroupId Int?
+  enrollmentId       Int?
   subjectId          Int
-  term               Term              @relation(fields: [termId], references: [id], onDelete:Cascade)
+  term               Term              @relation(fields: [termId], references: [id], onDelete: Cascade)
   subjectGroup       SubjectGroup      @relation(fields: [subjectGroupId], references: [id])
   subject            Subject           @relation(fields: [subjectId], references: [id])
-  termSubjectGroup   TermSubjectGroup? @relation(fields: [termSubjectGroupId], references: [id],onDelete:Cascade)
-  termSubjectGroupId Int?
+  termSubjectGroup   TermSubjectGroup? @relation(fields: [termSubjectGroupId], references: [id], onDelete: Cascade)
   enrollment         Enrollment?       @relation(fields: [enrollmentId], references: [id])
-  enrollmentId       Int?
 
   @@unique([termId, subjectGroupId, subjectId])
 }
