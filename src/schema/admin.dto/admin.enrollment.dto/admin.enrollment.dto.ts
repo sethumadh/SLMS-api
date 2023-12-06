@@ -14,3 +14,21 @@ export type SearchApplicantSchema = z.infer<typeof searchApplicantSchema>;
 export const findUniqueApplicantSchema = findUniqueStudentSchema;
 
 export type FindUniqueApplicantSchema = z.infer<typeof findUniqueApplicantSchema>;
+
+/* enroll applicant to subjects */
+export const applicantEnrollDataSchema = z.object({
+    body: z.object({
+        applicantId: z.number(),
+        enrollData: z.array(
+            z.object({
+                subject: z.string(),
+                termSubjectGroupId: z.number(),
+                subjectGroupId: z.number(),
+                termId: z.number(),
+                feeId: z.number(),
+                termSubjectId: z.number()
+            })
+        )
+    })
+});
+export type ApplicantEnrollDataSchema = z.infer<typeof applicantEnrollDataSchema>;

@@ -160,14 +160,15 @@ model TermSubjectGroup {
 }
 
 model TermSubject {
-  id                 Int              @id @default(autoincrement())
+  id                 Int                 @id @default(autoincrement())
   termSubjectGroupId Int
   subjectId          Int
   termId             Int
   level              Level[]
-  subject            Subject          @relation(fields: [subjectId], references: [id])
-  term               Term             @relation(fields: [termId], references: [id])
-  TermSubjectGroup   TermSubjectGroup @relation(fields: [termSubjectGroupId], references: [id])
+  subject            Subject             @relation(fields: [subjectId], references: [id])
+  subjectEnrollments SubjectEnrollment[]
+  term               Term                @relation(fields: [termId], references: [id])
+  termSubjectGroup   TermSubjectGroup    @relation(fields: [termSubjectGroupId], references: [id])
 
   @@unique([termId, subjectId, termSubjectGroupId])
 }
@@ -181,8 +182,21 @@ model Enrollment {
   feePayment              FeePayment[]
   termSubjectGroup        TermSubjectGroup          @relation(fields: [termSubjectGroupId], references: [id])
   termSubjectGroupSubject TermSubjectGroupSubject[]
+  subjectEnrollments      SubjectEnrollment[]
 
-  @@unique([studentId, termSubjectGroupId])
+
+}
+
+model SubjectEnrollment {
+  id            Int         @id @default(autoincrement())
+  enrollmentId  Int
+  termSubjectId Int
+  grade         String @default("No Grades yet")// Optional, for storing grades
+  attendance    Boolean[] // Optional, for storing attendance
+  enrollment    Enrollment  @relation(fields: [enrollmentId], references: [id])
+  termSubject   TermSubject @relation(fields: [termSubjectId], references: [id])
+
+  @@unique([enrollmentId, termSubjectId])
 }
 
 model Fee {
@@ -190,12 +204,14 @@ model Fee {
   amount           Int
   paymentType      PaymentType
   termSubjectGroup TermSubjectGroup[]
+  FeePayment       FeePayment[]
 
   @@unique([amount, paymentType])
 }
 
 model FeePayment {
   id           Int           @id @default(autoincrement())
+  feeId        Int
   enrollmentId Int
   dueDate      DateTime
   paidDate     DateTime? // Nullable, set when payment is made
@@ -204,6 +220,7 @@ model FeePayment {
   status       PaymentStatus @default(NODUES)
   method       PaymentMethod @default(NA)
   enrollment   Enrollment    @relation(fields: [enrollmentId], references: [id])
+  fee          Fee           @relation(fields: [feeId], references: [id])
 }
 
 model TermSubjectGroupSubject {
