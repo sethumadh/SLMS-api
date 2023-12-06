@@ -13,4 +13,3 @@ newApplicantRoute.route('/find-current-term').get(asyncErrorHandler(findActiveTe
 
 // router.route('/application/deleteAllStudents');
 export default newApplicantRoute;
-// findUniqueStudentSchema
