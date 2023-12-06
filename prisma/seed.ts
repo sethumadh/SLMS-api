@@ -83,7 +83,7 @@ for (let i = 1; i <= 10; i++) {
         personalDetails: {
             firstName: `Name${i}`,
             lastName: `Lopez${i}`,
-            DOB: `200${6 + i}-09-03`,
+            DOB: new Date('01/01/2010').toISOString(),
             gender: i % 2 === 0 ? 'male' : 'female',
             email: `emil${i}@domain.com`,
             contact: `03990345${63 + i}`,
@@ -195,8 +195,8 @@ async function seedStudents() {
 async function seedTerms() {
     const termData: CreateNewTermSetupSchema['body'] = {
         termName: 'Term Summer 2024',
-        startDate: new Date('2023-12-04T00:00:00Z').toString(),
-        endDate: new Date('2024-12-12T23:59:59Z').toString(),
+        startDate: new Date('2023-12-04T00:00:00Z').toISOString(),
+        endDate: new Date('2024-12-12T23:59:59Z').toISOString(),
         groupSubjects: [
             {
                 groupName: 'Group Music',
@@ -315,7 +315,7 @@ async function seedTerms() {
 
 async function main() {
     await seedStudents();
-    await seedTerms();
+    // await seedTerms();
 }
 
 main()
