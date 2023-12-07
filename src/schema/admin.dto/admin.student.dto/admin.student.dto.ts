@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { EmergencyContactSchema, HealthInformationSchema, OtherInformationSchema, ParentsSchema } from '../../new.applicant.dto/new.applicant.dto';
+import { searchApplicantSchema } from '../admin.enrollment.dto/admin.enrollment.dto';
 
 // To find a student by ID
 export const findUniqueStudentSchema = z.object({
@@ -10,12 +11,21 @@ export const findUniqueStudentSchema = z.object({
 export type FindUniqueStudentSchema = z.infer<typeof findUniqueStudentSchema>;
 
 //To find all students for Admin
-export const findAllStudentSchema = z.object({
+export const findAllEnrolledStudentsSchema = z.object({
     query: z.object({
         page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()
     })
 });
-export type FindAllStudentSchema = z.infer<typeof findAllStudentSchema>;
+export type FindAllEnrolledStudentsSchema = z.infer<typeof findAllEnrolledStudentsSchema>;
+
+// search enrolled students
+export const searchEnrolledStudentsSchema = z.object({
+    query: z.object({
+        search: z.string(),
+        page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()
+    })
+});
+export type SearchEnrolledStudentsSchema = z.infer<typeof searchEnrolledStudentsSchema>;
 
 // update STUDENT DETAILS at the admin level - Custom schemas
 export const AdminPersonalSchema = z.object({

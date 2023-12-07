@@ -1,6 +1,7 @@
 import { db } from '../../../utils/db.server';
 import { customError } from '../../../utils/customError';
 import { ApplicantEnrollDataSchema } from '../../../schema/admin.dto/admin.enrollment.dto/admin.enrollment.dto';
+
 export async function findAllApplicants(page: number) {
     const take = 10;
     // const page = 2; // coming from request
@@ -8,7 +9,8 @@ export async function findAllApplicants(page: number) {
     const skip = pageNum * take;
     const applicants = await db.student.findMany({
         where: {
-            role: 'APPLICANT'
+            role: 'APPLICANT',
+            isActive: false
         },
         skip,
         take,
@@ -74,6 +76,9 @@ export async function findAllApplicants(page: number) {
         }
     });
     const count = await db.student.aggregate({
+        where: {
+            role: 'APPLICANT'
+        },
         _count: {
             id: true
         }
@@ -88,7 +93,6 @@ export async function findAllApplicants(page: number) {
 
 export async function searchApplicants(search: string, page: number) {
     const take = 10;
-    // const page = 2; // coming from request
     if (search.length == 0) {
         throw customError(`No Search query string available`, 'fail', 400, true);
     }
@@ -98,6 +102,7 @@ export async function searchApplicants(search: string, page: number) {
         skip,
         take,
         where: {
+            role: 'APPLICANT',
             OR: [
                 {
                     personalDetails: {
@@ -185,6 +190,32 @@ export async function searchApplicants(search: string, page: number) {
     });
 
     const count = await db.student.aggregate({
+        where: {
+            role: 'APPLICANT',
+            OR: [
+                {
+                    personalDetails: {
+                        OR: [
+                            { firstName: { contains: search, mode: 'insensitive' } },
+                            { lastName: { contains: search, mode: 'insensitive' } },
+                            { email: { contains: search, mode: 'insensitive' } },
+                            { contact: { contains: search, mode: 'insensitive' } },
+                            { postcode: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }
+                },
+                {
+                    parentsDetails: {
+                        OR: [
+                            { fatherName: { contains: search, mode: 'insensitive' } },
+                            { motherName: { contains: search, mode: 'insensitive' } },
+                            { parentEmail: { contains: search, mode: 'insensitive' } },
+                            { parentContact: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }
+                }
+            ]
+        },
         _count: {
             id: true
         }
@@ -283,24 +314,6 @@ export async function findTermToEnroll() {
                     termSubjectGroup: true
                 }
             }
-            // termSubjectGroup: {
-            //     select: {
-            //         id: true,
-            //         fee: true,
-            //         subjectGroup: true,
-            //         subject: true,
-            //         termSubject: true
-            //     }
-            // },
-            // termSubjectGroupSubject: {
-            //     select: {
-            //         id: true,
-            //         termId: true,
-            //         subjectId: true,
-            //         subjectGroupId: true,
-            //         subjectGroup: true
-            //     }
-            // }
         }
     });
 
@@ -472,10 +485,17 @@ export async function enrollApplicantToStudent(id: string) {
     if (!student) {
         throw customError(`No student found with ID ${id}`, 'fail', 404, true);
     }
+    const enrollments = await db.enrollment.findMany({
+        where: { studentId: parseInt(id) }
+    });
+
+    if (enrollments.length === 0) {
+        throw customError(`No enrollments found for the applicant. Please enroll a subject at the subject & classes tab.`, 'fail', 404, true);
+    }
 
     // Check if the student's role is already 'STUDENT'
     if (student.role === 'STUDENT') {
-        throw new Error(`The applicant is already a student`);
+        throw customError(`The applicant is already a student`, 'fail', 404, true);
     }
 
     // Update the student's role to 'STUDENT'

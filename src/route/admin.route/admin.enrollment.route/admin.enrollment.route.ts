@@ -27,7 +27,7 @@ adminEnrollmentRoute.route('/term-to-enroll').get(asyncErrorHandler(findTermToEn
 adminEnrollmentRoute.route('/enroll-applicant').post(validate(applicantEnrollDataSchema), asyncErrorHandler(enrollApplicantHandler));
 /*find enrolled subject for applicants*/
 adminEnrollmentRoute.route('/find-enrolled-subjects-applicant/:id').get(validate(findUniqueApplicantSchema), asyncErrorHandler(findApplicantEnrolledSubjectsHandler));
-/*enroll the applicant to studet*/
+/*enroll the applicant to student*/
 adminEnrollmentRoute.route('/enroll-applicant-to-student/:id').post(validate(findUniqueApplicantSchema), asyncErrorHandler(enrollApplicantToStudentHandler));
 
 export default adminEnrollmentRoute;

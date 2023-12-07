@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { FindAllStudentSchema } from '../../../schema/admin.dto/admin.student.dto/admin.student.dto';
+import { FindAllEnrolledStudentsSchema } from '../../../schema/admin.dto/admin.student.dto/admin.student.dto';
 import {
     enrollApplicant,
     enrollApplicantToStudent,
@@ -12,7 +12,7 @@ import {
 } from '../../../service/admin.service/admin.enrollment.service/admin.enrollment.service';
 import { ApplicantEnrollDataSchema, FindUniqueApplicantSchema, SearchApplicantSchema } from '../../../schema/admin.dto/admin.enrollment.dto/admin.enrollment.dto';
 
-export type FindAllApplicantSchema = FindAllStudentSchema;
+export type FindAllApplicantSchema = FindAllEnrolledStudentsSchema;
 
 //find all applicants
 export const findAllApplicantsHandler = async (req: Request<{}, {}, {}, FindAllApplicantSchema['query']>, res: Response, next: NextFunction) => {
@@ -30,7 +30,7 @@ export const findAllApplicantsHandler = async (req: Request<{}, {}, {}, FindAllA
 // search applicants
 export const searchApplicantHandler = async (req: Request<{}, {}, {}, SearchApplicantSchema['query']>, res: Response, next: NextFunction) => {
     const { search, page = 0 } = req.query;
-    console.log(search);
+    console.log("hello")
     const searchResult = await searchApplicants(search, +page);
     res.status(200).json(searchResult);
 };

@@ -37,6 +37,7 @@ enum PaymentType {
 model Student {
   id                Int                @id @default(autoincrement())
   role              Role               @default(APPLICANT)
+  isActive          Boolean            @default(false) // RUN A CRON JOB TO MAKE THIS FIELD TRUE FOR CURRENT STUDENT
   enrollments       Enrollment[]
   personalDetails   PersonalDetails?
   parentsDetails    ParentsDetails?
@@ -183,15 +184,14 @@ model Enrollment {
   termSubjectGroup        TermSubjectGroup          @relation(fields: [termSubjectGroupId], references: [id])
   termSubjectGroupSubject TermSubjectGroupSubject[]
   subjectEnrollments      SubjectEnrollment[]
-
-
+  createdAt         DateTime           @default(now())
 }
 
 model SubjectEnrollment {
   id            Int         @id @default(autoincrement())
   enrollmentId  Int
   termSubjectId Int
-  grade         String @default("No Grades yet")// Optional, for storing grades
+  grade         String      @default("No Grades yet") // Optional, for storing grades
   attendance    Boolean[] // Optional, for storing attendance
   enrollment    Enrollment  @relation(fields: [enrollmentId], references: [id])
   termSubject   TermSubject @relation(fields: [termSubjectId], references: [id])

@@ -62,44 +62,6 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
     console.log(students);
 }
 
-// find student using general search  for search fnction in student table
-export async function findStudentsBySearch(search: string, page: number) {
-    const take = 2;
-    // const page = 2; // coming from request
-    const pageNum: number = page ?? 0;
-    const skip = pageNum * take;
-    const students = await db.student.findMany({
-        skip,
-        take,
-        where: {
-            OR: [
-                {
-                    personalDetails: {
-                        OR: [
-                            { firstName: { contains: search, mode: 'insensitive' } },
-                            { lastName: { contains: search, mode: 'insensitive' } },
-                            { email: { contains: search, mode: 'insensitive' } },
-                            { contact: { contains: search, mode: 'insensitive' } },
-                            { postcode: { contains: search, mode: 'insensitive' } }
-                        ]
-                    }
-                },
-                {
-                    parentsDetails: {
-                        OR: [
-                            { fatherName: { contains: search, mode: 'insensitive' } },
-                            { motherName: { contains: search, mode: 'insensitive' } },
-                            { parentEmail: { contains: search, mode: 'insensitive' } },
-                            { parentContact: { contains: search, mode: 'insensitive' } }
-                        ]
-                    }
-                }
-            ]
-        }
-    });
-    console.log(students);
-}
-
 // find unqiue student by ID for internal queries
 export async function findStudentById(id: string) {
     const student = await db.student.findUnique({
@@ -157,13 +119,6 @@ export async function findStudentById(id: string) {
                     declaration: true
                 }
             }
-
-            // feedback: {
-            //     select: {
-            //         id: true,
-            //         feedback: true
-            //     }
-            // }
         }
     });
 
@@ -171,20 +126,186 @@ export async function findStudentById(id: string) {
 }
 
 // Find all student for the admin
-export async function findAllStudents(page: number) {
+
+export async function findAllEnrolledStudents(page: number) {
     const take = 5;
     // const page = 2; // coming from request
     const pageNum: number = page ?? 0;
     const skip = pageNum * take;
-    const students = await db.student.findMany({
+    const enrolledStudents = await db.student.findMany({
         where: {
-            role: 'STUDENT'
+            role: 'STUDENT',
+            isActive: false
         },
         skip,
         take,
         select: {
             id: true,
             role: true,
+            isActive: true,
+            updatedAt: true,
+            createdAt: true,
+            personalDetails: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    DOB: true,
+                    gender: true,
+                    email: true,
+                    contact: true,
+                    address: true,
+                    suburb: true,
+                    state: true,
+                    country: true,
+                    postcode: true,
+                    image: true
+                }
+            },
+
+            parentsDetails: {
+                select: {
+                    id: true,
+                    fatherName: true,
+                    motherName: true,
+                    parentEmail: true,
+                    parentContact: true
+                }
+            },
+            emergencyContact: {
+                select: {
+                    id: true,
+                    contactPerson: true,
+                    contactNumber: true,
+                    relationship: true
+                }
+            },
+            healthInformation: {
+                select: {
+                    id: true,
+                    medicareNumber: true,
+                    ambulanceMembershipNumber: true,
+                    medicalCondition: true,
+                    allergy: true
+                }
+            },
+            subjectRelated: true,
+            subjectsChosen: true,
+            otherInformation: {
+                select: {
+                    id: true,
+                    otherInfo: true,
+                    declaration: true
+                }
+            }
+            // enrollments: {
+            //     select: {
+            //         id: true,
+            //         dueDate: true,
+            //         createdAt: true,
+            //         termSubjectGroup: {
+            //             select: {
+            //                 id: true,
+            //                 termId: true,
+            //                 subjectGroupId: true
+            //             }
+            //         },
+            //         feePayment: {
+            //             select: {
+            //                 id: true,
+            //                 dueDate: true,
+            //                 paidDate: true,
+            //                 amount: true,
+            //                 dueAmount: true,
+            //                 status: true,
+            //                 method: true
+            //             }
+            //         },
+            //         subjectEnrollments: {
+            //             select: {
+            //                 id: true,
+            //                 termSubjectId: true,
+            //                 grade: true,
+            //                 attendance: true,
+            //                 termSubject: {
+            //                     select: {
+            //                         id: true,
+            //                         subject: {
+            //                             select: {
+            //                                 id: true,
+            //                                 name: true
+            //                             }
+            //                         }
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
+    const count = await db.student.aggregate({
+        where: {
+            role: 'STUDENT'
+        },
+        _count: {
+            id: true
+        }
+    });
+
+    if (enrolledStudents.length == 0) {
+        throw customError(`No students lists to show`, 'fail', 400, true);
+    }
+    return { enrolledStudents, count };
+}
+
+// search enrolled student for the admin
+export async function searchEnrolledStudents(search: string, page: number) {
+    const take = 10;
+    if (search.length == 0) {
+        throw customError(`No Search query string available`, 'fail', 400, true);
+    }
+    const pageNum: number = page ?? 0;
+    const skip = pageNum * take;
+    const enrolledStudents = await db.student.findMany({
+        skip,
+        take,
+        where: {
+            role: 'STUDENT',
+            isActive: false,
+            OR: [
+                {
+                    personalDetails: {
+                        OR: [
+                            { firstName: { contains: search, mode: 'insensitive' } },
+                            { lastName: { contains: search, mode: 'insensitive' } },
+                            { email: { contains: search, mode: 'insensitive' } },
+                            { contact: { contains: search, mode: 'insensitive' } },
+                            { postcode: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }
+                },
+                {
+                    parentsDetails: {
+                        OR: [
+                            { fatherName: { contains: search, mode: 'insensitive' } },
+                            { motherName: { contains: search, mode: 'insensitive' } },
+                            { parentEmail: { contains: search, mode: 'insensitive' } },
+                            { parentContact: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }
+                }
+            ]
+        },
+        select: {
+            id: true,
+            role: true,
+            isActive: true,
+            updatedAt: true,
+            createdAt: true,
             personalDetails: {
                 select: {
                     id: true,
@@ -239,17 +360,47 @@ export async function findAllStudents(page: number) {
             }
         },
         orderBy: {
-            createdAt: 'asc'
+            createdAt: 'desc'
         }
     });
-    const count = students.length;
-    if (students.length == 0) {
+    const count = await db.student.aggregate({
+        where: {
+            role: 'STUDENT',
+            isActive: false,
+            OR: [
+                {
+                    personalDetails: {
+                        OR: [
+                            { firstName: { contains: search, mode: 'insensitive' } },
+                            { lastName: { contains: search, mode: 'insensitive' } },
+                            { email: { contains: search, mode: 'insensitive' } },
+                            { contact: { contains: search, mode: 'insensitive' } },
+                            { postcode: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }
+                },
+                {
+                    parentsDetails: {
+                        OR: [
+                            { fatherName: { contains: search, mode: 'insensitive' } },
+                            { motherName: { contains: search, mode: 'insensitive' } },
+                            { parentEmail: { contains: search, mode: 'insensitive' } },
+                            { parentContact: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }
+                }
+            ]
+        },
+        _count: {
+            id: true
+        }
+    });
+
+    if (enrolledStudents.length == 0) {
         throw customError(`No students lists to show`, 'fail', 400, true);
     }
-
-    return { students, count };
+    return { enrolledStudents, count };
 }
-
 // delete student
 export async function deleteManyStudents() {
     const student = await db.student.deleteMany();

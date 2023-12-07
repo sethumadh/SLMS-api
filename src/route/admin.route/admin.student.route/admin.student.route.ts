@@ -4,15 +4,17 @@ import { asyncErrorHandler } from '../../../utils/asyncErrorHandler';
 import validate from '../../../middleware/validateResource';
 
 import {
-    findAllStudentSchema,
+    findAllEnrolledStudentsSchema,
     findUniqueStudentSchema,
+    searchEnrolledStudentsSchema,
     updateStudentHealthDetailSchema,
     updateStudentParentsDetailSchema,
     updateStudentPersonalDetailSchema
 } from '../../../schema/admin.dto/admin.student.dto/admin.student.dto';
 import {
-    findAllStudentsHandler,
+    findAllEnrolledStudentsHandler,
     findStudentByIdHandler,
+    searchEnrolledStudentsHandler,
     updateStudentHealthInformationHandler,
     updateStudentParentsDetailHandler,
     updateStudentPersonalDetailHandler
@@ -20,7 +22,10 @@ import {
 
 const adminStudentRoute = express.Router();
 
-adminStudentRoute.route('/get-all-students').get(validate(findAllStudentSchema), asyncErrorHandler(findAllStudentsHandler));
+adminStudentRoute.route('/get-all-enrolled-students').get(validate(findAllEnrolledStudentsSchema), asyncErrorHandler(findAllEnrolledStudentsHandler));
+/*search enrolled students*/
+adminStudentRoute.route('/search-enrolled-students').get( asyncErrorHandler(searchEnrolledStudentsHandler));
+
 adminStudentRoute.route('/student-detail/:id').get(validate(findUniqueStudentSchema), asyncErrorHandler(findStudentByIdHandler));
 adminStudentRoute.route('/update-personal-detail/:id').patch(validate(updateStudentPersonalDetailSchema), updateStudentPersonalDetailHandler);
 adminStudentRoute.route('/update-parents-detail/:id').patch(validate(updateStudentParentsDetailSchema), updateStudentParentsDetailHandler);
@@ -28,4 +33,4 @@ adminStudentRoute.route('/update-health-detail/:id').patch(validate(updateStuden
 
 // adminStudentRoute.route('/deleteAllStudents');
 export default adminStudentRoute;
-// findUniqueStudentSchema
+//searchEnrolledStudentsHandler

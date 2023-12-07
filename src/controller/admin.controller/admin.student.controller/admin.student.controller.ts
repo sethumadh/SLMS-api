@@ -3,16 +3,18 @@ import { NextFunction, Request, Response } from 'express';
 import { customError } from '../../../utils/customError';
 import {
     deleteManyStudents,
-    findAllStudents,
+    findAllEnrolledStudents,
     findStudentById,
+    searchEnrolledStudents,
     updateStudentHealthInformation,
     updateStudentParentsDetail,
     updateStudentPersonalDetail
 } from '../../../service/admin.service/admin.student.service/admin.student.service';
 import { asyncErrorHandler } from '../../../utils/asyncErrorHandler';
 import {
-    FindAllStudentSchema,
+    FindAllEnrolledStudentsSchema,
     FindUniqueStudentSchema,
+    SearchEnrolledStudentsSchema,
     UpdateStudentHealthDetailSchema,
     UpdateStudentParentsDetailSchema,
     UpdateStudentPersonalDetailSchema
@@ -26,17 +28,23 @@ export const findStudentByIdHandler = async (req: Request<FindUniqueStudentSchem
 };
 
 // Find all student for the admin
-export const findAllStudentsHandler = async (req: Request<{}, {}, {}, FindAllStudentSchema['query']>, res: Response, next: NextFunction) => {
+export const findAllEnrolledStudentsHandler = async (req: Request<{}, {}, {}, FindAllEnrolledStudentsSchema['query']>, res: Response, next: NextFunction) => {
     const { page } = req.query;
 
     if (page) {
-        const allStudent = await findAllStudents(+page);
+        const allStudent = await findAllEnrolledStudents(+page);
         res.status(200).json(allStudent);
     } else {
         const page = 0;
-        const allStudent = await findAllStudents(page);
+        const allStudent = await findAllEnrolledStudents(page);
         res.status(200).json(allStudent);
     }
+};
+
+export const searchEnrolledStudentsHandler = async (req: Request<{}, {}, {}, SearchEnrolledStudentsSchema['query']>, res: Response, next: NextFunction) => {
+    const { search, page = 0 } = req.query;
+    const searchResult = await searchEnrolledStudents(search, +page);
+    res.status(200).json(searchResult);
 };
 
 // update student personal details service
