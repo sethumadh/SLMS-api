@@ -1,9 +1,13 @@
 // import { UpdateStudentDetailSchema } from '../schema/admin.dto/admin.dto';
 import { z } from 'zod';
 
-import { UpdateStudentHealthDetailSchema, UpdateStudentParentsDetailSchema, UpdateStudentPersonalDetailSchema } from '../../../schema/admin.dto/admin.student.dto/admin.student.dto';
-import { db } from '../../../utils/db.server';
-import { customError } from '../../../utils/customError';
+import {
+    UpdateStudentHealthDetailSchema,
+    UpdateStudentParentsDetailSchema,
+    UpdateStudentPersonalDetailSchema
+} from '../../../../schema/admin.dto/admin.student.dto/admin.enrolledstudent/admin.enrolled.student.dto';
+import { db } from '../../../../utils/db.server';
+import { customError } from '../../../../utils/customError';
 
 // findAllStudents()--
 // createStudent(data)--
@@ -17,26 +21,6 @@ import { customError } from '../../../utils/customError';
 // findFeedbackByStudentId('1')?
 // createStudentFeedback('feedback for student 3', '3')?
 // findSiblingsByParentEmail('b@b.com');
-
-//  find feedback for a student for admin and teacher
-// export async function findFeedbackByStudentId(id: string, page: number) {
-//     const take = 5;
-//     // const page = 2; // coming from request
-//     const pageNum: number = page ?? 0;
-//     const skip = pageNum * take;
-//     const students = await db.feedback.findMany({
-//         skip,
-//         take,
-//         where: {
-//             Student: {
-//                 is: {
-//                     id: +id
-//                 }
-//             }
-//         }
-//     });
-//     console.log(students);
-// }
 
 // filter students using subjetcs --> drop down at the student table
 export async function filterStudentsBySubjects(subjects: string[], page: number) {
@@ -63,7 +47,7 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
 }
 
 // find unqiue student by ID for internal queries
-export async function findStudentById(id: string) {
+export async function findEnrolledStudentById(id: string) {
     const student = await db.student.findUnique({
         where: {
             id: +id
@@ -432,7 +416,7 @@ export async function findSiblingsByParentEmail(email: string) {
         console.log(siblings);
         let siblingsDetails: any = [];
         for (let sibling of siblings) {
-            const data = await findStudentById(sibling.id.toString());
+            const data = await findEnrolledStudentById(sibling.id.toString());
             siblingsDetails = [...siblingsDetails, data];
         }
         console.log('details:', siblingsDetails);

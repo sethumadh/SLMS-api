@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { EmergencyContactSchema, HealthInformationSchema, OtherInformationSchema, ParentsSchema } from '../../new.applicant.dto/new.applicant.dto';
-import { searchApplicantSchema } from '../admin.enrollment.dto/admin.enrollment.dto';
+import { EmergencyContactSchema, HealthInformationSchema, OtherInformationSchema, ParentsSchema } from '../../../new.applicant.dto/new.applicant.dto';
+import { searchApplicantSchema } from '../../admin.enrollment.dto/admin.enrollment.dto';
 
 // To find a student by ID
 export const findUniqueStudentSchema = z.object({

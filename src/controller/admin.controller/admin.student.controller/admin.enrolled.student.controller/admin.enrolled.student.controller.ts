@@ -1,16 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { customError } from '../../../utils/customError';
+import { customError } from '../../../../utils/customError';
 import {
     deleteManyStudents,
     findAllEnrolledStudents,
-    findStudentById,
+    findEnrolledStudentById,
     searchEnrolledStudents,
     updateStudentHealthInformation,
     updateStudentParentsDetail,
     updateStudentPersonalDetail
-} from '../../../service/admin.service/admin.student.service/admin.student.service';
-import { asyncErrorHandler } from '../../../utils/asyncErrorHandler';
+} from '../../../../service/admin.service/admin.student.service/admin.enrolled.student.service/admin.enrolled.student.service';
+import { asyncErrorHandler } from '../../../../utils/asyncErrorHandler';
 import {
     FindAllEnrolledStudentsSchema,
     FindUniqueStudentSchema,
@@ -18,12 +18,12 @@ import {
     UpdateStudentHealthDetailSchema,
     UpdateStudentParentsDetailSchema,
     UpdateStudentPersonalDetailSchema
-} from '../../../schema/admin.dto/admin.student.dto/admin.student.dto';
+} from '../../../../schema/admin.dto/admin.student.dto/admin.enrolledstudent/admin.enrolled.student.dto';
 
 // find unqiue student by ID for internal queries
-export const findStudentByIdHandler = async (req: Request<FindUniqueStudentSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+export const findEnrolledStudentByIdHandler = async (req: Request<FindUniqueStudentSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    const student = await findStudentById(id);
+    const student = await findEnrolledStudentById(id);
     res.status(200).json(student);
 };
 

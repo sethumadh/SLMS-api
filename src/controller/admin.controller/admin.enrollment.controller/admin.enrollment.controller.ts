@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { FindAllEnrolledStudentsSchema } from '../../../schema/admin.dto/admin.student.dto/admin.student.dto';
+import { FindAllEnrolledStudentsSchema } from '../../../schema/admin.dto/admin.student.dto/admin.enrolledstudent/admin.enrolled.student.dto';
 import {
     enrollApplicant,
     enrollApplicantToStudent,
