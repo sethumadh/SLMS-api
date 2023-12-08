@@ -78,7 +78,7 @@ export const newApplicantSchema = z.object({
 });
 export type NewApplicantSchema = z.infer<typeof newApplicantSchema>;
 const studentSeedData: NewApplicantSchema['body'][] = [];
-for (let i = 1; i <= 10; i++) {
+for (let i = 1; i <= 45; i++) {
     studentSeedData.push({
         personalDetails: {
             firstName: `Name${i}`,
