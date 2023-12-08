@@ -326,98 +326,93 @@ export async function findTermToEnroll() {
 
 /* enroll applicant to subjects */
 export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['body']) {
-    console.log(enrollData);
-    let alreadyEnrolledSubjects = []; // Array to store names of already enrolled subjects
 
-    // Iterate through each enrollment data item
+    let alreadyEnrolledSubjects = [];
+
+    // Check Existing Enrollments
     for (const enrollmentItem of enrollData.enrollData) {
-        // Fetch existing enrollments for the student with the specific termSubjectGroupId
         const existingEnrollments = await db.enrollment.findMany({
-            where: {
-                studentId: enrollData.applicantId,
-                termSubjectGroupId: enrollmentItem.termSubjectGroupId
-            },
-            include: {
-                subjectEnrollments: {
-                    include: {
-                        termSubject: true // Include termSubject to access the subjectId
-                    }
-                }
-            }
+            where: { studentId: enrollData.applicantId, termSubjectGroupId: enrollmentItem.termSubjectGroupId },
+            include: { subjectEnrollment: { include: { termSubject: true } } }
         });
 
-        // Check if any existing enrollment includes the specific subject
         for (const enrollment of existingEnrollments) {
-            const isAlreadyEnrolledInSubject = enrollment.subjectEnrollments.some((se) => se.termSubjectId === enrollmentItem.termSubjectId);
-
-            if (isAlreadyEnrolledInSubject) {
-                // Add the subject name to the array if the student is already enrolled in it
+            // Directly check the subjectEnrollment object
+            if (enrollment.subjectEnrollment && enrollment.subjectEnrollment.termSubjectId === enrollmentItem.termSubjectId) {
                 alreadyEnrolledSubjects.push(enrollmentItem.subject);
-                // Do not break here, continue to check other enrollments
             }
         }
     }
 
-    console.log('Already Enrolled Subjects: ', alreadyEnrolledSubjects);
     if (alreadyEnrolledSubjects.length > 0) {
-        throw customError(`The subjects you are trying to enroll is already enrolled for this applicant `, 'fail', 400, true);
+        throw new Error(`Already enrolled in subjects: ${alreadyEnrolledSubjects.join(', ')}`);
     }
 
-    // sof
     let enrollmentIds = [];
     for (const enrollmentItem of enrollData.enrollData) {
+        // Fetch fee info
         const feeInfo = await db.termSubjectGroup.findUnique({
             where: { id: enrollmentItem.termSubjectGroupId },
             include: { fee: true, term: true }
         });
+
+        // Determine due date
         let dueDate;
         if (feeInfo?.fee?.paymentType === 'MONTHLY') {
-            // Set due date to 5 days before the end of the current month
             const now = new Date();
-            dueDate = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of the current month
-            dueDate.setDate(dueDate.getDate() - 5); // 5 days before the month end
+            dueDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            dueDate.setDate(dueDate.getDate() - 5);
         } else if (feeInfo?.fee?.paymentType === 'TERM') {
-            // Assuming a term is 6 months, set due date every two months from the start of the term
             const termStartDate = new Date(feeInfo.term.startDate);
-            dueDate = new Date(termStartDate.setMonth(termStartDate.getMonth() + 2)); // Every two months from the term start date
+            dueDate = new Date(termStartDate.setMonth(termStartDate.getMonth() + 2));
         } else {
-            // Default due date or handle other cases
-            dueDate = new Date(); // Set a default due date or handle as required
+            dueDate = new Date();
         }
-        // Create a new enrollment record along with SubjectEnrollment records
+
+        // Create Enrollment and SubjectEnrollment
         const newEnrollment = await db.enrollment.create({
             data: {
                 studentId: enrollData.applicantId,
                 termSubjectGroupId: enrollmentItem.termSubjectGroupId,
-                dueDate: dueDate, // Example, set the due date
-                // Nested write to create SubjectEnrollment
-                subjectEnrollments: {
-                    create: [
-                        {
-                            termSubjectId: enrollmentItem.termSubjectId
-                            // grade and attendance can be omitted here, they will use default values
-                        }
-                    ]
-                }
+                dueDate: dueDate,
+                subjectEnrollment: { create: { termSubjectId: enrollmentItem.termSubjectId } }
             },
-            select: {
-                id: true
-            }
+            select: { id: true }
         });
+
+        // Handle FeePayment and StudentTermFee
         if (feeInfo?.feeId) {
+            const studentTermFee = await db.studentTermFee.upsert({
+                where: {
+                    studentId_termSubjectGroupId_termId: {
+                        studentId: enrollData.applicantId,
+                        termSubjectGroupId: enrollmentItem.termSubjectGroupId,
+                        termId: feeInfo.termId
+                    }
+                },
+                update: {},
+                create: {
+                    studentId: enrollData.applicantId,
+                    termSubjectGroupId: enrollmentItem.termSubjectGroupId,
+                    termId: feeInfo.termId
+                }
+            });
+
             await db.feePayment.create({
                 data: {
                     feeId: feeInfo.feeId,
-                    enrollmentId: newEnrollment.id,
+                    studentTermFeeId: studentTermFee.id,
                     dueDate: dueDate,
-                    amount: feeInfo?.fee?.amount as number, // Assuming amount is stored in the fee record
-                    dueAmount: feeInfo?.fee?.amount as number,
+                    amount: feeInfo.fee?.amount as number,
+                    dueAmount: feeInfo.fee?.amount as number,
                     status: 'PENDING',
                     method: 'NA'
                 }
             });
         }
-        const subjectId = await db.subject.findUnique({
+
+        // Update TermSubjectGroupSubject
+        const subject = await db.subject.findUnique({
             where: {
                 name: enrollmentItem.subject
             },
@@ -429,17 +424,18 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
             where: {
                 termId: enrollmentItem.termId,
                 subjectGroupId: enrollmentItem.subjectGroupId,
-                subjectId: subjectId?.id,
+                subjectId: subject?.id,
                 termSubjectGroupId: enrollmentItem.termSubjectGroupId
             },
-            data: {
-                enrollmentId: newEnrollment.id
-            }
+            data: { enrollmentId: newEnrollment.id }
         });
+
         enrollmentIds.push(newEnrollment.id);
     }
-    return { message: 'Enrollment successful', enrollmentIds: enrollmentIds };
+
+    return { message: 'Enrollment successful', enrollmentIds };
 }
+
 /* fetch all enrolled subjects for the appicant*/
 
 export async function findApplicantEnrolledSubjects(id: string) {
@@ -447,7 +443,7 @@ export async function findApplicantEnrolledSubjects(id: string) {
     const enrollments = await db.enrollment.findMany({
         where: { studentId: parseInt(id) },
         include: {
-            subjectEnrollments: {
+            subjectEnrollment: {
                 include: {
                     termSubject: {
                         include: {
@@ -462,13 +458,14 @@ export async function findApplicantEnrolledSubjects(id: string) {
     // Extract the subjects from the enrollments
     let enrolledSubjects: { subjectId: number; subjectName: string }[] = [];
     enrollments.forEach((enrollment) => {
-        enrollment.subjectEnrollments.forEach((se) => {
+        if (enrollment.subjectEnrollment) { // Check if subjectEnrollment exists
+            const se = enrollment.subjectEnrollment;
             enrolledSubjects.push({
                 subjectId: se.termSubject.subjectId,
                 subjectName: se.termSubject.subject.name
                 // Include additional subject details as needed
             });
-        });
+        }
     });
 
     // Return the list of enrolled subjects

@@ -30,7 +30,7 @@ export const findAllApplicantsHandler = async (req: Request<{}, {}, {}, FindAllA
 // search applicants
 export const searchApplicantHandler = async (req: Request<{}, {}, {}, SearchApplicantSchema['query']>, res: Response, next: NextFunction) => {
     const { search, page = 0 } = req.query;
-    console.log("hello")
+
     const searchResult = await searchApplicants(search, +page);
     res.status(200).json(searchResult);
 };

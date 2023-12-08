@@ -44,6 +44,7 @@ model Student {
   emergencyContact  EmergencyContact?
   healthInformation HealthInformation?
   otherInformation  OtherInformation?
+  studentTermFee    StudentTermFee[]
   subjectsChosen    String[]
   subjectRelated    String[]
   createdAt         DateTime           @default(now())
@@ -111,7 +112,7 @@ model Subject {
   isActive                Boolean                   @default(true)
   termSubject             TermSubject[]
   termSubjectGroupSubject TermSubjectGroupSubject[]
-  TermSubjectGroup        TermSubjectGroup[]
+  termSubjectGroup        TermSubjectGroup[]
 }
 
 model SubjectGroup {
@@ -134,6 +135,7 @@ model Term {
   termSubject             TermSubject[]
   termSubjectGroup        TermSubjectGroup[]
   termSubjectGroupSubject TermSubjectGroupSubject[]
+  studentTermFee          StudentTermFee[]
 }
 
 model Level {
@@ -143,7 +145,6 @@ model Level {
   termSubject TermSubject[]
 }
 
-//
 model TermSubjectGroup {
   id                      Int                       @id @default(autoincrement())
   termId                  Int
@@ -156,6 +157,7 @@ model TermSubjectGroup {
   subject                 Subject[]
   termSubject             TermSubject[]
   termSubjectGroupSubject TermSubjectGroupSubject[]
+  studentTermFee          StudentTermFee[]
 
   @@unique([termId, subjectGroupId])
 }
@@ -175,21 +177,24 @@ model TermSubject {
 }
 
 model Enrollment {
-  id                      Int                       @id @default(autoincrement())
-  studentId               Int
-  dueDate                 DateTime
-  termSubjectGroupId      Int
-  student                 Student                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  feePayment              FeePayment[]
+  id                 Int      @id @default(autoincrement())
+  studentId          Int
+  dueDate            DateTime
+  termSubjectGroupId Int
+  student            Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
   termSubjectGroup        TermSubjectGroup          @relation(fields: [termSubjectGroupId], references: [id])
   termSubjectGroupSubject TermSubjectGroupSubject[]
-  subjectEnrollments      SubjectEnrollment[]
-  createdAt         DateTime           @default(now())
+  createdAt               DateTime                  @default(now())
+  subjectEnrollment       SubjectEnrollment?
+  subjectEnrollmentId     Int?                      @unique
+
+  @@unique([studentId, termSubjectGroupId, subjectEnrollmentId])
 }
 
 model SubjectEnrollment {
   id            Int         @id @default(autoincrement())
-  enrollmentId  Int
+  enrollmentId  Int         @unique
   termSubjectId Int
   grade         String      @default("No Grades yet") // Optional, for storing grades
   attendance    Boolean[] // Optional, for storing attendance
@@ -204,23 +209,36 @@ model Fee {
   amount           Int
   paymentType      PaymentType
   termSubjectGroup TermSubjectGroup[]
-  FeePayment       FeePayment[]
+  feePayment       FeePayment[]
 
   @@unique([amount, paymentType])
 }
 
+model StudentTermFee {
+  id                 Int              @id @default(autoincrement())
+  studentId          Int
+  termSubjectGroupId Int
+  termId             Int
+  feePayments        FeePayment[]
+  student            Student          @relation(fields: [studentId], references: [id])
+  termSubjectGroup   TermSubjectGroup @relation(fields: [termSubjectGroupId], references: [id])
+  term               Term             @relation(fields: [termId], references: [id])
+
+  @@unique([studentId, termSubjectGroupId, termId])
+}
+
 model FeePayment {
-  id           Int           @id @default(autoincrement())
-  feeId        Int
-  enrollmentId Int
-  dueDate      DateTime
-  paidDate     DateTime? // Nullable, set when payment is made
-  amount       Int
-  dueAmount    Int // Amount still due (if any)
-  status       PaymentStatus @default(NODUES)
-  method       PaymentMethod @default(NA)
-  enrollment   Enrollment    @relation(fields: [enrollmentId], references: [id])
-  fee          Fee           @relation(fields: [feeId], references: [id])
+  id               Int             @id @default(autoincrement())
+  feeId            Int
+  dueDate          DateTime
+  paidDate         DateTime? // Nullable, set when payment is made
+  amount           Int
+  dueAmount        Int // Amount still due (if any)
+  studentTermFeeId Int?
+  status           PaymentStatus   @default(NODUES)
+  method           PaymentMethod   @default(NA)
+  fee              Fee             @relation(fields: [feeId], references: [id])
+  studentTermFee   StudentTermFee? @relation(fields: [studentTermFeeId], references: [id])
 }
 
 model TermSubjectGroupSubject {
