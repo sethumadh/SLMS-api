@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { findUniqueStudentSchema } from '../admin.student.dto/admin.enrolledstudent/admin.enrolled.student.dto';
+
 
 export const findAllApplicantSchema = z.object({
     query: z.object({

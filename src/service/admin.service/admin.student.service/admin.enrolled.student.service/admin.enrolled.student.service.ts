@@ -2,6 +2,7 @@
 import { z } from 'zod';
 
 import {
+    EnrolledStudentEnrollDataSchema,
     UpdateStudentHealthDetailSchema,
     UpdateStudentParentsDetailSchema,
     UpdateStudentPersonalDetailSchema
@@ -44,69 +45,6 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
         }
     });
     console.log(students);
-}
-
-// find unqiue student by ID for internal queries
-export async function findEnrolledStudentById(id: string) {
-    const student = await db.student.findUnique({
-        where: {
-            id: +id
-        },
-        include: {
-            personalDetails: {
-                select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    DOB: true,
-                    gender: true,
-                    email: true,
-                    contact: true,
-                    address: true,
-                    suburb: true,
-                    state: true,
-                    country: true,
-                    postcode: true,
-                    image: true
-                }
-            },
-            parentsDetails: {
-                select: {
-                    id: true,
-                    fatherName: true,
-                    motherName: true,
-                    parentEmail: true,
-                    parentContact: true
-                }
-            },
-            emergencyContact: {
-                select: {
-                    id: true,
-                    contactPerson: true,
-                    contactNumber: true,
-                    relationship: true
-                }
-            },
-            healthInformation: {
-                select: {
-                    id: true,
-                    medicareNumber: true,
-                    ambulanceMembershipNumber: true,
-                    medicalCondition: true,
-                    allergy: true
-                }
-            },
-            otherInformation: {
-                select: {
-                    id: true,
-                    otherInfo: true,
-                    declaration: true
-                }
-            }
-        }
-    });
-
-    return student;
 }
 
 // Find all student for the admin
@@ -182,50 +120,6 @@ export async function findAllEnrolledStudents(page: number) {
                     declaration: true
                 }
             }
-            // enrollments: {
-            //     select: {
-            //         id: true,
-            //         dueDate: true,
-            //         createdAt: true,
-            //         termSubjectGroup: {
-            //             select: {
-            //                 id: true,
-            //                 termId: true,
-            //                 subjectGroupId: true
-            //             }
-            //         },
-            //         feePayment: {
-            //             select: {
-            //                 id: true,
-            //                 dueDate: true,
-            //                 paidDate: true,
-            //                 amount: true,
-            //                 dueAmount: true,
-            //                 status: true,
-            //                 method: true
-            //             }
-            //         },
-            //         subjectEnrollments: {
-            //             select: {
-            //                 id: true,
-            //                 termSubjectId: true,
-            //                 grade: true,
-            //                 attendance: true,
-            //                 termSubject: {
-            //                     select: {
-            //                         id: true,
-            //                         subject: {
-            //                             select: {
-            //                                 id: true,
-            //                                 name: true
-            //                             }
-            //                         }
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
         },
         orderBy: {
             createdAt: 'desc'
@@ -246,6 +140,134 @@ export async function findAllEnrolledStudents(page: number) {
     return { enrolledStudents, count };
 }
 
+// find unqiue student by ID for internal queries
+export async function findEnrolledStudentById(id: string) {
+    const enrolledStudent = await db.student.findUnique({
+        where: {
+            id: +id,
+            role: 'STUDENT',
+            isActive: false
+        },
+        include: {
+            personalDetails: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    DOB: true,
+                    gender: true,
+                    email: true,
+                    contact: true,
+                    address: true,
+                    suburb: true,
+                    state: true,
+                    country: true,
+                    postcode: true,
+                    image: true
+                }
+            },
+            parentsDetails: {
+                select: {
+                    id: true,
+                    fatherName: true,
+                    motherName: true,
+                    parentEmail: true,
+                    parentContact: true
+                }
+            },
+            emergencyContact: {
+                select: {
+                    id: true,
+                    contactPerson: true,
+                    contactNumber: true,
+                    relationship: true
+                }
+            },
+            healthInformation: {
+                select: {
+                    id: true,
+                    medicareNumber: true,
+                    ambulanceMembershipNumber: true,
+                    medicalCondition: true,
+                    allergy: true
+                }
+            },
+            otherInformation: {
+                select: {
+                    id: true,
+                    otherInfo: true,
+                    declaration: true
+                }
+            }
+        }
+    });
+
+    return enrolledStudent;
+}
+// find term to enroll for the subject and classes management
+export async function findTermToEnrollForStudentEnrolled() {
+    const publishTerm = await db.term.findFirst({
+        where: {
+            isPublish: true
+        },
+        select: {
+            id: true,
+            name: true,
+            isPublish: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    subject: true,
+                    termSubjectGroup: true
+                }
+            }
+        }
+    });
+
+    if (!publishTerm) {
+        throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
+    }
+
+    return publishTerm;
+}
+export async function findEnrolledStudentEnrolledSubjects(id: string) {
+    // Fetch all enrollments for the student
+    const enrollments = await db.enrollment.findMany({
+        where: { studentId: parseInt(id) },
+        include: {
+            subjectEnrollment: {
+                include: {
+                    termSubject: {
+                        include: {
+                            subject: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Extract the subjects from the enrollments
+    let enrolledSubjects: { subjectId: number; subjectName: string }[] = [];
+    enrollments.forEach((enrollment) => {
+        if (enrollment.subjectEnrollment) { // Check if subjectEnrollment exists
+            const se = enrollment.subjectEnrollment;
+            enrolledSubjects.push({
+                subjectId: se.termSubject.subjectId,
+                subjectName: se.termSubject.subject.name
+                // Include additional subject details as needed
+            });
+        }
+    });
+
+    // Return the list of enrolled subjects
+    return enrolledSubjects;
+}
 // search enrolled student for the admin
 export async function searchEnrolledStudents(search: string, page: number) {
     const take = 10;
@@ -389,7 +411,117 @@ export async function searchEnrolledStudents(search: string, page: number) {
 export async function deleteManyStudents() {
     const student = await db.student.deleteMany();
 }
+/* enroll applicant to subjects */
+export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStudentEnrollDataSchema['body']) {
 
+    let alreadyEnrolledSubjects = [];
+
+    // Check Existing Enrollments
+    for (const enrollmentItem of enrollData.enrollData) {
+        const existingEnrollments = await db.enrollment.findMany({
+            where: { studentId: enrollData.enrolledStudentId, termSubjectGroupId: enrollmentItem.termSubjectGroupId },
+            include: { subjectEnrollment: { include: { termSubject: true } } }
+        });
+
+        for (const enrollment of existingEnrollments) {
+            // Directly check the subjectEnrollment object
+            if (enrollment.subjectEnrollment && enrollment.subjectEnrollment.termSubjectId === enrollmentItem.termSubjectId) {
+                alreadyEnrolledSubjects.push(enrollmentItem.subject);
+            }
+        }
+    }
+
+    if (alreadyEnrolledSubjects.length > 0) {
+        throw new Error(`Already enrolled in subjects: ${alreadyEnrolledSubjects.join(', ')}`);
+    }
+
+    let enrollmentIds = [];
+    for (const enrollmentItem of enrollData.enrollData) {
+        // Fetch fee info
+        const feeInfo = await db.termSubjectGroup.findUnique({
+            where: { id: enrollmentItem.termSubjectGroupId },
+            include: { fee: true, term: true }
+        });
+
+        // Determine due date
+        let dueDate;
+        if (feeInfo?.fee?.paymentType === 'MONTHLY') {
+            const now = new Date();
+            dueDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            dueDate.setDate(dueDate.getDate() - 5);
+        } else if (feeInfo?.fee?.paymentType === 'TERM') {
+            const termStartDate = new Date(feeInfo.term.startDate);
+            dueDate = new Date(termStartDate.setMonth(termStartDate.getMonth() + 2));
+        } else {
+            dueDate = new Date();
+        }
+
+        // Create Enrollment and SubjectEnrollment
+        const newEnrollment = await db.enrollment.create({
+            data: {
+                studentId: enrollData.enrolledStudentId,
+                termSubjectGroupId: enrollmentItem.termSubjectGroupId,
+                dueDate: dueDate,
+                subjectEnrollment: { create: { termSubjectId: enrollmentItem.termSubjectId } }
+            },
+            select: { id: true }
+        });
+
+        // Handle FeePayment and StudentTermFee
+        if (feeInfo?.feeId) {
+            const studentTermFee = await db.studentTermFee.upsert({
+                where: {
+                    studentId_termSubjectGroupId_termId: {
+                        studentId: enrollData.enrolledStudentId,
+                        termSubjectGroupId: enrollmentItem.termSubjectGroupId,
+                        termId: feeInfo.termId
+                    }
+                },
+                update: {},
+                create: {
+                    studentId: enrollData.enrolledStudentId,
+                    termSubjectGroupId: enrollmentItem.termSubjectGroupId,
+                    termId: feeInfo.termId
+                }
+            });
+
+            await db.feePayment.create({
+                data: {
+                    feeId: feeInfo.feeId,
+                    studentTermFeeId: studentTermFee.id,
+                    dueDate: dueDate,
+                    amount: feeInfo.fee?.amount as number,
+                    dueAmount: feeInfo.fee?.amount as number,
+                    status: 'PENDING',
+                    method: 'NA'
+                }
+            });
+        }
+
+        // Update TermSubjectGroupSubject
+        const subject = await db.subject.findUnique({
+            where: {
+                name: enrollmentItem.subject
+            },
+            select: {
+                id: true
+            }
+        });
+        await db.termSubjectGroupSubject.updateMany({
+            where: {
+                termId: enrollmentItem.termId,
+                subjectGroupId: enrollmentItem.subjectGroupId,
+                subjectId: subject?.id,
+                termSubjectGroupId: enrollmentItem.termSubjectGroupId
+            },
+            data: { enrollmentId: newEnrollment.id }
+        });
+
+        enrollmentIds.push(newEnrollment.id);
+    }
+
+    return { message: 'Enrollment successful', enrollmentIds };
+}
 // deleteManyStudents();
 
 // Find siblings of a student using parent email

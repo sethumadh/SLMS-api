@@ -3,8 +3,11 @@ import { NextFunction, Request, Response } from 'express';
 import { customError } from '../../../../utils/customError';
 import {
     deleteManyStudents,
+    enrollStudentEnrolledToSubjects,
     findAllEnrolledStudents,
     findEnrolledStudentById,
+    findEnrolledStudentEnrolledSubjects,
+    findTermToEnrollForStudentEnrolled,
     searchEnrolledStudents,
     updateStudentHealthInformation,
     updateStudentParentsDetail,
@@ -12,8 +15,9 @@ import {
 } from '../../../../service/admin.service/admin.student.service/admin.enrolled.student.service/admin.enrolled.student.service';
 import { asyncErrorHandler } from '../../../../utils/asyncErrorHandler';
 import {
+    EnrolledStudentEnrollDataSchema,
     FindAllEnrolledStudentsSchema,
-    FindUniqueStudentSchema,
+    FindUniqueEnrolledStudentSchema,
     SearchEnrolledStudentsSchema,
     UpdateStudentHealthDetailSchema,
     UpdateStudentParentsDetailSchema,
@@ -21,7 +25,7 @@ import {
 } from '../../../../schema/admin.dto/admin.student.dto/admin.enrolledstudent/admin.enrolled.student.dto';
 
 // find unqiue student by ID for internal queries
-export const findEnrolledStudentByIdHandler = async (req: Request<FindUniqueStudentSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+export const findEnrolledStudentByIdHandler = async (req: Request<FindUniqueEnrolledStudentSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const student = await findEnrolledStudentById(id);
     res.status(200).json(student);
@@ -47,9 +51,27 @@ export const searchEnrolledStudentsHandler = async (req: Request<{}, {}, {}, Sea
     res.status(200).json(searchResult);
 };
 
+// findTermToEnrollForStudentEnrolled
+export const findTermToEnrollForStudentEnrolledHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
+    const termToEnroll = await findTermToEnrollForStudentEnrolled();
+    res.status(200).json(termToEnroll);
+};
+
+export const findEnrolledStudentEnrolledSubjectsHandler = async (req: Request<FindUniqueEnrolledStudentSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const enrolledSubjects = await findEnrolledStudentEnrolledSubjects(id);
+    res.status(200).json(enrolledSubjects);
+};
+
+export const enrollStudentEnrolledToSubjectsHandler = async (req: Request<{}, {}, EnrolledStudentEnrollDataSchema['body'], {}>, res: Response, next: NextFunction) => {
+    const enrollData = req.body;
+    const termToEnroll = await enrollStudentEnrolledToSubjects(enrollData);
+    res.status(200).json(termToEnroll);
+};
+// enrollStudentEnrolledToSubjects
 // update student personal details service
 export const updateStudentPersonalDetailHandler = asyncErrorHandler(
-    async (req: Request<FindUniqueStudentSchema['params'], {}, UpdateStudentPersonalDetailSchema['body'], {}>, res: Response, next: NextFunction) => {
+    async (req: Request<FindUniqueEnrolledStudentSchema['params'], {}, UpdateStudentPersonalDetailSchema['body'], {}>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
             const data = req.body.personalDetails;
@@ -69,7 +91,7 @@ export const updateStudentPersonalDetailHandler = asyncErrorHandler(
 
 // update student parents details service
 export const updateStudentParentsDetailHandler = asyncErrorHandler(
-    async (req: Request<FindUniqueStudentSchema['params'], {}, UpdateStudentParentsDetailSchema['body'], {}>, res: Response, next: NextFunction) => {
+    async (req: Request<FindUniqueEnrolledStudentSchema['params'], {}, UpdateStudentParentsDetailSchema['body'], {}>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
             const data = req.body.parentsDetails;
@@ -89,7 +111,7 @@ export const updateStudentParentsDetailHandler = asyncErrorHandler(
 
 // Update Emergency and health Details
 export const updateStudentHealthInformationHandler = asyncErrorHandler(
-    async (req: Request<FindUniqueStudentSchema['params'], {}, UpdateStudentHealthDetailSchema['body'], {}>, res: Response, next: NextFunction) => {
+    async (req: Request<FindUniqueEnrolledStudentSchema['params'], {}, UpdateStudentHealthDetailSchema['body'], {}>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
             const data = req.body;

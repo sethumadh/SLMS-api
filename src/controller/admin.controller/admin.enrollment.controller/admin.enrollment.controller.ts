@@ -41,8 +41,7 @@ export const findApplicantByIdHandler = async (req: Request<FindUniqueApplicantS
     const applicant = await findApplicantById(id);
     res.status(200).json(applicant);
 };
-export const findTermToEnrollHandler = async (req: Request<FindUniqueApplicantSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+export const findTermToEnrollHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
     const termToEnroll = await findTermToEnroll();
     res.status(200).json(termToEnroll);
 };
