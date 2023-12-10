@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { findUniqueStudentSchema } from '../admin.student.dto/admin.student.dto';
+
 
 export const findAllApplicantSchema = z.object({
     query: z.object({
@@ -15,7 +15,7 @@ export const searchApplicantSchema = z.object({
 });
 export type SearchApplicantSchema = z.infer<typeof searchApplicantSchema>;
 
-export const findUniqueApplicantSchema =z.object({
+export const findUniqueApplicantSchema = z.object({
     params: z.object({
         id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
     })

@@ -18,7 +18,7 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
         where: {
             firstName,
             lastName,
-            DOB:new Date(DOB),
+            DOB: new Date(DOB),
             // DOB:formattedDOB,
             email
         },

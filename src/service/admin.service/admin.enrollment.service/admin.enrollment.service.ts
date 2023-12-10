@@ -290,6 +290,7 @@ export async function findApplicantById(id: string) {
             }
         }
     });
+    console.log(applicant)
 
     return applicant;
 }

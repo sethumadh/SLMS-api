@@ -10,10 +10,10 @@ import { config } from './src/config/config';
 import log from './src/utils/logger';
 import { customError } from './src/utils/customError';
 import newApplicantRoute from './src/route/new.applicant.route/new.applicant.route';
-import adminStudentRoute from './src/route/admin.route/admin.student.route/admin.student.route';
+import adminStudentRoute from './src/route/admin.route/admin.student.route/admin.enrolled.student.route/admin.enrolled.student.route';
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';
 import adminAdministrationRoute from './src/route/admin.route/admin.administration.route/admin.administration.route';
-import adminEnrollmentRoute from "./src/route/admin.route/admin.enrollment.route/admin.enrollment.route"
+import adminEnrollmentRoute from './src/route/admin.route/admin.enrollment.route/admin.enrollment.route';
 
 const app = express();
 app.use(cookieParser());
@@ -46,7 +46,7 @@ process.on('uncaughtException', (err: Err) => {
     process.exit(1);
 });
 app.get('/test', (req, res, next) => {
-    throw new Error('internal error')
+    throw new Error('internal error');
 });
 app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
 app.use('/api/v1/application', newApplicantRoute);
