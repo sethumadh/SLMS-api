@@ -137,7 +137,7 @@ model Term {
   termSubjectGroup        TermSubjectGroup[]
   termSubjectGroupSubject TermSubjectGroupSubject[]
   studentTermFee          StudentTermFee[]
-  TermSubjectLevel        TermSubjectLevel[]
+  termSubjectLevel        TermSubjectLevel[]
 }
 
 model Level {

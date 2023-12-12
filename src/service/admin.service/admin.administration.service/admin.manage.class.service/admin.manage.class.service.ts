@@ -33,23 +33,20 @@ export const createClassWithSections = async (createClassData: CreateClassWithSe
     }
 
     for (const sectionName of uniqueSections) {
-        let section = await db.section.findUnique({
-            where: {
-                name: sectionName
+        await db.section.upsert({
+            where: { name: sectionName },
+            update: {
+                termSubjectLevel: {
+                    connect: { id: termSubjectLevel.id }
+                }
+            },
+            create: {
+                name: sectionName,
+                termSubjectLevel: {
+                    connect: { id: termSubjectLevel.id }
+                }
             }
         });
-
-        if (!section) {
-            section = await db.section.create({
-                data: {
-                    name: sectionName,
-                    termSubjectLevel: {
-                        connect: { id: termSubjectLevel.id }
-                    }
-                }
-            });
-        }
-        // No additional action needed for existing sections
     }
     return { message: 'Successfully created class' };
 };
@@ -126,4 +123,56 @@ export const findSectionsForManageClass = async () => {
         // }
     });
     return sections;
+};
+
+export const findCurrentTermClasses = async () => {
+    const currentTermClasses = await db.term.findFirst({
+        where: {
+            currentTerm: true
+        },
+        select: {
+            id: true,
+            name: true,
+            isPublish: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            termSubjectLevel: {
+                select: {
+                    id: true,
+                    subject: true,
+                    level: true,
+                    sections: {
+                        select: {
+                            id: true,
+                            name: true
+                        },
+                        orderBy: {
+                            name: 'asc' // Ordering by section name in ascending order
+                        }
+                    }
+                },
+                orderBy: [
+                    {
+                        subject: {
+                            name: 'asc'
+                        }
+                    },
+                    {
+                        level: {
+                            name: 'asc'
+                        }
+                    }
+                ]
+            }
+        }
+    });
+
+    if (!currentTermClasses) {
+        throw customError(`current Term classes could not found. Please try again later`, 'fail', 404, true);
+    }
+
+    return currentTermClasses;
 };

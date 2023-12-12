@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import {
     createClassWithSections,
+    findCurrentTermClasses,
     findCurrentTermForManageClass,
     findPublishTermForManageClass,
     findSectionsForManageClass
@@ -14,6 +15,10 @@ export const findPublishTermForManageClassHandler = async (req: Request<{}, {}, 
 export const findCurrentTermForManageClassHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
     const currentTerm = await findCurrentTermForManageClass();
     res.status(200).json(currentTerm);
+};
+export const findCurrentTermClassesHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
+    const currentTermClasses = await findCurrentTermClasses();
+    res.status(200).json(currentTermClasses);
 };
 export const findSectionsForManageClassHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
     const sections = await findSectionsForManageClass();

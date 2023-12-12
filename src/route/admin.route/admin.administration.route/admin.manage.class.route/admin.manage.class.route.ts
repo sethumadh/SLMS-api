@@ -4,6 +4,7 @@ import validate from '../../../../middleware/validateResource';
 import { asyncErrorHandler } from '../../../../utils/asyncErrorHandler';
 import {
     createClassWithSectionsHandler,
+    findCurrentTermClassesHandler,
     findCurrentTermForManageClassHandler,
     findPublishTermForManageClassHandler,
     findSectionsForManageClassHandler
@@ -14,6 +15,7 @@ const adminManageClassRoute = express.Router();
 
 adminManageClassRoute.route('/find-publish-term-manage-class').get(asyncErrorHandler(findPublishTermForManageClassHandler));
 adminManageClassRoute.route('/find-current-term-manage-class').get(asyncErrorHandler(findCurrentTermForManageClassHandler));
+adminManageClassRoute.route('/find-current-term-class').get(asyncErrorHandler(findCurrentTermClassesHandler));
 adminManageClassRoute.route('/find-sections-manage-class').get(asyncErrorHandler(findSectionsForManageClassHandler));
 adminManageClassRoute.route('/create-class').post(validate(createClassWithSectionsSchema), asyncErrorHandler(createClassWithSectionsHandler));
 
