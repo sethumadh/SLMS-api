@@ -1,8 +1,6 @@
-import { PaymentType } from '@prisma/client';
 import {
     ChangeCurrentTermNameSchema,
     CreateNewTermSetupSchema,
-    CreateTermSchema,
     ExtendCurrentTermSchema,
     FindUniqueTermSchema
 } from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';

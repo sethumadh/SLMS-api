@@ -151,7 +151,7 @@ model Level {
 model Section {
   id                Int                @id @default(autoincrement())
   name              String             @unique
-  termSubjectLevels TermSubjectLevel[]
+  termSubjectLevel TermSubjectLevel[]
   enrollments       Enrollment[]
 }
 

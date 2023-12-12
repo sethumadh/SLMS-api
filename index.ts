@@ -14,6 +14,7 @@ import adminStudentRoute from './src/route/admin.route/admin.student.route/admin
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';
 import adminAdministrationRoute from './src/route/admin.route/admin.administration.route/admin.administration.route';
 import adminEnrollmentRoute from './src/route/admin.route/admin.enrollment.route/admin.enrollment.route';
+import adminManageClassRoute from './src/route/admin.route/admin.administration.route/admin.manage.class.route/admin.manage.class.route';
 
 const app = express();
 app.use(cookieParser());
@@ -51,6 +52,7 @@ app.get('/test', (req, res, next) => {
 app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
 app.use('/api/v1/application', newApplicantRoute);
 app.use('/api/v1/admin/administration', adminAdministrationRoute);
+app.use('/api/v1/admin/administration/class', adminManageClassRoute);
 app.use('/api/v1/admin/student', adminStudentRoute);
 app.use('/api/v1/admin/applicant', adminEnrollmentRoute);
 

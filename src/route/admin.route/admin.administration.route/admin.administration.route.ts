@@ -19,7 +19,6 @@ import {
 import {
     changeCurrentTermNameSchema,
     createNewTermSetupSchema,
-    createTermSchema,
     extendCurrentTermSchema,
     findUniqueTermSchema
 } from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
