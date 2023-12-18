@@ -15,8 +15,8 @@ export async function createTimetable(timetableData: TimeTableSchema['body']) {
         });
         const newTimeTable = await prisma.timeTable.create({
             data: {
-                data: timetableData.timetable,
-                name: `Timetable-${currentTermname?.name}`,
+                data: timetableData.data,
+                name: `${currentTermname?.name}`,
                 isActive: true // Ensuring the new timetable is active
             }
         });

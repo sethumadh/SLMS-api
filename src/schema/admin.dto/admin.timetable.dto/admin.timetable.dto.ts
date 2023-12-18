@@ -12,7 +12,7 @@ const timeSlotSchema = z.object({
 
 export const timeTableSchema = z.object({
     body: z.object({
-        timetable: z.array(timeSlotSchema)
+        data: z.array(timeSlotSchema)
     })
 });
 
