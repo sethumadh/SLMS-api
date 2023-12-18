@@ -149,10 +149,10 @@ model Level {
 }
 
 model Section {
-  id                Int                @id @default(autoincrement())
-  name              String             @unique
+  id               Int                @id @default(autoincrement())
+  name             String             @unique
   termSubjectLevel TermSubjectLevel[]
-  enrollments       Enrollment[]
+  enrollments      Enrollment[]
 }
 
 model TermSubjectGroup {
@@ -294,4 +294,13 @@ model TermSubjectGroupSubject {
   enrollment         Enrollment?       @relation(fields: [enrollmentId], references: [id])
 
   @@unique([termId, subjectGroupId, subjectId])
+}
+
+model TimeTable {
+  id        Int      @id @default(autoincrement())
+  name      String?   @default("Timetable")
+  isActive  Boolean  @default(true)
+  data      Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }

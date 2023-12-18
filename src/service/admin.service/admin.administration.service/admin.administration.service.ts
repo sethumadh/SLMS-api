@@ -24,7 +24,7 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
         });
 
         if (existingTerm) {
-            throw new Error(`Term with name ${termName} already exists.`);
+            throw customError(`Term with name ${termName} already exists.`, 'fail', 404, true);
         }
 
         const createdTerm = await db.term.create({
@@ -234,7 +234,7 @@ export async function findUniqueTerm(id: FindUniqueTermSchema['params']['id']) {
     });
 
     if (!uniqueTerm) {
-        throw new Error(`Term with ID ${id} could not be found. Please try again later.`);
+        throw customError(`Term with ID ${id} could not be found. Please try again later.`, 'fail', 404, true);
     }
 
     return uniqueTerm;
@@ -251,14 +251,14 @@ export async function extendCurrentTerm(id: ExtendCurrentTermSchema['params']['i
     });
 
     if (!currentTerm) {
-        throw new Error(`Term with ID ${id} does not exist.`);
+        throw customError(`Term with ID ${id} does not exist.`, 'fail', 404, true);
     }
     if (!currentTerm.currentTerm) {
-        throw new Error(`Term with ID ${id} already expired.`);
+        throw customError(`Term with ID ${id} already expired.`, 'fail', 404, true);
     }
     const startDate = new Date(currentTerm.startDate);
     if (eDate <= startDate) {
-        throw new Error(`The new end date must be later than the start date (${currentTerm.startDate}).`);
+        throw customError(`The new end date must be later than the start date (${currentTerm.startDate}).`, 'fail', 404, true);
     }
     eDate.setHours(23, 59, 59, 999); // Set to one second before midnight on the day before the term ends
 

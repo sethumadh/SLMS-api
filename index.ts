@@ -15,6 +15,7 @@ import { globalErrorHandler } from './src/controller/error.controller/error.cont
 import adminAdministrationRoute from './src/route/admin.route/admin.administration.route/admin.administration.route';
 import adminEnrollmentRoute from './src/route/admin.route/admin.enrollment.route/admin.enrollment.route';
 import adminManageClassRoute from './src/route/admin.route/admin.administration.route/admin.manage.class.route/admin.manage.class.route';
+import adminTimetableRoute from './src/route/admin.route/admin.timetable.route/admin.timetable.route';
 
 const app = express();
 app.use(cookieParser());
@@ -53,6 +54,8 @@ app.get('/healthcheck', (req: Request, res: Response) => res.sendStatus(200));
 app.use('/api/v1/application', newApplicantRoute);
 app.use('/api/v1/admin/administration', adminAdministrationRoute);
 app.use('/api/v1/admin/administration/class', adminManageClassRoute);
+
+app.use('/api/v1/admin/timetable', adminTimetableRoute);
 app.use('/api/v1/admin/student', adminStudentRoute);
 app.use('/api/v1/admin/applicant', adminEnrollmentRoute);
 
