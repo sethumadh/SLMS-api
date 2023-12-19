@@ -13,6 +13,7 @@ import {
     updateStudentPersonalDetailSchema
 } from '../../../../schema/admin.dto/admin.student.dto/admin.enrolledstudent/admin.enrolled.student.dto';
 import {
+    deEnrollStudentEnrolledToSubjectsHandler,
     enrollStudentEnrolledToSubjectsHandler,
     findAllEnrolledStudentsHandler,
     findEnrolledStudentByIdHandler,
@@ -40,6 +41,8 @@ adminStudentRoute.route('/term-to-enroll-student-enrolled').get(asyncErrorHandle
 adminStudentRoute.route('/find-enrolled-subjects-for-enrolled-student/:id').get(validate(findUniqueEnrolledStudentSchema), asyncErrorHandler(findEnrolledStudentEnrolledSubjectsHandler));
 /*enroll applicant to subject*/
 adminStudentRoute.route('/enroll-enrolled-student').post(validate(enrolledStudentEnrollDataSchema), asyncErrorHandler(enrollStudentEnrolledToSubjectsHandler));
+/* de-enroll enrolled student to subjects */
+adminStudentRoute.route('/de-enroll-enrolled-student').post(validate(enrolledStudentEnrollDataSchema), asyncErrorHandler(deEnrollStudentEnrolledToSubjectsHandler));
 
 // adminStudentRoute.route('/deleteAllStudents');
 export default adminStudentRoute;

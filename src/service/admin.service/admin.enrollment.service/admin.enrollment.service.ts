@@ -290,7 +290,6 @@ export async function findApplicantById(id: string) {
             }
         }
     });
-    console.log(applicant)
 
     return applicant;
 }
@@ -327,7 +326,6 @@ export async function findTermToEnroll() {
 
 /* enroll applicant to subjects */
 export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['body']) {
-
     let alreadyEnrolledSubjects = [];
 
     // Check Existing Enrollments
@@ -346,7 +344,7 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
     }
 
     if (alreadyEnrolledSubjects.length > 0) {
-        throw new Error(`Already enrolled in subjects: ${alreadyEnrolledSubjects.join(', ')}`);
+        throw customError(`Already enrolled in subjects: ${alreadyEnrolledSubjects.join(', ')}`, 'fail', 404, true);
     }
 
     let enrollmentIds = [];
@@ -375,10 +373,22 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
             data: {
                 studentId: enrollData.applicantId,
                 termSubjectGroupId: enrollmentItem.termSubjectGroupId,
-                dueDate: dueDate,
-                subjectEnrollment: { create: { termSubjectId: enrollmentItem.termSubjectId } }
+                dueDate: dueDate
             },
             select: { id: true }
+        });
+
+        const newSubjectEnrollment = await db.subjectEnrollment.create({
+            data: {
+                enrollmentId: newEnrollment.id,
+                termSubjectId: enrollmentItem.termSubjectId
+            }
+        });
+
+        // Update the Enrollment with the SubjectEnrollment ID
+        await db.enrollment.update({
+            where: { id: newEnrollment.id },
+            data: { subjectEnrollmentId: newSubjectEnrollment.id }
         });
 
         // Handle FeePayment and StudentTermFee
@@ -437,8 +447,57 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
     return { message: 'Enrollment successful', enrollmentIds };
 }
 
-/* fetch all enrolled subjects for the appicant*/
+/* de-enroll applicant to subjects */
+export async function deEnrollApplicant(deEnrollData: ApplicantEnrollDataSchema['body']) {
+    let deEnrolledSubjects = [];
 
+    for (const deEnrollItem of deEnrollData.enrollData) {
+        // Find the SubjectEnrollment record
+        const subjectEnrollment = await db.subjectEnrollment.findFirst({
+            where: {
+                termSubjectId: deEnrollItem.termSubjectId,
+                enrollment: {
+                    studentId: deEnrollData.applicantId,
+                    termSubjectGroupId: deEnrollItem.termSubjectGroupId
+                }
+            }
+        });
+
+        if (!subjectEnrollment) {
+            throw customError(`Not enrolled in subjects: ${deEnrollItem.subject}`, 'fail', 404, true);
+        }
+
+        // Delete the SubjectEnrollment record
+        await db.subjectEnrollment.delete({
+            where: { id: subjectEnrollment.id }
+        });
+
+        // Optionally, if no other subjects are enrolled in the same termSubjectGroup, delete the Enrollment record
+        const remainingEnrollments = await db.subjectEnrollment.count({
+            where: {
+                enrollment: {
+                    studentId: deEnrollData.applicantId,
+                    termSubjectGroupId: deEnrollItem.termSubjectGroupId
+                }
+            }
+        });
+
+        if (remainingEnrollments === 0) {
+            await db.enrollment.delete({
+                where: { id: subjectEnrollment.enrollmentId }
+            });
+        }
+
+        deEnrolledSubjects.push(deEnrollItem.subject);
+    }
+
+    return {
+        message: 'De-enrollment process completed',
+        deEnrolledSubjects
+    };
+}
+
+/* fetch all enrolled subjects for the appicant*/
 export async function findApplicantEnrolledSubjects(id: string) {
     // Fetch all enrollments for the student
     const enrollments = await db.enrollment.findMany({
@@ -459,7 +518,8 @@ export async function findApplicantEnrolledSubjects(id: string) {
     // Extract the subjects from the enrollments
     let enrolledSubjects: { subjectId: number; subjectName: string }[] = [];
     enrollments.forEach((enrollment) => {
-        if (enrollment.subjectEnrollment) { // Check if subjectEnrollment exists
+        if (enrollment.subjectEnrollment) {
+            // Check if subjectEnrollment exists
             const se = enrollment.subjectEnrollment;
             enrolledSubjects.push({
                 subjectId: se.termSubject.subjectId,

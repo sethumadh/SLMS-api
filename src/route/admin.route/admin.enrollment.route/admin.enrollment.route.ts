@@ -4,6 +4,7 @@ import validate from '../../../middleware/validateResource';
 import { asyncErrorHandler } from '../../../utils/asyncErrorHandler';
 import { applicantEnrollDataSchema, findAllApplicantSchema, findUniqueApplicantSchema, searchApplicantSchema } from '../../../schema/admin.dto/admin.enrollment.dto/admin.enrollment.dto';
 import {
+    deEnrollApplicantHandler,
     enrollApplicantHandler,
     enrollApplicantToStudentHandler,
     findAllApplicantsHandler,
@@ -29,5 +30,6 @@ adminEnrollmentRoute.route('/enroll-applicant').post(validate(applicantEnrollDat
 adminEnrollmentRoute.route('/find-enrolled-subjects-applicant/:id').get(validate(findUniqueApplicantSchema), asyncErrorHandler(findApplicantEnrolledSubjectsHandler));
 /*enroll the applicant to student*/
 adminEnrollmentRoute.route('/enroll-applicant-to-student/:id').post(validate(findUniqueApplicantSchema), asyncErrorHandler(enrollApplicantToStudentHandler));
-
+/* de-enroll applicant to subjects */
+adminEnrollmentRoute.route('/de-enroll-applicant').post(validate(applicantEnrollDataSchema), asyncErrorHandler(deEnrollApplicantHandler));
 export default adminEnrollmentRoute;

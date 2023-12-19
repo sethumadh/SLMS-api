@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 
 import { FindAllEnrolledStudentsSchema } from '../../../schema/admin.dto/admin.student.dto/admin.enrolledstudent/admin.enrolled.student.dto';
 import {
+    deEnrollApplicant,
     enrollApplicant,
     enrollApplicantToStudent,
     findAllApplicants,
@@ -47,10 +48,16 @@ export const findTermToEnrollHandler = async (req: Request<{}, {}, {}, {}>, res:
 };
 
 //  enroll Applicant to subjects
-
 export const enrollApplicantHandler = async (req: Request<{}, {}, ApplicantEnrollDataSchema['body'], {}>, res: Response, next: NextFunction) => {
     const enrollData = req.body;
     const termToEnroll = await enrollApplicant(enrollData);
+    res.status(200).json(termToEnroll);
+};
+
+/* de-enroll applicant to subjects */
+export const deEnrollApplicantHandler = async (req: Request<{}, {}, ApplicantEnrollDataSchema['body'], {}>, res: Response, next: NextFunction) => {
+    const enrollData = req.body;
+    const termToEnroll = await deEnrollApplicant(enrollData);
     res.status(200).json(termToEnroll);
 };
 

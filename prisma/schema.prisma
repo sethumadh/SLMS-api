@@ -217,15 +217,15 @@ model Enrollment {
   dueDate                 DateTime
   termSubjectGroupId      Int
   subjectEnrollmentId     Int?                      @unique
+  createdAt               DateTime                  @default(now())
+  sectionId               Int?
+  termSubjectLevelId      Int?
   student                 Student                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
   termSubjectGroup        TermSubjectGroup          @relation(fields: [termSubjectGroupId], references: [id])
   termSubjectGroupSubject TermSubjectGroupSubject[]
   subjectEnrollment       SubjectEnrollment?
-  createdAt               DateTime                  @default(now())
   Section                 Section?                  @relation(fields: [sectionId], references: [id])
-  sectionId               Int?
   TermSubjectLevel        TermSubjectLevel?         @relation(fields: [termSubjectLevelId], references: [id])
-  termSubjectLevelId      Int?
   StudentClassHistory     StudentClassHistory[]
 
   @@unique([studentId, termSubjectGroupId, subjectEnrollmentId])

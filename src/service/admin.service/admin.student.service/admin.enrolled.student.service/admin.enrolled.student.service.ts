@@ -25,7 +25,7 @@ import { customError } from '../../../../utils/customError';
 
 // filter students using subjetcs --> drop down at the student table
 export async function filterStudentsBySubjects(subjects: string[], page: number) {
-    const take = 5;
+    const take = 10;
     // const page = 2; // coming from request
     const pageNum: number = page ?? 0;
     const skip = pageNum * take;
@@ -50,7 +50,7 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
 // Find all student for the admin
 
 export async function findAllEnrolledStudents(page: number) {
-    const take = 5;
+    const take = 10;
     // const page = 2; // coming from request
     const pageNum: number = page ?? 0;
     const skip = pageNum * take;
@@ -255,7 +255,8 @@ export async function findEnrolledStudentEnrolledSubjects(id: string) {
     // Extract the subjects from the enrollments
     let enrolledSubjects: { subjectId: number; subjectName: string }[] = [];
     enrollments.forEach((enrollment) => {
-        if (enrollment.subjectEnrollment) { // Check if subjectEnrollment exists
+        if (enrollment.subjectEnrollment) {
+            // Check if subjectEnrollment exists
             const se = enrollment.subjectEnrollment;
             enrolledSubjects.push({
                 subjectId: se.termSubject.subjectId,
@@ -411,9 +412,8 @@ export async function searchEnrolledStudents(search: string, page: number) {
 export async function deleteManyStudents() {
     const student = await db.student.deleteMany();
 }
-/* enroll applicant to subjects */
+/* enroll enrolled student to subjects */
 export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStudentEnrollDataSchema['body']) {
-
     let alreadyEnrolledSubjects = [];
 
     // Check Existing Enrollments
@@ -461,12 +461,23 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
             data: {
                 studentId: enrollData.enrolledStudentId,
                 termSubjectGroupId: enrollmentItem.termSubjectGroupId,
-                dueDate: dueDate,
-                subjectEnrollment: { create: { termSubjectId: enrollmentItem.termSubjectId } }
+                dueDate: dueDate
             },
             select: { id: true }
         });
 
+        const newSubjectEnrollment = await db.subjectEnrollment.create({
+            data: {
+                enrollmentId: newEnrollment.id,
+                termSubjectId: enrollmentItem.termSubjectId
+            }
+        });
+
+        // Update the Enrollment with the SubjectEnrollment ID
+        await db.enrollment.update({
+            where: { id: newEnrollment.id },
+            data: { subjectEnrollmentId: newSubjectEnrollment.id }
+        });
         // Handle FeePayment and StudentTermFee
         if (feeInfo?.feeId) {
             const studentTermFee = await db.studentTermFee.upsert({
@@ -521,6 +532,56 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
     }
 
     return { message: 'Enrollment successful', enrollmentIds };
+}
+
+/* de-enroll enrolled student to subjects */
+export async function deEnrollStudentEnrolledToSubjects(deEnrollData: EnrolledStudentEnrollDataSchema['body']) {
+    let deEnrolledSubjects = [];
+
+    for (const deEnrollItem of deEnrollData.enrollData) {
+        // Find the SubjectEnrollment record
+        const subjectEnrollment = await db.subjectEnrollment.findFirst({
+            where: {
+                termSubjectId: deEnrollItem.termSubjectId,
+                enrollment: {
+                    studentId: deEnrollData.enrolledStudentId,
+                    termSubjectGroupId: deEnrollItem.termSubjectGroupId
+                }
+            }
+        });
+
+        if (!subjectEnrollment) {
+            throw customError(`Not enrolled in subjects: ${deEnrollItem.subject}`, 'fail', 404, true);
+        }
+
+        // Delete the SubjectEnrollment record
+        await db.subjectEnrollment.delete({
+            where: { id: subjectEnrollment.id }
+        });
+
+        // Optionally, if no other subjects are enrolled in the same termSubjectGroup, delete the Enrollment record
+        const remainingEnrollments = await db.subjectEnrollment.count({
+            where: {
+                enrollment: {
+                    studentId: deEnrollData.enrolledStudentId,
+                    termSubjectGroupId: deEnrollItem.termSubjectGroupId
+                }
+            }
+        });
+
+        if (remainingEnrollments === 0) {
+            await db.enrollment.delete({
+                where: { id: subjectEnrollment.enrollmentId }
+            });
+        }
+
+        deEnrolledSubjects.push(deEnrollItem.subject);
+    }
+
+    return {
+        message: 'De-enrollment process completed',
+        deEnrolledSubjects
+    };
 }
 // deleteManyStudents();
 

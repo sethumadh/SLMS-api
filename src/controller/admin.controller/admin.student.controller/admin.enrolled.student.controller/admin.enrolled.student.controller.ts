@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 
 import { customError } from '../../../../utils/customError';
 import {
+    deEnrollStudentEnrolledToSubjects,
     deleteManyStudents,
     enrollStudentEnrolledToSubjects,
     findAllEnrolledStudents,
@@ -63,12 +64,18 @@ export const findEnrolledStudentEnrolledSubjectsHandler = async (req: Request<Fi
     res.status(200).json(enrolledSubjects);
 };
 
+// enrollStudentEnrolledToSubjects
 export const enrollStudentEnrolledToSubjectsHandler = async (req: Request<{}, {}, EnrolledStudentEnrollDataSchema['body'], {}>, res: Response, next: NextFunction) => {
     const enrollData = req.body;
     const termToEnroll = await enrollStudentEnrolledToSubjects(enrollData);
     res.status(200).json(termToEnroll);
 };
-// enrollStudentEnrolledToSubjects
+/* de-enroll enrolled student to subjects */
+export const deEnrollStudentEnrolledToSubjectsHandler = async (req: Request<{}, {}, EnrolledStudentEnrollDataSchema['body'], {}>, res: Response, next: NextFunction) => {
+    const enrollData = req.body;
+    const termToEnroll = await deEnrollStudentEnrolledToSubjects(enrollData);
+    res.status(200).json(termToEnroll);
+};
 // update student personal details service
 export const updateStudentPersonalDetailHandler = asyncErrorHandler(
     async (req: Request<FindUniqueEnrolledStudentSchema['params'], {}, UpdateStudentPersonalDetailSchema['body'], {}>, res: Response, next: NextFunction) => {
