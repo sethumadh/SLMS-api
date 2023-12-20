@@ -7,6 +7,12 @@ export const findUniqueTermSchema = z.object({
 });
 export type FindUniqueTermSchema = z.infer<typeof findUniqueTermSchema>;
 
+export const findAllStudentsInATermSchema = z.object({
+    query: z.object({
+        page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()
+    })
+});
+export type FindAllStudentsInATermSchema = z.infer<typeof findAllStudentsInATermSchema>;
 
 
 

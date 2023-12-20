@@ -51,7 +51,6 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
 
 export async function findAllEnrolledStudents(page: number) {
     const take = 10;
-    // const page = 2; // coming from request
     const pageNum: number = page ?? 0;
     const skip = pageNum * take;
     const enrolledStudents = await db.student.findMany({

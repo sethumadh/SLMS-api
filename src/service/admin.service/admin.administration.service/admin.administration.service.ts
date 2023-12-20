@@ -1,9 +1,4 @@
-import {
-    ChangeCurrentTermNameSchema,
-    CreateNewTermSetupSchema,
-    ExtendCurrentTermSchema,
-    FindUniqueTermSchema
-} from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
+import { ChangeCurrentTermNameSchema, CreateNewTermSetupSchema, ExtendCurrentTermSchema, FindUniqueTermSchema } from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
 import { customError } from '../../../utils/customError';
 import { db } from '../../../utils/db.server';
 
@@ -532,4 +527,100 @@ export async function findAllSubjects() {
 export const findAllLevels = async () => {
     const allLevels = await db.level.findMany({});
     return allLevels;
+};
+
+// find students in a term
+export const findAllStudentsInATerm = async (id: string, page: number) => {
+    const take = 10;
+    const pageNum: number = page ?? 0;
+    const skip = pageNum * take;
+    const studentsInTerm = await db.termSubjectGroup.findMany({
+        where: { termId: +id },
+        include: {
+            enrollment: {
+                skip,
+                take,
+                include: {
+                    subjectEnrollment: {
+                        select: {
+                            attendance: true,
+                            termSubject: {
+                                select: {
+                                    subject: {
+                                        select: {
+                                            name: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    student: {
+                        select: {
+                            id: true,
+                            role: true,
+                            isActive: true,
+                            updatedAt: true,
+                            createdAt: true,
+                            personalDetails: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    DOB: true,
+                                    gender: true,
+                                    email: true,
+                                    contact: true,
+                                    address: true,
+                                    suburb: true,
+                                    state: true,
+                                    country: true,
+                                    postcode: true,
+                                    image: true
+                                }
+                            },
+                            parentsDetails: {
+                                select: {
+                                    id: true,
+                                    fatherName: true,
+                                    motherName: true,
+                                    parentEmail: true,
+                                    parentContact: true
+                                }
+                            },
+                            emergencyContact: {
+                                select: {
+                                    id: true,
+                                    contactPerson: true,
+                                    contactNumber: true,
+                                    relationship: true
+                                }
+                            },
+                            healthInformation: {
+                                select: {
+                                    id: true,
+                                    medicareNumber: true,
+                                    ambulanceMembershipNumber: true,
+                                    medicalCondition: true,
+                                    allergy: true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+    const uniqueStudentsMap = new Map();
+
+    for (const termSubjectGroup of studentsInTerm) {
+        for (const enrollment of termSubjectGroup.enrollment) {
+            const student = enrollment.student;
+            uniqueStudentsMap.set(student.id, student);
+        }
+    }
+
+    const distinctStudents = Array.from(uniqueStudentsMap.values());
+
+    return studentsInTerm;
 };

@@ -8,6 +8,7 @@ import {
     extendCurrentTerm,
     findAllGroups,
     findAllLevels,
+    findAllStudentsInATerm,
     findAllSubjects,
     findAllTerm,
     findUniqueTerm,
@@ -18,6 +19,7 @@ import {
     ChangeCurrentTermNameSchema,
     CreateNewTermSetupSchema,
     ExtendCurrentTermSchema,
+    FindAllStudentsInATermSchema,
     FindUniqueTermSchema
 } from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
 
@@ -81,4 +83,18 @@ export const findAllSubjectsHandler = async (req: Request, res: Response, next: 
 export const findAllLevelsHandler = async (req: Request, res: Response, next: NextFunction) => {
     const allLevels = await findAllLevels();
     res.status(200).json(allLevels);
+};
+
+// find students in a term
+export const findAllStudentsInATermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, FindAllStudentsInATermSchema['query']>, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    const { page } = req.query;
+    if (page) {
+        const studentsListInATerm = await findAllStudentsInATerm(id, +page);
+        res.status(200).json(studentsListInATerm);
+    } else {
+        const page = 0;
+        const studentsListInATerm = await findAllStudentsInATerm(id, page);
+        res.status(200).json(studentsListInATerm);
+    }
 };
