@@ -34,7 +34,6 @@ export async function findActiveTimetable() {
     if (!timetable) {
         throw customError(`There are no timetable found`, 'fail', 404, true);
     }
-    console.log(timetable);
     return timetable;
 }
 

@@ -6,7 +6,6 @@ import { error } from 'console';
 const validate = (schema: AnyZodObject) => async (req: Request, res: Response, next: NextFunction) => {
     // console.log(req, 'url inside req');
     // console.log(req.query, 'url inside req');
-    console.log(req.body);
     try {
         schema.parse({
             body: req.body,

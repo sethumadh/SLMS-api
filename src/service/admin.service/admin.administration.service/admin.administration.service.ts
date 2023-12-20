@@ -100,7 +100,7 @@ export const createNewTermSetup = async (setupData: CreateNewTermSetupSchema['bo
                         subjectId: subject.id
                     }
                 });
-                console.log(termSubjectGroup.id, 'ide termsubjectgroup');
+
                 // Create TermSubject with levels
                 await db.termSubject.create({
                     data: {
@@ -361,7 +361,6 @@ export async function makePublishTerm(id: FindUniqueTermSchema['params']['id']) 
                 isPublish: true
             }
         });
-        console.log(updatedTerm);
         return updatedTerm;
     });
 }
@@ -469,7 +468,7 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
         }
     });
 
-    console.log(updatedTerm);
+
     return updatedTerm;
 }
 

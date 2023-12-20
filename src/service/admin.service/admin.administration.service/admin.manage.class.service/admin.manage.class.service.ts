@@ -4,7 +4,7 @@ import { db } from '../../../../utils/db.server';
 
 export const createClassWithSections = async (createClassData: CreateClassWithSectionsSchema['body']) => {
     const { termId, subjectName, levelName, sections } = createClassData.createClassData;
-    console.log(termId, subjectName, levelName, sections);
+
     const uniqueSections = [...new Set(sections)];
     const subject = await db.subject.findUnique({
         where: { name: subjectName }
