@@ -6,6 +6,7 @@ import {
     deleteTerm,
     endCurrentTerm,
     extendCurrentTerm,
+    findCurrentTerm,
     findAllGroups,
     findAllLevels,
     findAllStudentsInATerm,
@@ -97,4 +98,10 @@ export const findAllStudentsInATermHandler = async (req: Request<FindUniqueTermS
         const studentsListInATerm = await findAllStudentsInATerm(id, page);
         res.status(200).json(studentsListInATerm);
     }
+};
+
+//find current term
+export const findCurrentTermHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const activeTerm = await findCurrentTerm();
+    res.status(200).json(activeTerm);
 };

@@ -468,7 +468,6 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
         }
     });
 
-
     return updatedTerm;
 }
 
@@ -623,3 +622,42 @@ export const findAllStudentsInATerm = async (id: string, page: number) => {
 
     return studentsInTerm;
 };
+
+// find  current term details
+export async function findCurrentTerm() {
+    const activeTerm = await db.term.findFirst({
+        where: {
+            currentTerm: true
+        },
+        select: {
+            id: true,
+            name: true,
+            isPublish: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    subject: true,
+                    level: true
+                }
+            },
+            termSubjectGroup: {
+                select: {
+                    id: true,
+                    fee: true,
+                    subjectGroup: true
+                }
+            }
+        }
+    });
+
+    if (!activeTerm) {
+        throw customError(`Active Term could not found. Please try again later`, 'fail', 404, true);
+    }
+
+    return activeTerm;
+}
