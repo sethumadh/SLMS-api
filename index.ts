@@ -10,12 +10,13 @@ import { config } from './src/config/config';
 import log from './src/utils/logger';
 import { customError } from './src/utils/customError';
 import newApplicantRoute from './src/route/new.applicant.route/new.applicant.route';
-import adminStudentRoute from './src/route/admin.route/admin.student.route/admin.enrolled.student.route/admin.enrolled.student.route';
+import adminEnrolledStudentRoute from './src/route/admin.route/admin.student.route/admin.enrolled.student.route/admin.enrolled.student.route';
 import { globalErrorHandler } from './src/controller/error.controller/error.controller';
 import adminAdministrationRoute from './src/route/admin.route/admin.administration.route/admin.administration.route';
 import adminEnrollmentRoute from './src/route/admin.route/admin.enrollment.route/admin.enrollment.route';
 import adminManageClassRoute from './src/route/admin.route/admin.administration.route/admin.manage.class.route/admin.manage.class.route';
 import adminTimetableRoute from './src/route/admin.route/admin.timetable.route/admin.timetable.route';
+import adminActiveStudentRoute from './src/route/admin.route/admin.student.route/admin.active.student.route/admin.active.student.route';
 
 const app = express();
 app.use(cookieParser());
@@ -56,7 +57,8 @@ app.use('/api/v1/admin/administration', adminAdministrationRoute);
 app.use('/api/v1/admin/administration/class', adminManageClassRoute);
 
 app.use('/api/v1/admin/timetable', adminTimetableRoute);
-app.use('/api/v1/admin/student', adminStudentRoute);
+app.use('/api/v1/admin/student/enrolled', adminEnrolledStudentRoute);
+app.use('/api/v1/admin/student/active', adminActiveStudentRoute);
 app.use('/api/v1/admin/applicant', adminEnrollmentRoute);
 
 // Server frontend static assets and handle catch-all route

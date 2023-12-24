@@ -371,6 +371,16 @@ export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) 
                 currentTerm: false
             }
         });
+        await db.student.updateMany({
+            where: {
+                role: 'STUDENT',
+                isActive: true
+            },
+            data: {
+                role: 'ALUMNI',
+                isActive: false
+            }
+        });
         const currentTerm = await db.term.findUnique({
             where: {
                 id: +id
@@ -387,6 +397,16 @@ export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) 
                 currentTerm: true
             }
         });
+         // Update all students with role STUDENT and isActive false
+         await db.student.updateMany({
+            where: {
+                role: 'STUDENT',
+                isActive: false
+            },
+            data: {
+                isActive: true
+            }
+        });
         return updatedTerm;
     });
 }
@@ -399,12 +419,12 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
     const existingTermWithGivenName = await db.term.findFirst({
         where: {
             name: {
-                contains: name,
+                equals: name,
                 mode: 'insensitive'
             }
         }
     });
-
+    console.log(existingTermWithGivenName);
     if (existingTermWithGivenName?.name) {
         throw customError(`This term name - ${name} already exists for a term`, 'fail', 404, true);
     }
@@ -660,4 +680,42 @@ export async function findCurrentTerm() {
     }
 
     return activeTerm;
+}
+//find published term
+export async function findPublishTermAdministration() {
+    const publishTerm = await db.term.findFirst({
+        where: {
+            isPublish: true
+        },
+        select: {
+            id: true,
+            name: true,
+            isPublish: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    subject: true,
+                    level: true
+                }
+            },
+            termSubjectGroup: {
+                select: {
+                    id: true,
+                    fee: true,
+                    subjectGroup: true
+                }
+            }
+        }
+    });
+
+    if (!publishTerm) {
+        throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
+    }
+
+    return publishTerm;
 }

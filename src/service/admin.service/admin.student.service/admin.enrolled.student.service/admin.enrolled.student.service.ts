@@ -47,7 +47,7 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
     console.log(students);
 }
 
-// Find all student for the admin
+// Find all enrolled student for the admin
 
 export async function findAllEnrolledStudents(page: number) {
     const take = 10;

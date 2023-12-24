@@ -3,7 +3,7 @@ import { EmergencyContactSchema, HealthInformationSchema, ParentsSchema } from '
 
 
 
-// To find a student by ID
+// To find an enrolled student by ID
 export const findUniqueEnrolledStudentSchema = z.object({
     params: z.object({
         id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
@@ -11,7 +11,7 @@ export const findUniqueEnrolledStudentSchema = z.object({
 });
 export type FindUniqueEnrolledStudentSchema = z.infer<typeof findUniqueEnrolledStudentSchema>;
 
-//To find all students for Admin
+//To find all enrolled students for Admin
 export const findAllEnrolledStudentsSchema = z.object({
     query: z.object({
         page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()

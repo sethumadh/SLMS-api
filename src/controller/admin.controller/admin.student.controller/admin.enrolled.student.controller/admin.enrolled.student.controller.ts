@@ -32,7 +32,7 @@ export const findEnrolledStudentByIdHandler = async (req: Request<FindUniqueEnro
     res.status(200).json(student);
 };
 
-// Find all student for the admin
+// Find all enrolled student for the admin
 export const findAllEnrolledStudentsHandler = async (req: Request<{}, {}, {}, FindAllEnrolledStudentsSchema['query']>, res: Response, next: NextFunction) => {
     const { page } = req.query;
 
