@@ -72,7 +72,7 @@ export const lateEnrolledActiveStudentHandler = async (req: Request<{}, {}, {}, 
     const { id, termId } = req.query;
     if (id && termId) {
         const enrolledSubjects = await lateEnrolledActiveStudent(+id, termId);
-        console.log(enrolledSubjects);
+
         res.status(200).json(enrolledSubjects);
     }
 };
