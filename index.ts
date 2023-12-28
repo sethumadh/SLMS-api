@@ -17,6 +17,7 @@ import adminEnrollmentRoute from './src/route/admin.route/admin.enrollment.route
 import adminManageClassRoute from './src/route/admin.route/admin.administration.route/admin.manage.class.route/admin.manage.class.route';
 import adminTimetableRoute from './src/route/admin.route/admin.timetable.route/admin.timetable.route';
 import adminActiveStudentRoute from './src/route/admin.route/admin.student.route/admin.active.student.route/admin.active.student.route';
+import adminLateEnrolledStudentRoute from './src/route/admin.route/admin.student.route/admin.late.enrollments.route/admin.late.enrollments.route';
 
 const app = express();
 app.use(cookieParser());
@@ -58,6 +59,7 @@ app.use('/api/v1/admin/administration/class', adminManageClassRoute);
 
 app.use('/api/v1/admin/timetable', adminTimetableRoute);
 app.use('/api/v1/admin/student/enrolled', adminEnrolledStudentRoute);
+app.use('/api/v1/admin/student/late-enrolled', adminLateEnrolledStudentRoute);
 app.use('/api/v1/admin/student/active', adminActiveStudentRoute);
 app.use('/api/v1/admin/applicant', adminEnrollmentRoute);
 

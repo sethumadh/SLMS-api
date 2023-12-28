@@ -5,6 +5,7 @@ import {
     deEnrollStudentEnrolledToSubjects,
     deleteManyStudents,
     enrollStudentEnrolledToSubjects,
+    enrollToCurrenTerm,
     findAllEnrolledStudents,
     findEnrolledStudentById,
     findEnrolledStudentEnrolledSubjects,
@@ -34,22 +35,24 @@ export const findEnrolledStudentByIdHandler = async (req: Request<FindUniqueEnro
 
 // Find all enrolled student for the admin
 export const findAllEnrolledStudentsHandler = async (req: Request<{}, {}, {}, FindAllEnrolledStudentsSchema['query']>, res: Response, next: NextFunction) => {
-    const { page } = req.query;
+    const { page, termId } = req.query;
 
-    if (page) {
-        const allStudent = await findAllEnrolledStudents(+page);
+    if (page && termId) {
+        const allStudent = await findAllEnrolledStudents(+page, +termId);
         res.status(200).json(allStudent);
-    } else {
+    } else if (termId) {
         const page = 0;
-        const allStudent = await findAllEnrolledStudents(page);
+        const allStudent = await findAllEnrolledStudents(page, +termId);
         res.status(200).json(allStudent);
     }
 };
 
 export const searchEnrolledStudentsHandler = async (req: Request<{}, {}, {}, SearchEnrolledStudentsSchema['query']>, res: Response, next: NextFunction) => {
-    const { search, page = 0 } = req.query;
-    const searchResult = await searchEnrolledStudents(search, +page);
-    res.status(200).json(searchResult);
+    const { search, page = 0, termId } = req.query;
+    if (termId) {
+        const searchResult = await searchEnrolledStudents(search, +page, +termId);
+        res.status(200).json(searchResult);
+    }
 };
 
 // findTermToEnrollForStudentEnrolled
@@ -73,8 +76,8 @@ export const enrollStudentEnrolledToSubjectsHandler = async (req: Request<{}, {}
 /* de-enroll enrolled student to subjects */
 export const deEnrollStudentEnrolledToSubjectsHandler = async (req: Request<{}, {}, EnrolledStudentEnrollDataSchema['body'], {}>, res: Response, next: NextFunction) => {
     const enrollData = req.body;
-    const termToEnroll = await deEnrollStudentEnrolledToSubjects(enrollData);
-    res.status(200).json(termToEnroll);
+    const message = await deEnrollStudentEnrolledToSubjects(enrollData);
+    res.status(200).json(message);
 };
 // update student personal details service
 export const updateStudentPersonalDetailHandler = asyncErrorHandler(
@@ -135,6 +138,14 @@ export const updateStudentHealthInformationHandler = asyncErrorHandler(
         }
     }
 );
+
+// enroll enrolled-student to active student for the current term
+export const enrollToCurrenTermHandler = async (req: Request<FindUniqueEnrolledStudentSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const message = await enrollToCurrenTerm(id);
+
+    res.status(200).json(message);
+};
 
 // delete student
 export const deleteManyStudentsHandler = async (req: Request, res: Response, next: NextFunction) => {

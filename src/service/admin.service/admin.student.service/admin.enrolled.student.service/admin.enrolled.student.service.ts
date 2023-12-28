@@ -44,22 +44,30 @@ export async function filterStudentsBySubjects(subjects: string[], page: number)
             // }
         }
     });
-    console.log(students);
+
 }
 
 // Find all enrolled student for the admin
 
-export async function findAllEnrolledStudents(page: number) {
+export async function findAllEnrolledStudents(page: number, termId: number) {
     const take = 10;
     const pageNum: number = page ?? 0;
     const skip = pageNum * take;
     const enrolledStudents = await db.student.findMany({
         where: {
             role: 'STUDENT',
-            isActive: false
+            isActive: false,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            }
         },
         skip,
         take,
+        orderBy: {
+            createdAt: 'desc'
+        },
         select: {
             id: true,
             role: true,
@@ -119,23 +127,19 @@ export async function findAllEnrolledStudents(page: number) {
                     declaration: true
                 }
             }
-        },
-        orderBy: {
-            createdAt: 'desc'
         }
     });
-    const count = await db.student.aggregate({
+    const count = await db.student.count({
         where: {
-            role: 'STUDENT'
-        },
-        _count: {
-            id: true
+            role: 'STUDENT',
+            isActive: false,
+            studentTermFee: {
+                some: {
+                    termId: termId
+                }
+            }
         }
     });
-
-    if (enrolledStudents.length == 0) {
-        throw customError(`No students lists to show`, 'fail', 400, true);
-    }
     return { enrolledStudents, count };
 }
 
@@ -269,7 +273,7 @@ export async function findEnrolledStudentEnrolledSubjects(id: string) {
     return enrolledSubjects;
 }
 // search enrolled student for the admin
-export async function searchEnrolledStudents(search: string, page: number) {
+export async function searchEnrolledStudents(search: string, page: number, termId: number) {
     const take = 10;
     if (search.length == 0) {
         throw customError(`No Search query string available`, 'fail', 400, true);
@@ -279,9 +283,17 @@ export async function searchEnrolledStudents(search: string, page: number) {
     const enrolledStudents = await db.student.findMany({
         skip,
         take,
+        orderBy: {
+            createdAt: 'desc'
+        },
         where: {
             role: 'STUDENT',
             isActive: false,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            },
             OR: [
                 {
                     personalDetails: {
@@ -364,15 +376,17 @@ export async function searchEnrolledStudents(search: string, page: number) {
                     declaration: true
                 }
             }
-        },
-        orderBy: {
-            createdAt: 'desc'
         }
     });
-    const count = await db.student.aggregate({
+    const count = await db.student.count({
         where: {
             role: 'STUDENT',
             isActive: false,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            },
             OR: [
                 {
                     personalDetails: {
@@ -396,15 +410,9 @@ export async function searchEnrolledStudents(search: string, page: number) {
                     }
                 }
             ]
-        },
-        _count: {
-            id: true
         }
     });
 
-    if (enrolledStudents.length == 0) {
-        throw customError(`No students lists to show`, 'fail', 400, true);
-    }
     return { enrolledStudents, count };
 }
 // delete student
@@ -727,4 +735,31 @@ export async function updateStudentHealthInformation(id: string, data: UpdateStu
     } catch (e) {
         throw new Error(`Failed to update student health and emergency details @ksm${e}`);
     }
+}
+
+// enroll enrolled-student to active student for the current term
+export async function enrollToCurrenTerm(id: string) {
+    const student = await db.student.findUnique({
+        where: { id: parseInt(id) }
+    });
+    if (!student) {
+        throw customError(`No student found with ID ${id}`, 'fail', 404, true);
+    }
+    const enrollments = await db.enrollment.findMany({
+        where: { studentId: parseInt(id) }
+    });
+
+    if (enrollments.length === 0) {
+        throw customError(`No enrollments found for the applicant. Please enroll a subject at the subject & classes tab.`, 'fail', 404, true);
+    }
+
+    // Check if the student's role is already 'STUDENT'
+    if (student.role != 'STUDENT') {
+        throw customError(`The applicant is not student`, 'fail', 404, true);
+    }
+    await db.student.update({
+        where: { id: parseInt(id) },
+        data: { role: 'STUDENT', isActive: true }
+    });
+    return { message: `The applicant enrolled to Student successfully` };
 }

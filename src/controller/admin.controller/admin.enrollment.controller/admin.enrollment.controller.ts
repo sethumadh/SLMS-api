@@ -8,7 +8,8 @@ import {
     findAllApplicants,
     findApplicantById,
     findApplicantEnrolledSubjects,
-    findTermToEnroll,
+    findCurrentTermToEnroll,
+    findPublishedTermToEnroll,
     searchApplicants
 } from '../../../service/admin.service/admin.enrollment.service/admin.enrollment.service';
 import { ApplicantEnrollDataSchema, FindUniqueApplicantSchema, SearchApplicantSchema } from '../../../schema/admin.dto/admin.enrollment.dto/admin.enrollment.dto';
@@ -42,8 +43,12 @@ export const findApplicantByIdHandler = async (req: Request<FindUniqueApplicantS
     const applicant = await findApplicantById(id);
     res.status(200).json(applicant);
 };
-export const findTermToEnrollHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
-    const termToEnroll = await findTermToEnroll();
+export const findPublishedTermToEnrollHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
+    const termToEnroll = await findPublishedTermToEnroll();
+    res.status(200).json(termToEnroll);
+};
+export const findCurrentTermToEnrollHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
+    const termToEnroll = await findCurrentTermToEnroll();
     res.status(200).json(termToEnroll);
 };
 
@@ -68,6 +73,6 @@ export const findApplicantEnrolledSubjectsHandler = async (req: Request<FindUniq
 };
 export const enrollApplicantToStudentHandler = async (req: Request<FindUniqueApplicantSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    const enrolledSubjects = await enrollApplicantToStudent(id);
+    const enrolledSubjects = await enrollApplicantToStudent(+id);
     res.status(200).json(enrolledSubjects);
 };

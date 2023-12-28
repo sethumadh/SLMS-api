@@ -11,7 +11,8 @@ export type FindUniqueActiveStudentSchema = z.infer<typeof findUniqueActiveStude
 //To find all enrolled students for Admin
 export const findAllActiveStudentsSchema = z.object({
     query: z.object({
-        page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()
+        page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional(),
+        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional(),
     })
 });
 export type FindAllActiveStudentsSchema = z.infer<typeof findAllActiveStudentsSchema>;
@@ -20,7 +21,8 @@ export type FindAllActiveStudentsSchema = z.infer<typeof findAllActiveStudentsSc
 export const searchActiveStudentsSchema = z.object({
     query: z.object({
         search: z.string(),
-        page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()
+        page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional(),
+        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional(),
     })
 });
 export type SearchActiveStudentsSchema = z.infer<typeof searchActiveStudentsSchema>;

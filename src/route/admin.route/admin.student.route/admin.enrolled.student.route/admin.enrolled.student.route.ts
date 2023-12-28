@@ -15,6 +15,7 @@ import {
 import {
     deEnrollStudentEnrolledToSubjectsHandler,
     enrollStudentEnrolledToSubjectsHandler,
+    enrollToCurrenTermHandler,
     findAllEnrolledStudentsHandler,
     findEnrolledStudentByIdHandler,
     findEnrolledStudentEnrolledSubjectsHandler,
@@ -30,20 +31,25 @@ const adminEnrolledStudentRoute = express.Router();
 adminEnrolledStudentRoute.route('/get-all-enrolled-students').get(validate(findAllEnrolledStudentsSchema), asyncErrorHandler(findAllEnrolledStudentsHandler));
 
 /*search enrolled students*/
-adminEnrolledStudentRoute.route('/search-enrolled-students').get(asyncErrorHandler(searchEnrolledStudentsHandler));
+adminEnrolledStudentRoute.route('/search-enrolled-students').get(validate(searchEnrolledStudentsSchema), asyncErrorHandler(searchEnrolledStudentsHandler));
 
 adminEnrolledStudentRoute.route('/enrolled-student-detail/:id').get(validate(findUniqueEnrolledStudentSchema), asyncErrorHandler(findEnrolledStudentByIdHandler));
 adminEnrolledStudentRoute.route('/update-personal-detail/:id').patch(validate(updateStudentPersonalDetailSchema), updateStudentPersonalDetailHandler);
 adminEnrolledStudentRoute.route('/update-parents-detail/:id').patch(validate(updateStudentParentsDetailSchema), updateStudentParentsDetailHandler);
 adminEnrolledStudentRoute.route('/update-health-detail/:id').patch(validate(updateStudentHealthDetailSchema), updateStudentHealthInformationHandler);
+/*******************************************/
 /* find term to enroll */
 adminEnrolledStudentRoute.route('/term-to-enroll-student-enrolled').get(asyncErrorHandler(findTermToEnrollForStudentEnrolledHandler));
 /*find enrolled subject for applicants*/
 adminEnrolledStudentRoute.route('/find-enrolled-subjects-for-enrolled-student/:id').get(validate(findUniqueEnrolledStudentSchema), asyncErrorHandler(findEnrolledStudentEnrolledSubjectsHandler));
+
+/*******************************************/
+
 /*enroll applicant to subject*/
 adminEnrolledStudentRoute.route('/enroll-enrolled-student').post(validate(enrolledStudentEnrollDataSchema), asyncErrorHandler(enrollStudentEnrolledToSubjectsHandler));
 /* de-enroll enrolled student to subjects */
 adminEnrolledStudentRoute.route('/de-enroll-enrolled-student').post(validate(enrolledStudentEnrollDataSchema), asyncErrorHandler(deEnrollStudentEnrolledToSubjectsHandler));
-
+// enroll enrolled-student to active student for the current term
+adminEnrolledStudentRoute.route('/enrolled-student-to-current-term/:id').post(validate(findUniqueEnrolledStudentSchema), asyncErrorHandler(enrollToCurrenTermHandler));
 // adminEnrolledStudentRoute.route('/deleteAllStudents');
 export default adminEnrolledStudentRoute;

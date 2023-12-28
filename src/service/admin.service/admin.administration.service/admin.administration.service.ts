@@ -424,7 +424,7 @@ export async function changeCurrentTermName(id: ChangeCurrentTermNameSchema['par
             }
         }
     });
-    console.log(existingTermWithGivenName);
+
     if (existingTermWithGivenName?.name) {
         throw customError(`This term name - ${name} already exists for a term`, 'fail', 404, true);
     }

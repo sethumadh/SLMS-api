@@ -1,20 +1,27 @@
-import { z } from 'zod';
 import { db } from '../../../../utils/db.server';
 import { customError } from '../../../../utils/customError';
 
 // Find all active student for the admin
-
-export async function findActiveStudents(page: number) {
+export async function findActiveStudents(page: number, termId: number) {
     const take = 10;
-    const pageNum: number = page ?? 0;
+    const pageNum = page ?? 0;
     const skip = pageNum * take;
+
     const activeStudents = await db.student.findMany({
         where: {
             role: 'STUDENT',
-            isActive: true
+            isActive: true,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            }
         },
         skip,
         take,
+        orderBy: {
+            createdAt: 'desc'
+        },
         select: {
             id: true,
             role: true,
@@ -38,7 +45,6 @@ export async function findActiveStudents(page: number) {
                     image: true
                 }
             },
-
             parentsDetails: {
                 select: {
                     id: true,
@@ -74,28 +80,26 @@ export async function findActiveStudents(page: number) {
                     declaration: true
                 }
             }
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    });
-    const count = await db.student.aggregate({
-        where: {
-            role: 'STUDENT'
-        },
-        _count: {
-            id: true
         }
     });
 
-    if (activeStudents.length == 0) {
-        throw customError(`No students lists to show`, 'fail', 400, true);
-    }
+    const count = await db.student.count({
+        where: {
+            role: 'STUDENT',
+            isActive: true,
+            studentTermFee: {
+                some: {
+                    termId: termId
+                }
+            }
+        }
+    });
+
     return { activeStudents, count };
 }
 
 // search active student for the admin
-export async function searchActiveStudents(search: string, page: number) {
+export async function searchActiveStudents(search: string, page: number, termId: number) {
     const take = 10;
     if (search.length == 0) {
         throw customError(`No Search query string available`, 'fail', 400, true);
@@ -105,9 +109,17 @@ export async function searchActiveStudents(search: string, page: number) {
     const activeStudents = await db.student.findMany({
         skip,
         take,
+        orderBy: {
+            createdAt: 'desc'
+        },
         where: {
             role: 'STUDENT',
             isActive: true,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            },
             OR: [
                 {
                     personalDetails: {
@@ -190,15 +202,17 @@ export async function searchActiveStudents(search: string, page: number) {
                     declaration: true
                 }
             }
-        },
-        orderBy: {
-            createdAt: 'desc'
         }
     });
-    const count = await db.student.aggregate({
+    const count = await db.student.count({
         where: {
             role: 'STUDENT',
             isActive: true,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            },
             OR: [
                 {
                     personalDetails: {
@@ -222,15 +236,9 @@ export async function searchActiveStudents(search: string, page: number) {
                     }
                 }
             ]
-        },
-        _count: {
-            id: true
         }
     });
 
-    if (activeStudents.length == 0) {
-        throw customError(`No students lists to show`, 'fail', 400, true);
-    }
     return { activeStudents, count };
 }
 
@@ -295,6 +303,6 @@ export async function findActiveStudentById(id: string) {
             }
         }
     });
-console.log(activeStudent)
+
     return activeStudent;
 }

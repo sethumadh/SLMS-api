@@ -1,22 +1,33 @@
-import { db } from '../../../utils/db.server';
-import { customError } from '../../../utils/customError';
-import { ApplicantEnrollDataSchema } from '../../../schema/admin.dto/admin.enrollment.dto/admin.enrollment.dto';
+import { db } from '../../../../utils/db.server';
+import { customError } from '../../../../utils/customError';
+import { EnrolledStudentEnrollDataSchema } from '../../../../schema/admin.dto/admin.student.dto/admin.enrolledstudent/admin.enrolled.student.dto';
 
-export async function findAllApplicants(page: number) {
+// Find all late enrollment - student for the admin
+export async function findLateEnrolledStudents(page: number, termId: number) {
     const take = 10;
-    // const page = 2; // coming from request
-    const pageNum: number = page ?? 0;
+    const pageNum = page ?? 0;
     const skip = pageNum * take;
-    const applicants = await db.student.findMany({
+
+    const lateEnrolledStudents = await db.student.findMany({
         where: {
-            role: 'APPLICANT',
-            isActive: false
+            role: 'STUDENT',
+            isActive: false,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            }
         },
         skip,
         take,
+        orderBy: {
+            createdAt: 'desc'
+        },
         select: {
             id: true,
             role: true,
+            isActive: true,
+            updatedAt: true,
             createdAt: true,
             personalDetails: {
                 select: {
@@ -70,39 +81,46 @@ export async function findAllApplicants(page: number) {
                     declaration: true
                 }
             }
-        },
-        orderBy: {
-            createdAt: 'desc'
         }
     });
-    const count = await db.student.aggregate({
+
+    const count = await db.student.count({
         where: {
-            role: 'APPLICANT'
-        },
-        _count: {
-            id: true
+            role: 'STUDENT',
+            isActive: false,
+            studentTermFee: {
+                some: {
+                    termId: termId
+                }
+            }
         }
     });
 
-    if (applicants.length == 0) {
-        throw customError(`No applicants lists to show`, 'fail', 400, true);
-    }
-
-    return { applicants, count };
+    return { lateEnrolledStudents, count };
 }
 
-export async function searchApplicants(search: string, page: number) {
+// search late enrollment - student for the admin
+export async function searchLateEnrolledStudents(search: string, page: number, termId: number) {
     const take = 10;
     if (search.length == 0) {
         throw customError(`No Search query string available`, 'fail', 400, true);
     }
     const pageNum: number = page ?? 0;
     const skip = pageNum * take;
-    const applicants = await db.student.findMany({
+    const lateEnrolledStudents = await db.student.findMany({
         skip,
         take,
+        orderBy: {
+            createdAt: 'desc'
+        },
         where: {
-            role: 'APPLICANT',
+            role: 'STUDENT',
+            isActive: false,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            },
             OR: [
                 {
                     personalDetails: {
@@ -130,6 +148,8 @@ export async function searchApplicants(search: string, page: number) {
         select: {
             id: true,
             role: true,
+            isActive: true,
+            updatedAt: true,
             createdAt: true,
             personalDetails: {
                 select: {
@@ -183,15 +203,17 @@ export async function searchApplicants(search: string, page: number) {
                     declaration: true
                 }
             }
-        },
-        orderBy: {
-            createdAt: 'desc'
         }
     });
-
-    const count = await db.student.aggregate({
+    const count = await db.student.count({
         where: {
-            role: 'APPLICANT',
+            role: 'STUDENT',
+            isActive: false,
+            studentTermFee: {
+                some: {
+                    termId: +termId
+                }
+            },
             OR: [
                 {
                     personalDetails: {
@@ -215,25 +237,19 @@ export async function searchApplicants(search: string, page: number) {
                     }
                 }
             ]
-        },
-        _count: {
-            id: true
         }
     });
 
-    if (applicants.length == 0) {
-        throw customError(`No applicants lists to show`, 'fail', 400, true);
-    }
-
-    return { applicants, count };
+    return { lateEnrolledStudents, count };
 }
 
-/*find applicant by ID*/
-export async function findApplicantById(id: string) {
-    const applicant = await db.student.findUnique({
+// find unqiue late enrollment - student by ID for internal queries
+export async function findLateEnrolledStudentById(id: string) {
+    const lateEnrolledStudent = await db.student.findUnique({
         where: {
             id: +id,
-            role: 'APPLICANT'
+            role: 'STUDENT',
+            isActive: false
         },
         include: {
             personalDetails: {
@@ -253,7 +269,6 @@ export async function findApplicantById(id: string) {
                     image: true
                 }
             },
-
             parentsDetails: {
                 select: {
                     id: true,
@@ -280,7 +295,6 @@ export async function findApplicantById(id: string) {
                     allergy: true
                 }
             },
-
             otherInformation: {
                 select: {
                     id: true,
@@ -290,43 +304,12 @@ export async function findApplicantById(id: string) {
             }
         }
     });
-
-    return applicant;
+    return lateEnrolledStudent;
 }
-/* find published term to enroll*/
-export async function findPublishedTermToEnroll() {
-    const publishTerm = await db.term.findFirst({
-        where: {
-            isPublish: true
-        },
-        select: {
-            id: true,
-            name: true,
-            isPublish: true,
-            currentTerm: true,
-            startDate: true,
-            endDate: true,
-            createdAt: true,
-            updatedAt: true,
-            termSubject: {
-                select: {
-                    id: true,
-                    subject: true,
-                    termSubjectGroup: true
-                }
-            }
-        }
-    });
 
-    if (!publishTerm) {
-        throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
-    }
-
-    return publishTerm;
-}
-/* find current term to enroll*/
-export async function findCurrentTermToEnroll() {
-    const publishTerm = await db.term.findFirst({
+// find term to enroll
+export async function findTermToEnrollForLateEnrolledStudent() {
+    const currentTerm = await db.term.findFirst({
         where: {
             currentTerm: true
         },
@@ -349,20 +332,59 @@ export async function findCurrentTermToEnroll() {
         }
     });
 
-    if (!publishTerm) {
+    if (!currentTerm) {
         throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
     }
 
-    return publishTerm;
+    return currentTerm;
 }
-/* enroll applicant to subjects */
-export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['body']) {
+export async function findLateEnrolledStudentEnrolledSubjects(id: string, termId: string) {
+    // Fetch all enrollments for the student
+    const enrollments = await db.enrollment.findMany({
+        where: {
+            studentId: parseInt(id),
+            termSubjectGroup: {
+                termId: +termId
+            }
+        },
+        include: {
+            subjectEnrollment: {
+                include: {
+                    termSubject: {
+                        include: {
+                            subject: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Extract the subjects from the enrollments
+    let enrolledSubjects: { subjectId: number; subjectName: string }[] = [];
+    enrollments.forEach((enrollment) => {
+        if (enrollment.subjectEnrollment) {
+            // Check if subjectEnrollment exists
+            const se = enrollment.subjectEnrollment;
+            enrolledSubjects.push({
+                subjectId: se.termSubject.subjectId,
+                subjectName: se.termSubject.subject.name
+                // Include additional subject details as needed
+            });
+        }
+    });
+
+    return enrolledSubjects;
+}
+
+/* enroll enrolled student to subjects */
+export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStudentEnrollDataSchema['body']) {
     let alreadyEnrolledSubjects = [];
 
     // Check Existing Enrollments
     for (const enrollmentItem of enrollData.enrollData) {
         const existingEnrollments = await db.enrollment.findMany({
-            where: { studentId: enrollData.applicantId, termSubjectGroupId: enrollmentItem.termSubjectGroupId },
+            where: { studentId: enrollData.enrolledStudentId, termSubjectGroupId: enrollmentItem.termSubjectGroupId },
             include: { subjectEnrollment: { include: { termSubject: true } } }
         });
 
@@ -375,7 +397,7 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
     }
 
     if (alreadyEnrolledSubjects.length > 0) {
-        throw customError(`Already enrolled in subjects: ${alreadyEnrolledSubjects.join(', ')}`, 'fail', 404, true);
+        throw new Error(`Already enrolled in subjects: ${alreadyEnrolledSubjects.join(', ')}`);
     }
 
     let enrollmentIds = [];
@@ -402,7 +424,7 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
         // Create Enrollment and SubjectEnrollment
         const newEnrollment = await db.enrollment.create({
             data: {
-                studentId: enrollData.applicantId,
+                studentId: enrollData.enrolledStudentId,
                 termSubjectGroupId: enrollmentItem.termSubjectGroupId,
                 dueDate: dueDate
             },
@@ -421,20 +443,19 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
             where: { id: newEnrollment.id },
             data: { subjectEnrollmentId: newSubjectEnrollment.id }
         });
-
         // Handle FeePayment and StudentTermFee
         if (feeInfo?.feeId) {
             const studentTermFee = await db.studentTermFee.upsert({
                 where: {
                     studentId_termSubjectGroupId_termId: {
-                        studentId: enrollData.applicantId,
+                        studentId: enrollData.enrolledStudentId,
                         termSubjectGroupId: enrollmentItem.termSubjectGroupId,
                         termId: feeInfo.termId
                     }
                 },
                 update: {},
                 create: {
-                    studentId: enrollData.applicantId,
+                    studentId: enrollData.enrolledStudentId,
                     termSubjectGroupId: enrollmentItem.termSubjectGroupId,
                     termId: feeInfo.termId
                 }
@@ -474,13 +495,12 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
 
         enrollmentIds.push(newEnrollment.id);
     }
-    const messages = await enrollApplicantToStudent(enrollData.applicantId);
 
-    return { message: 'Enrollment successful and The applicant enrolled to Student successfully`', enrollmentIds, messages };
+    return { message: 'Enrollment successful', enrollmentIds };
 }
 
-/* de-enroll applicant to subjects */
-export async function deEnrollApplicant(deEnrollData: ApplicantEnrollDataSchema['body']) {
+/* de-enroll enrolled student to subjects */
+export async function deEnrollStudentEnrolledToSubjects(deEnrollData: EnrolledStudentEnrollDataSchema['body']) {
     let deEnrolledSubjects = [];
 
     for (const deEnrollItem of deEnrollData.enrollData) {
@@ -489,7 +509,7 @@ export async function deEnrollApplicant(deEnrollData: ApplicantEnrollDataSchema[
             where: {
                 termSubjectId: deEnrollItem.termSubjectId,
                 enrollment: {
-                    studentId: deEnrollData.applicantId,
+                    studentId: deEnrollData.enrolledStudentId,
                     termSubjectGroupId: deEnrollItem.termSubjectGroupId
                 }
             }
@@ -508,7 +528,7 @@ export async function deEnrollApplicant(deEnrollData: ApplicantEnrollDataSchema[
         const remainingEnrollments = await db.subjectEnrollment.count({
             where: {
                 enrollment: {
-                    studentId: deEnrollData.applicantId,
+                    studentId: deEnrollData.enrolledStudentId,
                     termSubjectGroupId: deEnrollItem.termSubjectGroupId
                 }
             }
@@ -529,46 +549,10 @@ export async function deEnrollApplicant(deEnrollData: ApplicantEnrollDataSchema[
     };
 }
 
-/* fetch all enrolled subjects for the appicant*/
-export async function findApplicantEnrolledSubjects(id: string) {
-    // Fetch all enrollments for the student
-    const enrollments = await db.enrollment.findMany({
-        where: { studentId: parseInt(id) },
-        include: {
-            subjectEnrollment: {
-                include: {
-                    termSubject: {
-                        include: {
-                            subject: true
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Extract the subjects from the enrollments
-    let enrolledSubjects: { subjectId: number; subjectName: string }[] = [];
-    enrollments.forEach((enrollment) => {
-        if (enrollment.subjectEnrollment) {
-            // Check if subjectEnrollment exists
-            const se = enrollment.subjectEnrollment;
-            enrolledSubjects.push({
-                subjectId: se.termSubject.subjectId,
-                subjectName: se.termSubject.subject.name
-                // Include additional subject details as needed
-            });
-        }
-    });
-
-    // Return the list of enrolled subjects
-    return enrolledSubjects;
-}
-
-export async function enrollApplicantToStudent(id: number) {
+export async function lateEnrolledActiveStudent(id: number, termId: string) {
     // Fetch the student record
     const student = await db.student.findUnique({
-        where: { id }
+        where: { id, role: 'STUDENT' }
     });
 
     // Check if student record exists
@@ -576,22 +560,22 @@ export async function enrollApplicantToStudent(id: number) {
         throw customError(`No student found with ID ${id}`, 'fail', 404, true);
     }
     const enrollments = await db.enrollment.findMany({
-        where: { studentId: id }
+        where: {
+            studentId: id,
+            termSubjectGroup: {
+                termId: +termId
+            }
+        }
     });
 
     if (enrollments.length === 0) {
         throw customError(`No enrollments found for the applicant. Please enroll a subject at the subject & classes tab.`, 'fail', 404, true);
     }
 
-    // Check if the student's role is already 'STUDENT'
-    if (student.role === 'STUDENT') {
-        throw customError(`The applicant is already a student`, 'fail', 404, true);
-    }
-
     // Update the student's role to 'STUDENT'
     await db.student.update({
         where: { id },
-        data: { role: 'STUDENT' }
+        data: { isActive: true }
     });
 
     return { message: `The applicant enrolled to Student successfully` };

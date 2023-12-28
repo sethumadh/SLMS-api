@@ -10,7 +10,8 @@ import {
     findAllApplicantsHandler,
     findApplicantByIdHandler,
     findApplicantEnrolledSubjectsHandler,
-    findTermToEnrollHandler,
+    findCurrentTermToEnrollHandler,
+    findPublishedTermToEnrollHandler,
     searchApplicantHandler
 } from '../../../controller/admin.controller/admin.enrollment.controller/admin.enrollment.controller';
 
@@ -22,14 +23,21 @@ adminEnrollmentRoute.route('/search-applicants').get(validate(searchApplicantSch
 
 /* find unique applicant by id*/
 adminEnrollmentRoute.route('/applicant-detail/:id').get(validate(findUniqueApplicantSchema), asyncErrorHandler(findApplicantByIdHandler));
-/* find term to enroll */
-adminEnrollmentRoute.route('/term-to-enroll').get(asyncErrorHandler(findTermToEnrollHandler));
+/* find published term to enroll */
+adminEnrollmentRoute.route('/term-to-enroll').get(asyncErrorHandler(findPublishedTermToEnrollHandler));
+/* find current term to enroll */
+adminEnrollmentRoute.route('/current-term-to-enroll').get(asyncErrorHandler(findCurrentTermToEnrollHandler));
+
 /*enroll applicant to subject*/
 adminEnrollmentRoute.route('/enroll-applicant').post(validate(applicantEnrollDataSchema), asyncErrorHandler(enrollApplicantHandler));
 /*find enrolled subject for applicants*/
 adminEnrollmentRoute.route('/find-enrolled-subjects-applicant/:id').get(validate(findUniqueApplicantSchema), asyncErrorHandler(findApplicantEnrolledSubjectsHandler));
+
+//***** */  NOT USED *****//
 /*enroll the applicant to student*/
 adminEnrollmentRoute.route('/enroll-applicant-to-student/:id').post(validate(findUniqueApplicantSchema), asyncErrorHandler(enrollApplicantToStudentHandler));
+//***** */  NOT USED *****//
+
 /* de-enroll applicant to subjects */
 adminEnrollmentRoute.route('/de-enroll-applicant').post(validate(applicantEnrollDataSchema), asyncErrorHandler(deEnrollApplicantHandler));
 export default adminEnrollmentRoute;
