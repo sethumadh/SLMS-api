@@ -99,11 +99,9 @@ export async function findActiveStudents(page: number, termId: number) {
 }
 
 // search active student for the admin
-export async function searchActiveStudents(search: string, page: number, termId: number) {
+export async function searchActiveStudents(search = '', page: number, termId: number, subjectOption = '') {
     const take = 10;
-    if (search.length == 0) {
-        throw customError(`No Search query string available`, 'fail', 400, true);
-    }
+
     const pageNum: number = page ?? 0;
     const skip = pageNum * take;
     const activeStudents = await db.student.findMany({
@@ -117,7 +115,14 @@ export async function searchActiveStudents(search: string, page: number, termId:
             isActive: true,
             studentTermFee: {
                 some: {
-                    termId: +termId
+                    termId: +termId,
+                    termSubjectGroup: {
+                        subject: {
+                            some: {
+                                name: subjectOption ? subjectOption : undefined
+                            }
+                        }
+                    }
                 }
             },
             OR: [
@@ -210,7 +215,14 @@ export async function searchActiveStudents(search: string, page: number, termId:
             isActive: true,
             studentTermFee: {
                 some: {
-                    termId: +termId
+                    termId: +termId,
+                    termSubjectGroup: {
+                        subject: {
+                            some: {
+                                name: subjectOption
+                            }
+                        }
+                    }
                 }
             },
             OR: [
