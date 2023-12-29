@@ -318,3 +318,34 @@ export async function findActiveStudentById(id: string) {
 
     return activeStudent;
 }
+export async function findStudentFeeDetails(studentId: number, termId: number) {
+    const studentTermFees = await db.studentTermFee.findMany({
+        where: {
+            studentId: studentId,
+            termSubjectGroup: {
+                termId
+            }
+        },
+        include: {
+            termSubjectGroup: {
+                include: {
+                    fee: true,
+                    subjectGroup: true,
+                    subject: true,
+                    enrollment: {
+                        where: {
+                            studentId
+                        },
+                        select: {
+                            dueDate: true,
+                            subjectEnrollment: true
+                        }
+                    }
+                }
+            },
+            feePayments: true
+        }
+    });
+
+    return studentTermFees;
+}

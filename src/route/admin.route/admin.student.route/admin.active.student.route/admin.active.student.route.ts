@@ -2,8 +2,8 @@ import express from 'express';
 
 import { asyncErrorHandler } from '../../../../utils/asyncErrorHandler';
 import validate from '../../../../middleware/validateResource';
-import { findAllActiveStudentsSchema, findUniqueActiveStudentSchema, searchActiveStudentsSchema } from '../../../../schema/admin.dto/admin.student.dto/admin.active.students.dto/admin.active.students.dto';
-import { findActiveStudentByIdHandler, findActiveStudentsHandler, searchActiveStudentsHandler } from '../../../../controller/admin.controller/admin.student.controller/admin.active.students.controller/admin.active.students.controller';
+import { findAllActiveStudentsSchema, findStudentFeeDetailsSchema, findUniqueActiveStudentSchema, searchActiveStudentsSchema } from '../../../../schema/admin.dto/admin.student.dto/admin.active.students.dto/admin.active.students.dto';
+import { findActiveStudentByIdHandler, findActiveStudentsHandler, findStudentFeeDetailsHandler, searchActiveStudentsHandler } from '../../../../controller/admin.controller/admin.student.controller/admin.active.students.controller/admin.active.students.controller';
 
 const adminActiveStudentRoute = express.Router();
 
@@ -15,5 +15,7 @@ adminActiveStudentRoute.route('/search-active-students').get(validate(searchActi
 
 /*find unqiue student*/
 adminActiveStudentRoute.route('/active-student-detail/:id').get(validate(findUniqueActiveStudentSchema), asyncErrorHandler(findActiveStudentByIdHandler));
+/*find unqiue active student fee details*/
+adminActiveStudentRoute.route('/active-student-fee-detail/:studentId').get(validate(findStudentFeeDetailsSchema), asyncErrorHandler(findStudentFeeDetailsHandler));
 
 export default adminActiveStudentRoute;

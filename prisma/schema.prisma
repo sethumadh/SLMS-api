@@ -224,8 +224,8 @@ model Enrollment {
   termSubjectGroup        TermSubjectGroup          @relation(fields: [termSubjectGroupId], references: [id])
   termSubjectGroupSubject TermSubjectGroupSubject[]
   subjectEnrollment       SubjectEnrollment?
-  Section                 Section?                  @relation(fields: [sectionId], references: [id])
-  TermSubjectLevel        TermSubjectLevel?         @relation(fields: [termSubjectLevelId], references: [id])
+  section                 Section?                  @relation(fields: [sectionId], references: [id])
+  termSubjectLevel        TermSubjectLevel?         @relation(fields: [termSubjectLevelId], references: [id])
   StudentClassHistory     StudentClassHistory[]
 
   @@unique([studentId, termSubjectGroupId, subjectEnrollmentId])
@@ -258,7 +258,7 @@ model StudentTermFee {
   studentId          Int
   termSubjectGroupId Int
   termId             Int
-  feePayments        FeePayment[]
+  feePayment        FeePayment[]
   student            Student          @relation(fields: [studentId], references: [id])
   termSubjectGroup   TermSubjectGroup @relation(fields: [termSubjectGroupId], references: [id])
   term               Term             @relation(fields: [termId], references: [id])
