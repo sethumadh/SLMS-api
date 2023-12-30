@@ -277,7 +277,7 @@ model FeePayment {
   status           PaymentStatus   @default(NODUES)
   method           PaymentMethod   @default(NA)
   fee              Fee             @relation(fields: [feeId], references: [id])
-  studentTermFee   StudentTermFee? @relation(fields: [studentTermFeeId], references: [id])
+  studentTermFee   StudentTermFee? @relation(fields: [studentTermFeeId], references: [id], onDelete: Cascade)
 }
 
 model TermSubjectGroupSubject {

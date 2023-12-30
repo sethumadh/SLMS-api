@@ -343,7 +343,11 @@ export async function findStudentFeeDetails(studentId: number, termId: number) {
                         },
                         select: {
                             dueDate: true,
-                            subjectEnrollment: true
+                            subjectEnrollment: {
+                                include: {
+                                    termSubject: true
+                                }
+                            }
                         }
                     }
                 }
