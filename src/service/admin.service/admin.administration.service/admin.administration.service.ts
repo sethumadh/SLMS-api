@@ -189,10 +189,6 @@ export async function findAllTerm() {
         }
     });
 
-    if (!allTerms) {
-        throw customError(`Unable to fetch terms. Please try again later`, 'fail', 404, true);
-    }
-
     return allTerms;
 }
 
