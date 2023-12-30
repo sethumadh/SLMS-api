@@ -17,7 +17,8 @@ import {
     findAllGroupsHandler,
     findAllStudentsInATermHandler,
     findCurrentTermHandler,
-    findPublishTermAdministrationHandler
+    findPublishTermAdministrationHandler,
+    unPublishTermTermHandler
 } from '../../../controller/admin.controller/admin.administration.controller/admin.administration.controller';
 import { changeCurrentTermNameSchema, createNewTermSetupSchema, extendCurrentTermSchema, findUniqueTermSchema } from '../../../schema/admin.dto/admin.administration.dto/admin.administration.dto';
 
@@ -40,6 +41,7 @@ adminAdministrationRoute.route('/term-students-list/:id').get(validate(findUniqu
 adminAdministrationRoute.route('/create-new-term-setup').post(validate(createNewTermSetupSchema), asyncErrorHandler(createNewTermSetupHandler));
 adminAdministrationRoute.route('/update/make-current-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(makeCurrentTermHandler));
 adminAdministrationRoute.route('/update/make-publish-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(makePublishTermHandler));
+adminAdministrationRoute.route('/update/un-publish-term/:id').patch(validate(findUniqueTermSchema), asyncErrorHandler(unPublishTermTermHandler));
 
 /*Groups*/
 adminAdministrationRoute.route('/get-all-groups').get(asyncErrorHandler(findAllGroupsHandler));

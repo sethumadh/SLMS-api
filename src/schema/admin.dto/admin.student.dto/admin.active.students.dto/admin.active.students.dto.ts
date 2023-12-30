@@ -12,7 +12,7 @@ export type FindUniqueActiveStudentSchema = z.infer<typeof findUniqueActiveStude
 export const findAllActiveStudentsSchema = z.object({
     query: z.object({
         page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional(),
-        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional(),
+        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()
     })
 });
 export type FindAllActiveStudentsSchema = z.infer<typeof findAllActiveStudentsSchema>;
@@ -21,7 +21,7 @@ export const findStudentFeeDetailsSchema = z.object({
         studentId: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
     }),
     query: z.object({
-        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }),
+        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
     })
 });
 export type FindStudentFeeDetailsSchemaSchema = z.infer<typeof findStudentFeeDetailsSchema>;
@@ -30,9 +30,9 @@ export type FindStudentFeeDetailsSchemaSchema = z.infer<typeof findStudentFeeDet
 export const searchActiveStudentsSchema = z.object({
     query: z.object({
         search: z.string().optional(),
-        subjectOption:z.string().optional(),
+        subjectOption: z.string().optional(),
         page: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional(),
-        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional(),
+        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }).optional()
     })
 });
 export type SearchActiveStudentsSchema = z.infer<typeof searchActiveStudentsSchema>;

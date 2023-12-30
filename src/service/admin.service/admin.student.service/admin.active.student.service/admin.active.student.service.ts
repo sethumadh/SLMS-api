@@ -312,6 +312,11 @@ export async function findActiveStudentById(id: string) {
                     otherInfo: true,
                     declaration: true
                 }
+            },
+            enrollments: {
+                select: {
+                    subjectEnrollment: true
+                }
             }
         }
     });
@@ -343,7 +348,7 @@ export async function findStudentFeeDetails(studentId: number, termId: number) {
                     }
                 }
             },
-            feePayments: true
+            feePayment: true
         }
     });
 

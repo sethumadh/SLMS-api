@@ -332,9 +332,9 @@ export async function findTermToEnrollForLateEnrolledStudent() {
         }
     });
 
-    if (!currentTerm) {
-        throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
-    }
+    // if (!currentTerm) {
+    //     throw customError(`current Term could not found. Please try again later`, 'fail', 404, true);
+    // }
 
     return currentTerm;
 }

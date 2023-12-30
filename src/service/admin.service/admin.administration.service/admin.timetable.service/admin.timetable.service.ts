@@ -31,9 +31,9 @@ export async function findActiveTimetable() {
         where: { isActive: true }
     });
 
-    if (!timetable) {
-        throw customError(`There are no timetable found`, 'fail', 404, true);
-    }
+    // if (!timetable) {
+    //     throw customError(`There are no timetable found`, 'fail', 404, true);
+    // }
     return timetable;
 }
 

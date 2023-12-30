@@ -364,6 +364,27 @@ export async function makePublishTerm(id: FindUniqueTermSchema['params']['id']) 
         return updatedTerm;
     });
 }
+export async function unPublishTerm(id: FindUniqueTermSchema['params']['id']) {
+    return db.$transaction(async () => {
+        const currentTerm = await db.term.findUnique({
+            where: {
+                id: +id
+            }
+        });
+        if (!currentTerm) {
+            throw customError(`Term not found or could not be updated. Please try again later`, 'fail', 404, true);
+        }
+        const updatedTerm = await db.term.update({
+            where: {
+                id: +id // or use name if you're updating by term name
+            },
+            data: {
+                isPublish: false
+            }
+        });
+        return updatedTerm;
+    });
+}
 export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) {
     return db.$transaction(async () => {
         await db.term.updateMany({
@@ -397,8 +418,8 @@ export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) 
                 currentTerm: true
             }
         });
-         // Update all students with role STUDENT and isActive false
-         await db.student.updateMany({
+        // Update all students with role STUDENT and isActive false
+        await db.student.updateMany({
             where: {
                 role: 'STUDENT',
                 isActive: false
@@ -712,10 +733,6 @@ export async function findPublishTermAdministration() {
             }
         }
     });
-
-    if (!publishTerm) {
-        throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
-    }
 
     return publishTerm;
 }

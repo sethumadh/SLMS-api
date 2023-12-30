@@ -318,15 +318,15 @@ export async function findPublishedTermToEnroll() {
         }
     });
 
-    if (!publishTerm) {
-        throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
-    }
+    // if (!publishTerm) {
+    //     throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
+    // }
 
     return publishTerm;
 }
 /* find current term to enroll*/
 export async function findCurrentTermToEnroll() {
-    const publishTerm = await db.term.findFirst({
+    const currentTerm = await db.term.findFirst({
         where: {
             currentTerm: true
         },
@@ -349,11 +349,11 @@ export async function findCurrentTermToEnroll() {
         }
     });
 
-    if (!publishTerm) {
+    if (!currentTerm) {
         throw customError(`Pubslished Term could not found. Please try again later`, 'fail', 404, true);
     }
 
-    return publishTerm;
+    return currentTerm;
 }
 /* enroll applicant to subjects */
 export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['body']) {

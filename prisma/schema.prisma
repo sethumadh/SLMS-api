@@ -113,7 +113,7 @@ model Subject {
   termSubject             TermSubject[]
   termSubjectGroupSubject TermSubjectGroupSubject[]
   termSubjectGroup        TermSubjectGroup[]
-  TermSubjectLevel        TermSubjectLevel[]
+  termSubjectLevel        TermSubjectLevel[]
 }
 
 model SubjectGroup {
@@ -226,7 +226,7 @@ model Enrollment {
   subjectEnrollment       SubjectEnrollment?
   section                 Section?                  @relation(fields: [sectionId], references: [id])
   termSubjectLevel        TermSubjectLevel?         @relation(fields: [termSubjectLevelId], references: [id])
-  StudentClassHistory     StudentClassHistory[]
+  studentClassHistory     StudentClassHistory[]
 
   @@unique([studentId, termSubjectGroupId, subjectEnrollmentId])
 }
@@ -258,7 +258,7 @@ model StudentTermFee {
   studentId          Int
   termSubjectGroupId Int
   termId             Int
-  feePayment        FeePayment[]
+  feePayment         FeePayment[]
   student            Student          @relation(fields: [studentId], references: [id])
   termSubjectGroup   TermSubjectGroup @relation(fields: [termSubjectGroupId], references: [id])
   term               Term             @relation(fields: [termId], references: [id])
@@ -298,7 +298,7 @@ model TermSubjectGroupSubject {
 
 model TimeTable {
   id        Int      @id @default(autoincrement())
-  name      String?   @default("Timetable")
+  name      String?  @default("Timetable")
   isActive  Boolean  @default(true)
   data      Json
   updatedAt DateTime @updatedAt

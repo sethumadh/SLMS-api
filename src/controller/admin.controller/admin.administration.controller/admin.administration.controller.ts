@@ -15,7 +15,8 @@ import {
     findUniqueTerm,
     makeCurrentTerm,
     makePublishTerm,
-    findPublishTermAdministration
+    findPublishTermAdministration,
+    unPublishTerm
 } from '../../../service/admin.service/admin.administration.service/admin.administration.service';
 import {
     ChangeCurrentTermNameSchema,
@@ -49,6 +50,11 @@ export const makeCurrentTermHandler = async (req: Request<FindUniqueTermSchema['
 export const makePublishTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
     const id = req.params.id;
     const updatedTerm = await makePublishTerm(id);
+    res.status(200).json(updatedTerm);
+};
+export const unPublishTermTermHandler = async (req: Request<FindUniqueTermSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    const updatedTerm = await unPublishTerm(id);
     res.status(200).json(updatedTerm);
 };
 export const extendCurrentTermHandler = async (req: Request<ExtendCurrentTermSchema['params'], {}, ExtendCurrentTermSchema['body'], {}>, res: Response, next: NextFunction) => {
