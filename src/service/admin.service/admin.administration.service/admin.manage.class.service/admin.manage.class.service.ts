@@ -170,9 +170,5 @@ export const findCurrentTermClasses = async () => {
         }
     });
 
-    if (!currentTermClasses) {
-        throw customError(`current Term classes could not found. Please try again later`, 'fail', 404, true);
-    }
-
     return currentTermClasses;
 };

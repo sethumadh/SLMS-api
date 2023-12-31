@@ -1,14 +1,15 @@
-import { FindUniqueTimetableSchema, TimeTableSchema, UpdateTimeTableSchema } from '../../../../schema/admin.dto/admin.timetable.dto/admin.timetable.dto';
+import { TimeTableSchema, UpdateTimeTableSchema } from '../../../../schema/admin.dto/admin.timetable.dto/admin.timetable.dto';
 import { customError } from '../../../../utils/customError';
 import { db } from '../../../../utils/db.server';
 
 export async function createTimetable(timetableData: TimeTableSchema['body']) {
     // Start a transaction
+
     const newTimetable = await db.$transaction(async (prisma) => {
         await prisma.timeTable.updateMany({
             data: { isActive: false }
         });
-        const currentTermname = await db.term.findFirst({
+        const currentTerm = await db.term.findFirst({
             where: {
                 currentTerm: true
             }
@@ -16,8 +17,9 @@ export async function createTimetable(timetableData: TimeTableSchema['body']) {
         const newTimeTable = await prisma.timeTable.create({
             data: {
                 data: timetableData.data,
-                name: `${currentTermname?.name}`,
-                isActive: true // Ensuring the new timetable is active
+                name: `${currentTerm?.name}`,
+                isActive: currentTerm?.currentTerm,
+                termId: currentTerm?.id
             }
         });
 

@@ -382,12 +382,36 @@ export async function unPublishTerm(id: FindUniqueTermSchema['params']['id']) {
     });
 }
 export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) {
+    // Find the currently active term
+    const currentTerm = await db.term.findFirst({
+        where: {
+            currentTerm: true
+        }
+    });
+
+    // Start a transaction
     return db.$transaction(async () => {
+        // If there is a current term, deactivate the associated timetables
+        if (currentTerm) {
+            await db.timeTable.updateMany({
+                where: {
+                    isActive: true,
+                    termId: currentTerm.id
+                },
+                data: {
+                    isActive: false
+                }
+            });
+        }
+
+        // Set all terms to not be the current term
         await db.term.updateMany({
             data: {
                 currentTerm: false
             }
         });
+
+        // Set all currently active students to alumni
         await db.student.updateMany({
             where: {
                 role: 'STUDENT',
@@ -398,23 +422,29 @@ export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) 
                 isActive: false
             }
         });
-        const currentTerm = await db.term.findUnique({
+
+        // Find the term to be set as the current term
+        const newCurrentTerm = await db.term.findUnique({
             where: {
                 id: +id
             }
         });
-        if (!currentTerm) {
+
+        if (!newCurrentTerm) {
             throw customError(`Term not found or could not be updated. Please try again later`, 'fail', 404, true);
         }
+
+        // Update the term to be the current term
         const updatedTerm = await db.term.update({
             where: {
-                id: +id // or use name if you're updating by term name
+                id: +id
             },
             data: {
                 currentTerm: true
             }
         });
-        // Update all students with role STUDENT and isActive false
+
+        // Update all students with role STUDENT and isActive false to be active again
         await db.student.updateMany({
             where: {
                 role: 'STUDENT',
@@ -424,6 +454,8 @@ export async function makeCurrentTerm(id: FindUniqueTermSchema['params']['id']) 
                 isActive: true
             }
         });
+
+        // Return the updated term
         return updatedTerm;
     });
 }
@@ -691,10 +723,6 @@ export async function findCurrentTerm() {
             }
         }
     });
-
-    if (!activeTerm) {
-        throw customError(`Active Term could not found. Please try again later`, 'fail', 404, true);
-    }
 
     return activeTerm;
 }

@@ -299,6 +299,7 @@ model TermSubjectGroupSubject {
 model TimeTable {
   id        Int      @id @default(autoincrement())
   name      String?  @default("Timetable")
+  termId    Int?
   isActive  Boolean  @default(true)
   data      Json
   updatedAt DateTime @updatedAt
