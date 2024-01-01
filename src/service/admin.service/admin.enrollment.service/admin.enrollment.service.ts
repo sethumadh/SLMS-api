@@ -356,131 +356,6 @@ export async function findCurrentTermToEnroll() {
     return currentTerm;
 }
 /* enroll applicant to subjects */
-// export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['body']) {
-//     let alreadyEnrolledSubjects = [];
-//     let uniqueTermSubjectGroupIds = new Set();
-
-//     // Check Existing Enrollments
-//     for (const enrollmentItem of enrollData.enrollData) {
-//         uniqueTermSubjectGroupIds.add(enrollmentItem.termSubjectGroupId);
-//         const existingEnrollments = await db.enrollment.findMany({
-//             where: { studentId: enrollData.applicantId, termSubjectGroupId: enrollmentItem.termSubjectGroupId },
-//             include: { subjectEnrollment: { include: { termSubject: true } } }
-//         });
-//         // *************************************
-//         for (const enrollment of existingEnrollments) {
-//             // Directly check the subjectEnrollment object
-//             if (enrollment.subjectEnrollment && enrollment.subjectEnrollment.termSubjectId === enrollmentItem.termSubjectId) {
-//                 alreadyEnrolledSubjects.push(enrollmentItem.subject);
-//             }
-//         }
-//     }
-
-//     if (alreadyEnrolledSubjects.length > 0) {
-//         throw customError(`Already enrolled in subjects: ${alreadyEnrolledSubjects.join(', ')}`, 'fail', 404, true);
-//     }
-
-//     let enrollmentIds = [];
-//     for (const enrollmentItem of enrollData.enrollData) {
-//         // Fetch fee info
-//         const feeInfo = await db.termSubjectGroup.findUnique({
-//             where: { id: enrollmentItem.termSubjectGroupId },
-//             include: { fee: true, term: true }
-//         });
-
-//         // Determine due date
-//         let dueDate;
-//         if (feeInfo?.fee?.paymentType === 'MONTHLY') {
-//             const now = new Date();
-//             dueDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-//             dueDate.setDate(dueDate.getDate() - 5);
-//         } else if (feeInfo?.fee?.paymentType === 'TERM') {
-//             const termStartDate = new Date(feeInfo.term.startDate);
-//             dueDate = new Date(termStartDate.setMonth(termStartDate.getMonth() + 2));
-//         } else {
-//             dueDate = new Date();
-//         }
-
-//         // Create Enrollment and SubjectEnrollment
-//         const newEnrollment = await db.enrollment.create({
-//             data: {
-//                 studentId: enrollData.applicantId,
-//                 termSubjectGroupId: enrollmentItem.termSubjectGroupId,
-//                 dueDate: dueDate
-//             },
-//             select: { id: true }
-//         });
-
-//         const newSubjectEnrollment = await db.subjectEnrollment.create({
-//             data: {
-//                 enrollmentId: newEnrollment.id,
-//                 termSubjectId: enrollmentItem.termSubjectId
-//             }
-//         });
-
-//         // Update the Enrollment with the SubjectEnrollment ID
-//         await db.enrollment.update({
-//             where: { id: newEnrollment.id },
-//             data: { subjectEnrollmentId: newSubjectEnrollment.id }
-//         });
-
-//         // Handle FeePayment and StudentTermFee
-//         if (feeInfo?.feeId) {
-//             const studentTermFee = await db.studentTermFee.upsert({
-//                 where: {
-//                     studentId_termSubjectGroupId_termId: {
-//                         studentId: enrollData.applicantId,
-//                         termSubjectGroupId: enrollmentItem.termSubjectGroupId,
-//                         termId: feeInfo.termId
-//                     }
-//                 },
-//                 update: {},
-//                 create: {
-//                     studentId: enrollData.applicantId,
-//                     termSubjectGroupId: enrollmentItem.termSubjectGroupId,
-//                     termId: feeInfo.termId
-//                 }
-//             });
-
-//             await db.feePayment.create({
-//                 data: {
-//                     feeId: feeInfo.feeId,
-//                     studentTermFeeId: studentTermFee.id,
-//                     dueDate: dueDate,
-//                     amount: feeInfo.fee?.amount as number,
-//                     dueAmount: feeInfo.fee?.amount as number,
-//                     status: 'PENDING',
-//                     method: 'NA'
-//                 }
-//             });
-//         }
-
-//         // Update TermSubjectGroupSubject
-//         const subject = await db.subject.findUnique({
-//             where: {
-//                 name: enrollmentItem.subject
-//             },
-//             select: {
-//                 id: true
-//             }
-//         });
-//         await db.termSubjectGroupSubject.updateMany({
-//             where: {
-//                 termId: enrollmentItem.termId,
-//                 subjectGroupId: enrollmentItem.subjectGroupId,
-//                 subjectId: subject?.id,
-//                 termSubjectGroupId: enrollmentItem.termSubjectGroupId
-//             },
-//             data: { enrollmentId: newEnrollment.id }
-//         });
-
-//         enrollmentIds.push(newEnrollment.id);
-//     }
-//     const messages = await enrollApplicantToStudent(enrollData.applicantId);
-
-//     return { message: 'Enrollment successful and The applicant enrolled to Student successfully`', enrollmentIds, messages };
-// }
-
 export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['body']) {
     let alreadyEnrolledSubjects = [];
 
@@ -563,18 +438,25 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
                 },
                 select: { id: true }
             });
-
-            await db.feePayment.create({
-                data: {
-                    feeId: feeInfo.feeId,
+            const existingFeePayment = await db.feePayment.findFirst({
+                where: {
                     studentTermFeeId: studentTermFee.id,
-                    dueDate: feeInfo?.enrollment?.find((en) => en.termSubjectGroupId === termSubjectGroupId)?.dueDate || new Date(),
-                    amountPaid: 0,
-                    dueAmount: feeInfo.fee?.amount || 0,
-                    status: 'PENDING',
-                    method: 'NA'
+                    feeId: feeInfo.feeId
                 }
             });
+            if (!existingFeePayment) {
+                await db.feePayment.create({
+                    data: {
+                        feeId: feeInfo.feeId,
+                        studentTermFeeId: studentTermFee.id,
+                        dueDate: feeInfo?.enrollment?.find((en) => en.termSubjectGroupId === termSubjectGroupId)?.dueDate || new Date(),
+                        amountPaid: 0,
+                        dueAmount: feeInfo.fee?.amount || 0,
+                        status: 'PENDING',
+                        method: 'NA'
+                    }
+                });
+            }
         }
     }
 
@@ -584,57 +466,9 @@ export async function enrollApplicant(enrollData: ApplicantEnrollDataSchema['bod
 }
 
 /* de-enroll applicant to subjects */
-// export async function deEnrollApplicant(deEnrollData: ApplicantEnrollDataSchema['body']) {
-//     let deEnrolledSubjects = [];
-
-//     for (const deEnrollItem of deEnrollData.enrollData) {
-//         // Find the SubjectEnrollment record
-//         const subjectEnrollment = await db.subjectEnrollment.findFirst({
-//             where: {
-//                 termSubjectId: deEnrollItem.termSubjectId,
-//                 enrollment: {
-//                     studentId: deEnrollData.applicantId,
-//                     termSubjectGroupId: deEnrollItem.termSubjectGroupId
-//                 }
-//             }
-//         });
-
-//         if (!subjectEnrollment) {
-//             throw customError(`Not enrolled in subjects: ${deEnrollItem.subject}`, 'fail', 404, true);
-//         }
-
-//         // Delete the SubjectEnrollment record
-//         await db.subjectEnrollment.delete({
-//             where: { id: subjectEnrollment.id }
-//         });
-
-//         // Optionally, if no other subjects are enrolled in the same termSubjectGroup, delete the Enrollment record
-//         const remainingEnrollments = await db.subjectEnrollment.count({
-//             where: {
-//                 enrollment: {
-//                     studentId: deEnrollData.applicantId,
-//                     termSubjectGroupId: deEnrollItem.termSubjectGroupId
-//                 }
-//             }
-//         });
-
-//         if (remainingEnrollments === 0) {
-//             await db.enrollment.delete({
-//                 where: { id: subjectEnrollment.enrollmentId }
-//             });
-//         }
-
-//         deEnrolledSubjects.push(deEnrollItem.subject);
-//     }
-
-//     return {
-//         message: 'De-enrollment process completed',
-//         deEnrolledSubjects
-//     };
-// }
 export async function deEnrollApplicant(deEnrollData: ApplicantEnrollDataSchema['body']) {
     let deEnrolledSubjects = [];
-    console.log('hello');
+
     for (const deEnrollItem of deEnrollData.enrollData) {
         // Find the SubjectEnrollment record
         const subjectEnrollment = await db.subjectEnrollment.findFirst({
