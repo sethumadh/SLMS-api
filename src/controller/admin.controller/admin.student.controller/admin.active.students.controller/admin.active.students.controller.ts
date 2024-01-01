@@ -1,9 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { findActiveStudentById, findActiveStudents, findStudentFeeDetails, searchActiveStudents } from '../../../../service/admin.service/admin.student.service/admin.active.student.service/admin.active.student.service';
+import {
+    findActiveStudentById,
+    findActiveStudents,
+    findStudentFeeDetails,
+    findTermSubjectGroupIdEnrolledSubjects,
+    searchActiveStudents
+} from '../../../../service/admin.service/admin.student.service/admin.active.student.service/admin.active.student.service';
 import {
     FindAllActiveStudentsSchema,
     FindStudentFeeDetailsSchemaSchema,
+    FindTermSubjectGroupIdEnrolledSubjectsSchema,
     FindUniqueActiveStudentSchema,
     SearchActiveStudentsSchema
 } from '../../../../schema/admin.dto/admin.student.dto/admin.active.students.dto/admin.active.students.dto';
@@ -36,9 +43,25 @@ export const findActiveStudentByIdHandler = async (req: Request<FindUniqueActive
     const student = await findActiveStudentById(id);
     res.status(200).json(student);
 };
-export const  findStudentFeeDetailsHandler = async (req: Request<FindStudentFeeDetailsSchemaSchema['params'], {}, {}, FindStudentFeeDetailsSchemaSchema['query']>, res: Response, next: NextFunction) => {
+export const findStudentFeeDetailsHandler = async (
+    req: Request<FindStudentFeeDetailsSchemaSchema['params'], {}, {}, FindStudentFeeDetailsSchemaSchema['query']>,
+    res: Response,
+    next: NextFunction
+) => {
     const { studentId } = req.params;
-    const {termId}= req.query
-    const student = await  findStudentFeeDetails(+studentId,+termId);
+    const { termId } = req.query;
+    const student = await findStudentFeeDetails(+studentId, +termId);
     res.status(200).json(student);
+};
+export const findTermSubjectGroupIdEnrolledSubjectsHandler = async (
+    req: Request<FindTermSubjectGroupIdEnrolledSubjectsSchema['params'], {}, {}, FindTermSubjectGroupIdEnrolledSubjectsSchema['query']>,
+    res: Response,
+    next: NextFunction
+) => {
+    const { id } = req.params;
+    const { termSubjectGroupId } = req.query;
+    if (id && termSubjectGroupId) {
+        const enrolledSubjects = await findTermSubjectGroupIdEnrolledSubjects(id, termSubjectGroupId);
+        res.status(200).json(enrolledSubjects);
+    }
 };

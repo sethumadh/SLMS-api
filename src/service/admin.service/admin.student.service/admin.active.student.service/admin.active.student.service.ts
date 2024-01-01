@@ -345,7 +345,11 @@ export async function findStudentFeeDetails(studentId: number, termId: number) {
                             dueDate: true,
                             subjectEnrollment: {
                                 include: {
-                                    termSubject: true
+                                    termSubject: {
+                                        select: {
+                                            subject: true
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -357,4 +361,43 @@ export async function findStudentFeeDetails(studentId: number, termId: number) {
     });
 
     return studentTermFees;
+}
+
+export async function findTermSubjectGroupIdEnrolledSubjects(id: string, termSubjectGroupId: string) {
+    // Fetch all enrollments for the student
+    const enrollments = await db.enrollment.findMany({
+        where: {
+            studentId: parseInt(id),
+            termSubjectGroup: {
+                id: +termSubjectGroupId
+            }
+        },
+        include: {
+            subjectEnrollment: {
+                include: {
+                    termSubject: {
+                        include: {
+                            subject: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Extract the subjects from the enrollments
+    let enrolledSubjects: { subjectId: number; subjectName: string }[] = [];
+    enrollments.forEach((enrollment) => {
+        if (enrollment.subjectEnrollment) {
+            // Check if subjectEnrollment exists
+            const se = enrollment.subjectEnrollment;
+            enrolledSubjects.push({
+                subjectId: se.termSubject.subjectId,
+                subjectName: se.termSubject.subject.name
+                // Include additional subject details as needed
+            });
+        }
+    });
+
+    return enrolledSubjects;
 }

@@ -423,7 +423,7 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
             data: {
                 studentId: enrollData.enrolledStudentId,
                 termSubjectGroupId: enrollmentItem.termSubjectGroupId,
-                dueDate: dueDate,
+                dueDate: dueDate
             },
             select: { id: true }
         });
@@ -440,7 +440,7 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
     for (const termSubjectGroupId of uniqueTermSubjectGroupIds) {
         const feeInfo = await db.termSubjectGroup.findUnique({
             where: { id: termSubjectGroupId },
-            include: { fee: true , enrollment:true}
+            include: { fee: true, enrollment: true }
         });
 
         if (feeInfo?.feeId) {
@@ -465,8 +465,8 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
                 data: {
                     feeId: feeInfo.feeId,
                     studentTermFeeId: studentTermFee.id,
-                    dueDate: feeInfo?.enrollment?.find(en=>en.termSubjectGroupId===termSubjectGroupId)?.dueDate || new Date(),
-                    amount: feeInfo.fee?.amount || 0,
+                    dueDate: feeInfo?.enrollment?.find((en) => en.termSubjectGroupId === termSubjectGroupId)?.dueDate || new Date(),
+                    amountPaid: 0,
                     dueAmount: feeInfo.fee?.amount || 0,
                     status: 'PENDING',
                     method: 'NA'
@@ -474,8 +474,6 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
             });
         }
     }
-
-
 
     return { message: 'Enrollment successful' };
 }
@@ -602,6 +600,21 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
 
 /* de-enroll enrolled student to subjects */
 export async function deEnrollStudentEnrolledToSubjects(deEnrollData: EnrolledStudentEnrollDataSchema['body']) {
+    // Check total number of subjects enrolled in the term
+    const termId = deEnrollData.enrollData[0].termId;
+    const totalEnrollments = await db.enrollment.count({
+        where: {
+            studentId: deEnrollData.enrolledStudentId,
+            termSubjectGroup: {
+                termId: termId
+            }
+        }
+    });
+
+    if (totalEnrollments <= deEnrollData.enrollData.length) {
+        throw new Error('The student must be enrolled in at least one subject.');
+    }
+
     let deEnrolledSubjects = [];
 
     for (const deEnrollItem of deEnrollData.enrollData) {
@@ -617,7 +630,7 @@ export async function deEnrollStudentEnrolledToSubjects(deEnrollData: EnrolledSt
         });
 
         if (!subjectEnrollment) {
-            throw new Error(`Not enrolled in subjects: ${deEnrollItem.subject}`);
+            throw new Error(`Not enrolled in subject: ${deEnrollItem.subject}`);
         }
 
         // Delete the SubjectEnrollment record
@@ -625,23 +638,21 @@ export async function deEnrollStudentEnrolledToSubjects(deEnrollData: EnrolledSt
             where: { id: subjectEnrollment.id }
         });
 
-        // Check if there are remaining SubjectEnrollments in the same TermSubjectGroup
-        const remainingSubjectEnrollments = await db.subjectEnrollment.count({
+        // Delete the Enrollment record
+        await db.enrollment.delete({
+            where: { id: subjectEnrollment.enrollmentId }
+        });
+
+        // Check for remaining enrollments in the same TermSubjectGroup
+        const remainingEnrollments = await db.enrollment.count({
             where: {
-                enrollment: {
-                    studentId: deEnrollData.enrolledStudentId,
-                    termSubjectGroupId: deEnrollItem.termSubjectGroupId
-                }
+                studentId: deEnrollData.enrolledStudentId,
+                termSubjectGroupId: deEnrollItem.termSubjectGroupId
             }
         });
 
-        if (remainingSubjectEnrollments === 0) {
-            // Delete the Enrollment record
-            await db.enrollment.delete({
-                where: { id: subjectEnrollment.enrollmentId }
-            });
-
-            // Find and delete the associated StudentTermFee record
+        // If no remaining enrollments, handle StudentTermFee and FeePayment records
+        if (remainingEnrollments === 0) {
             const studentTermFee = await db.studentTermFee.findFirst({
                 where: {
                     studentId: deEnrollData.enrolledStudentId,
@@ -651,18 +662,14 @@ export async function deEnrollStudentEnrolledToSubjects(deEnrollData: EnrolledSt
             });
 
             if (studentTermFee) {
-                // Delete associated FeePayments if any
+                // Delete associated FeePayment records
                 await db.feePayment.deleteMany({
-                    where: {
-                        studentTermFeeId: studentTermFee.id
-                    }
+                    where: { studentTermFeeId: studentTermFee.id }
                 });
 
                 // Delete the StudentTermFee record
                 await db.studentTermFee.delete({
-                    where: {
-                        id: studentTermFee.id
-                    }
+                    where: { id: studentTermFee.id }
                 });
             }
         }
