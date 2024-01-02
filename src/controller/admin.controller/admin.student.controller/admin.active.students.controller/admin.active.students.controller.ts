@@ -3,16 +3,20 @@ import { NextFunction, Request, Response } from 'express';
 import {
     findActiveStudentById,
     findActiveStudents,
+    findFeePaymentById,
     findStudentFeeDetails,
     findTermSubjectGroupIdEnrolledSubjects,
-    searchActiveStudents
+    searchActiveStudents,
+    updateAmountPaid
 } from '../../../../service/admin.service/admin.student.service/admin.active.student.service/admin.active.student.service';
 import {
     FindAllActiveStudentsSchema,
     FindStudentFeeDetailsSchemaSchema,
     FindTermSubjectGroupIdEnrolledSubjectsSchema,
     FindUniqueActiveStudentSchema,
-    SearchActiveStudentsSchema
+    FindUniqueFeePaymentSchema,
+    SearchActiveStudentsSchema,
+    UpdateAmountPaidSchema
 } from '../../../../schema/admin.dto/admin.student.dto/admin.active.students.dto/admin.active.students.dto';
 
 // Find all students for the admin
@@ -64,4 +68,23 @@ export const findTermSubjectGroupIdEnrolledSubjectsHandler = async (
         const enrolledSubjects = await findTermSubjectGroupIdEnrolledSubjects(id, termSubjectGroupId);
         res.status(200).json(enrolledSubjects);
     }
+};
+// findFeePaymentById
+export const findFeePaymentByIdHandler = async (req: Request<FindUniqueFeePaymentSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const student = await findFeePaymentById(id);
+    res.status(200).json(student);
+};
+
+/*update fee - amount paid made by the admin*/
+export const updateAmountPaidHandler = async (
+    req: Request<UpdateAmountPaidSchema['params'], {}, UpdateAmountPaidSchema['body'], UpdateAmountPaidSchema['query']>,
+    res: Response,
+    next: NextFunction
+) => {
+    const { id } = req.params;
+    const { amountPaid } = req.query;
+    const { remarks } = req.body;
+    const student = await updateAmountPaid(id, amountPaid, remarks);
+    res.status(200).json(student);
 };

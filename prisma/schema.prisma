@@ -271,8 +271,11 @@ model FeePayment {
   feeId            Int
   dueDate          DateTime
   paidDate         DateTime? // Nullable, set when payment is made
-  amountPaid       Int @default(0)
+  amountPaid       Int             @default(0)
   dueAmount        Int // Amount still due (if any)
+  remarks          String          @default("No remarks")
+  creditAmount     Int             @default(0)
+  feeAmount        Int?
   studentTermFeeId Int?
   status           PaymentStatus   @default(NODUES)
   method           PaymentMethod   @default(NA)

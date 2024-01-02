@@ -7,14 +7,18 @@ import {
     findStudentFeeDetailsSchema,
     findTermSubjectGroupIdEnrolledSubjectsSchema,
     findUniqueActiveStudentSchema,
-    searchActiveStudentsSchema
+    findUniqueFeePaymentSchema,
+    searchActiveStudentsSchema,
+    updateAmountPaidSchema
 } from '../../../../schema/admin.dto/admin.student.dto/admin.active.students.dto/admin.active.students.dto';
 import {
     findActiveStudentByIdHandler,
     findActiveStudentsHandler,
+    findFeePaymentByIdHandler,
     findStudentFeeDetailsHandler,
     findTermSubjectGroupIdEnrolledSubjectsHandler,
-    searchActiveStudentsHandler
+    searchActiveStudentsHandler,
+    updateAmountPaidHandler
 } from '../../../../controller/admin.controller/admin.student.controller/admin.active.students.controller/admin.active.students.controller';
 
 const adminActiveStudentRoute = express.Router();
@@ -33,5 +37,8 @@ adminActiveStudentRoute.route('/active-student-fee-detail/:studentId').get(valid
 adminActiveStudentRoute
     .route('/find-enrolled-subjects-term-subject-group/:id')
     .get(validate(findTermSubjectGroupIdEnrolledSubjectsSchema), asyncErrorHandler(findTermSubjectGroupIdEnrolledSubjectsHandler));
-
+/*find unqiue feePaymentById*/
+adminActiveStudentRoute.route('/fee-payment-detail/:id').get(validate(findUniqueFeePaymentSchema), asyncErrorHandler(findFeePaymentByIdHandler));
+/*update fee - amount paid made by the admin*/
+adminActiveStudentRoute.route('/fee-payment-update-amountPaid/:id').patch(validate(updateAmountPaidSchema), asyncErrorHandler(updateAmountPaidHandler));
 export default adminActiveStudentRoute;

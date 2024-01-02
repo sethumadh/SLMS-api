@@ -63,3 +63,25 @@ export const findTermSubjectGroupIdEnrolledSubjectsSchema = z.object({
     })
 });
 export type FindTermSubjectGroupIdEnrolledSubjectsSchema = z.infer<typeof findTermSubjectGroupIdEnrolledSubjectsSchema>;
+
+/*find unique feepayment details*/
+export const findUniqueFeePaymentSchema = z.object({
+    params: z.object({
+        id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    })
+});
+export type FindUniqueFeePaymentSchema = z.infer<typeof findUniqueFeePaymentSchema>;
+
+/*update fee - amount paid made by the admin*/
+export const updateAmountPaidSchema = z.object({
+    params: z.object({
+        id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    }),
+    query: z.object({
+        amountPaid: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    }),
+    body: z.object({
+        remarks: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    })
+});
+export type UpdateAmountPaidSchema = z.infer<typeof updateAmountPaidSchema>;

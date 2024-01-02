@@ -517,7 +517,8 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
                         amountPaid: 0,
                         dueAmount: feeInfo.fee?.amount || 0,
                         status: 'PENDING',
-                        method: 'NA'
+                        method: 'NA',
+                        feeAmount: feeInfo.fee?.amount || 0
                     }
                 });
             }
