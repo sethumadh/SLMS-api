@@ -469,11 +469,15 @@ export async function enrollStudentEnrolledToSubjects(enrollData: EnrolledStuden
             select: { id: true }
         });
 
-        await db.subjectEnrollment.create({
+        const newSubjectEnrollment = await db.subjectEnrollment.create({
             data: {
                 enrollmentId: newEnrollment.id,
                 termSubjectId: enrollmentItem.termSubjectId
             }
+        });
+        await db.enrollment.update({
+            where: { id: newEnrollment.id },
+            data: { subjectEnrollmentId: newSubjectEnrollment.id }
         });
     }
 

@@ -85,3 +85,26 @@ export const updateAmountPaidSchema = z.object({
     })
 });
 export type UpdateAmountPaidSchema = z.infer<typeof updateAmountPaidSchema>;
+
+/* find enrolled subjects for active students*/
+export const findActiveStudentEnrolledSubjectsSchema = z.object({
+    params: z.object({
+        studentId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }),
+        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    })
+});
+export type FindActiveStudentEnrolledSubjectsSchema = z.infer<typeof findActiveStudentEnrolledSubjectsSchema>;
+
+/****** * assign class to student*****/
+export const assignClassToStudentSchema = z.object({
+    params: z.object({
+        studentId: z.string().min(1, { message: 'Atleast one param string value required @ksm' }),
+        termId: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    }),
+    body: z.object({
+        subjectName: z.string().min(1, { message: 'Atleast one param string value required @ksm' }),
+        levelName: z.string().min(1, { message: 'Atleast one param string value required @ksm' }),
+        sectionName: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    })
+});
+export type AssignClassToStudentSchema = z.infer<typeof assignClassToStudentSchema>;

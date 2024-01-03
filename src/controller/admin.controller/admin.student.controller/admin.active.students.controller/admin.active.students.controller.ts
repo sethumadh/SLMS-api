@@ -1,8 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 
 import {
+    assignClassToStudent,
     findActiveStudentById,
+    findActiveStudentEnrolledSubjects,
     findActiveStudents,
+    findCurrentTermToAssignClass,
     findFeePaymentById,
     findStudentFeeDetails,
     findTermSubjectGroupIdEnrolledSubjects,
@@ -10,6 +13,8 @@ import {
     updateAmountPaid
 } from '../../../../service/admin.service/admin.student.service/admin.active.student.service/admin.active.student.service';
 import {
+    AssignClassToStudentSchema,
+    FindActiveStudentEnrolledSubjectsSchema,
     FindAllActiveStudentsSchema,
     FindStudentFeeDetailsSchemaSchema,
     FindTermSubjectGroupIdEnrolledSubjectsSchema,
@@ -87,4 +92,31 @@ export const updateAmountPaidHandler = async (
     const { remarks } = req.body;
     const student = await updateAmountPaid(id, amountPaid, remarks);
     res.status(200).json(student);
+};
+
+/* find enrolled subjects for active students*/
+
+export const findActiveStudentEnrolledSubjectsHandler = async (req: Request<FindActiveStudentEnrolledSubjectsSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const { studentId, termId } = req.params;
+    if (studentId && termId) {
+        const enrolledSubjects = await findActiveStudentEnrolledSubjects(studentId, termId);
+        res.status(200).json(enrolledSubjects);
+    }
+};
+
+// find current term for assign classes to active students
+export const findCurrentTermToAssignClassHandler = async (req: Request<{}, {}, {}, {}>, res: Response, next: NextFunction) => {
+    const currentTerm = await findCurrentTermToAssignClass();
+    res.status(200).json(currentTerm);
+};
+
+//AssignClassToStudentSchema
+/****** * assign class to student*****/
+export const assignClassToStudentHandler = async (req: Request<AssignClassToStudentSchema['params'], {}, AssignClassToStudentSchema['body'], {}>, res: Response, next: NextFunction) => {
+    const { studentId, termId } = req.params;
+    const { levelName, sectionName, subjectName } = req.body;
+    if (studentId && termId && levelName && sectionName && subjectName) {
+        const assignClass = await assignClassToStudent(studentId, termId, subjectName, levelName, sectionName);
+        res.status(200).json(assignClass);
+    }
 };

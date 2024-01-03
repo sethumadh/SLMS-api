@@ -3,6 +3,8 @@ import express from 'express';
 import { asyncErrorHandler } from '../../../../utils/asyncErrorHandler';
 import validate from '../../../../middleware/validateResource';
 import {
+    assignClassToStudentSchema,
+    findActiveStudentEnrolledSubjectsSchema,
     findAllActiveStudentsSchema,
     findStudentFeeDetailsSchema,
     findTermSubjectGroupIdEnrolledSubjectsSchema,
@@ -12,8 +14,11 @@ import {
     updateAmountPaidSchema
 } from '../../../../schema/admin.dto/admin.student.dto/admin.active.students.dto/admin.active.students.dto';
 import {
+    assignClassToStudentHandler,
     findActiveStudentByIdHandler,
+    findActiveStudentEnrolledSubjectsHandler,
     findActiveStudentsHandler,
+    findCurrentTermToAssignClassHandler,
     findFeePaymentByIdHandler,
     findStudentFeeDetailsHandler,
     findTermSubjectGroupIdEnrolledSubjectsHandler,
@@ -41,4 +46,15 @@ adminActiveStudentRoute
 adminActiveStudentRoute.route('/fee-payment-detail/:id').get(validate(findUniqueFeePaymentSchema), asyncErrorHandler(findFeePaymentByIdHandler));
 /*update fee - amount paid made by the admin*/
 adminActiveStudentRoute.route('/fee-payment-update-amountPaid/:id').patch(validate(updateAmountPaidSchema), asyncErrorHandler(updateAmountPaidHandler));
+
+/*find enrolled subject for late enrollments*/
+adminActiveStudentRoute
+    .route('/find-enrolled-subjects-active-student/:studentId/:termId')
+    .get(validate(findActiveStudentEnrolledSubjectsSchema), asyncErrorHandler(findActiveStudentEnrolledSubjectsHandler));
+
+// find current term for assign classes to active students
+adminActiveStudentRoute.route('/find-current-term-to-assign-class').get(asyncErrorHandler(findCurrentTermToAssignClassHandler));
+
+/****** * assign class to student*****/
+adminActiveStudentRoute.route('/assign-class-active-student/:studentId/:termId').post(validate(assignClassToStudentSchema), asyncErrorHandler(assignClassToStudentHandler));
 export default adminActiveStudentRoute;

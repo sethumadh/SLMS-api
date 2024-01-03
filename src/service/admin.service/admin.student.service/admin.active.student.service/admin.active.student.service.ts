@@ -450,3 +450,181 @@ export async function updateAmountPaid(id: string, newAmountPaid: string, remark
 
     return updatedFeePayment;
 }
+
+export async function findActiveStudentEnrolledSubjects(studentId: string, termId: string) {
+    // Fetch all enrollments for the student
+    const enrollments = await db.enrollment.findMany({
+        where: {
+            studentId: parseInt(studentId),
+            termSubjectGroup: {
+                termId: +termId
+            }
+        },
+        include: {
+            subjectEnrollment: {
+                include: {
+                    termSubject: {
+                        include: {
+                            subject: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+    // Extract the subjects from the enrollments
+    let enrolledSubjects: { subjectId: number; subjectName: string }[] = [];
+    enrollments.forEach((enrollment) => {
+        if (enrollment.subjectEnrollment) {
+            // Check if subjectEnrollment exists
+            const se = enrollment.subjectEnrollment;
+            enrolledSubjects.push({
+                subjectId: se.termSubject.subjectId,
+                subjectName: se.termSubject.subject.name
+                // Include additional subject details as needed
+            });
+        }
+    });
+
+    return enrolledSubjects;
+}
+
+// find current term for assign classes to active students
+
+export const findCurrentTermToAssignClass = async () => {
+    const currentTerm = await db.term.findFirst({
+        where: {
+            currentTerm: true
+        },
+        select: {
+            id: true,
+            name: true,
+            isPublish: true,
+            currentTerm: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            termSubject: {
+                select: {
+                    id: true,
+                    subject: true,
+                    level: true,
+                    termSubjectGroup: true
+                }
+            },
+            termSubjectLevel: {
+                include: {
+                    sections: {
+                        select: { name: true }
+                    },
+                    level: { select: { name: true } },
+                    subject: { select: { name: true } }
+                }
+            }
+        }
+    });
+
+    if (!currentTerm) {
+        throw customError(`Current Term could not found. Please try again later`, 'fail', 404, true);
+    }
+
+    return currentTerm;
+};
+
+/****** * assign class to student*****/
+export async function assignClassToStudent(studentId: string, termId: string, subjectName: string, levelName: string, sectionName: string) {
+    // console.log(sectionName);
+    // Find Subject ID
+    const subject = await db.subject.findUnique({
+        where: {
+            name: subjectName
+        }
+    });
+
+    if (!subject) {
+        throw customError(`Subject not found: ${subjectName}`, 'fail', 404, true);
+    }
+
+    // Find TermSubjectLevel ID
+    const termSubjectLevel = await db.termSubjectLevel.findFirst({
+        where: {
+            termId: +termId,
+            subjectId: subject.id,
+            level: {
+                name: levelName
+            }
+        }
+    });
+
+    if (!termSubjectLevel) {
+        throw customError(`TermSubjectLevel not found for ${subjectName} in ${levelName}`, 'fail', 404, true);
+    }
+    // Find the Section
+    let section = await db.section.findFirst({
+        where: {
+            name: sectionName
+        }
+    });
+    if (!section) {
+        throw customError(`Level not found for ${subjectName} in ${levelName}`, 'fail', 404, true);
+    }
+    // console.log(section);
+    // Find SubjectEnrollment and Enrollment ID
+    const subjectEnrollment = await db.subjectEnrollment.findFirst({
+        where: {
+            termSubject: {
+                subjectId: subject.id,
+                termId: +termId
+            },
+            enrollment: {
+                studentId: +studentId
+            }
+        },
+        include: {
+            enrollment: true // This includes the enrollment data
+        }
+    });
+
+    if (!subjectEnrollment || !subjectEnrollment.enrollment) {
+        throw customError(`Enrollment not found for student ${studentId} in subject ${subjectName}`, 'fail', 404, true);
+    }
+
+    // Find or create StudentClassHistory Record
+    const existingRecord = await db.studentClassHistory.findFirst({
+        where: {
+            enrollmentId: subjectEnrollment.enrollment.id,
+            termSubjectLevelId: termSubjectLevel.id,
+            studentId: +studentId,
+            sectionId: section.id
+        }
+    });
+    // console.log(existingRecord);
+    if (existingRecord) {
+        // Update if already assigned
+        await db.studentClassHistory.update({
+            where: {
+                id: existingRecord.id
+            },
+            data: {
+                isCurrentlyAssigned: true,
+                sectionId: section.id // Update sectionId
+            }
+        });
+    } else {
+        // Create new assignment
+        await db.studentClassHistory.create({
+            data: {
+                enrollmentId: subjectEnrollment.enrollment.id,
+                termSubjectLevelId: termSubjectLevel.id,
+                studentId: +studentId,
+                isCurrentlyAssigned: true,
+                sectionId: section.id // Assign sectionId
+            }
+        });
+    }
+
+    return { message: 'Class assigned successfully' };
+}
+
+/*get all classes for students*/

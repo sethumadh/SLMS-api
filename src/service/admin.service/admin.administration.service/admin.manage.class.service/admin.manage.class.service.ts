@@ -84,7 +84,7 @@ export const findPublishTermForManageClass = async () => {
 };
 
 export const findCurrentTermForManageClass = async () => {
-    const publishTerm = await db.term.findFirst({
+    const currentTerm = await db.term.findFirst({
         where: {
             currentTerm: true
         },
@@ -108,11 +108,11 @@ export const findCurrentTermForManageClass = async () => {
         }
     });
 
-    if (!publishTerm) {
+    if (!currentTerm) {
         throw customError(`Current Term could not found. Please try again later`, 'fail', 404, true);
     }
 
-    return publishTerm;
+    return currentTerm;
 };
 
 export const findSectionsForManageClass = async () => {

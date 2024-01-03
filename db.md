@@ -19,8 +19,8 @@ considered along with subjects for enrolling bob right?
 
 1)Now my requiremnt is i need to make sections for each subject at the level in a term. And this will be unique for a term for a subject and for a level. therefore A term called term1 can have subject
 called Maths with two levels L1 and L2. we can have sections like S1 and S2 sections for Maths at L1 level. We can also have section like S1 and S2 and S3 sections for Maths L2 Level. A section name cannot
-appear twice for a subject and level , for example, Maths at L1 level cannot have S1 twice. Modify my schema to create a new model for section and other association. I also need to re use the sections
-names across different term .
+appear twice for a subject and level , for example, Maths at L1 level cannot have S1 twice.  I also need to re use the sections
+names across different term .Modify my schema to create a new model for section and other association.
 
 2)also , as an example, now bob is enrolled to music , which is under group 1. and is assigned to music L1 S1. bob is also enrolled to maths and english which is under group2 and is assigned to class
 maths L2S1 and english L2S1. Admin can then re assign bob from maths L2S1  to maths L2S2 and from english L2S1. to english L1S1, if the admin requires to do so.
@@ -58,4 +58,20 @@ model Section {
   termSubjectLevel    TermSubjectLevel  @relation(fields: [termSubjectLevelId], references: [id])
 
   @@unique([name, termSubjectLevelId])
+}
+model StudentClassHistory {
+  id                 Int               @id @default(autoincrement())
+  enrollmentId       Int               // Link to the Enrollment
+  studentId          Int               // Link to the Student
+  termSubjectLevelId Int               // Link to the TermSubjectLevel
+  isCurrentlyAssigned Boolean          @default(true)
+  updatedDate        DateTime          @default(now())
+  note               String?           // Optional field for notes
+
+  enrollment         Enrollment        @relation(fields: [enrollmentId], references: [id])
+  student            Student           @relation(fields: [studentId], references: [id])
+  termSubjectLevel   TermSubjectLevel  @relation(fields: [termSubjectLevelId], references: [id])
+
+
+  @@unique([studentId, termSubjectLevelId])
 }

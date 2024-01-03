@@ -32,7 +32,7 @@ adminLateEnrolledStudentRoute.route('/late-enrolled-student-detail/:id').get(val
 /* find term to enroll */
 adminLateEnrolledStudentRoute.route('/term-to-enroll-late-enrolled-student').get(asyncErrorHandler(findTermToEnrollForLateEnrolledStudentHandler));
 
-/*find enrolled subject for applicants*/
+/*find enrolled subject for late enrollments*/
 adminLateEnrolledStudentRoute
     .route('/find-enrolled-subjects-for-late-enrolled-student/:id/:termId')
     .get(validate(findLateEnrolledStudentSubjectsSchema), asyncErrorHandler(findLateEnrolledStudentSubjectsHandler));
