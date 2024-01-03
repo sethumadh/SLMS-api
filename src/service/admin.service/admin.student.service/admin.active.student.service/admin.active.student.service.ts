@@ -628,3 +628,39 @@ export async function assignClassToStudent(studentId: string, termId: string, su
 }
 
 /*get all classes for students*/
+export async function findUniqueStudentClassDetails(studentId: string) {
+    const studentClassHistoryRecords = await db.studentClassHistory.findMany({
+        where: {
+            studentId: +studentId
+        },
+        include: {
+            termSubjectLevel: {
+                include: {
+                    subject: true,
+                    level: true
+                }
+            },
+            section: {
+                select: {
+                    name: true
+                }
+            }
+        },
+        orderBy:{
+            id:'desc'
+        }
+    });
+
+    return studentClassHistoryRecords;
+}
+/*Manage classes for students*/
+export async function manageClasses(id: string) {
+    const currentRecord = await db.studentClassHistory.findUnique({
+        where: { id: +id }
+    });
+    const updatedStudentClassHistoryRecords = await db.studentClassHistory.update({
+        where: { id: +id },
+        data: { isCurrentlyAssigned: !currentRecord?.isCurrentlyAssigned }
+    });
+    return updatedStudentClassHistoryRecords;
+}

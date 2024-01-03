@@ -10,6 +10,7 @@ import {
     findTermSubjectGroupIdEnrolledSubjectsSchema,
     findUniqueActiveStudentSchema,
     findUniqueFeePaymentSchema,
+    manageClassSchema,
     searchActiveStudentsSchema,
     updateAmountPaidSchema
 } from '../../../../schema/admin.dto/admin.student.dto/admin.active.students.dto/admin.active.students.dto';
@@ -22,6 +23,8 @@ import {
     findFeePaymentByIdHandler,
     findStudentFeeDetailsHandler,
     findTermSubjectGroupIdEnrolledSubjectsHandler,
+    findUniqueStudentClassDetailsHandler,
+    manageClassesHandler,
     searchActiveStudentsHandler,
     updateAmountPaidHandler
 } from '../../../../controller/admin.controller/admin.student.controller/admin.active.students.controller/admin.active.students.controller';
@@ -57,4 +60,7 @@ adminActiveStudentRoute.route('/find-current-term-to-assign-class').get(asyncErr
 
 /****** * assign class to student*****/
 adminActiveStudentRoute.route('/assign-class-active-student/:studentId/:termId').post(validate(assignClassToStudentSchema), asyncErrorHandler(assignClassToStudentHandler));
+/*get all classes for students*/
+adminActiveStudentRoute.route('/find-assigned-classes-for-active-student/:id').get(validate(findUniqueActiveStudentSchema), asyncErrorHandler(findUniqueStudentClassDetailsHandler));
+adminActiveStudentRoute.route('/manage-toggle-active-class/:id').patch(validate(manageClassSchema), asyncErrorHandler(manageClassesHandler));
 export default adminActiveStudentRoute;

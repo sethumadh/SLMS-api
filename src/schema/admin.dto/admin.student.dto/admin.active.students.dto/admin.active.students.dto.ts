@@ -108,3 +108,11 @@ export const assignClassToStudentSchema = z.object({
     })
 });
 export type AssignClassToStudentSchema = z.infer<typeof assignClassToStudentSchema>;
+
+/*Manage classes for students*/
+export const manageClassSchema = z.object({
+    params: z.object({
+        id: z.string().min(1, { message: 'Atleast one param string value required @ksm' })
+    }),
+});
+export type ManageClassSchema = z.infer<typeof manageClassSchema>;

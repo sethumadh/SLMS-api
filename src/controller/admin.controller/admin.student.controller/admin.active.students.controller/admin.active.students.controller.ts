@@ -9,6 +9,8 @@ import {
     findFeePaymentById,
     findStudentFeeDetails,
     findTermSubjectGroupIdEnrolledSubjects,
+    findUniqueStudentClassDetails,
+    manageClasses,
     searchActiveStudents,
     updateAmountPaid
 } from '../../../../service/admin.service/admin.student.service/admin.active.student.service/admin.active.student.service';
@@ -20,6 +22,7 @@ import {
     FindTermSubjectGroupIdEnrolledSubjectsSchema,
     FindUniqueActiveStudentSchema,
     FindUniqueFeePaymentSchema,
+    ManageClassSchema,
     SearchActiveStudentsSchema,
     UpdateAmountPaidSchema
 } from '../../../../schema/admin.dto/admin.student.dto/admin.active.students.dto/admin.active.students.dto';
@@ -119,4 +122,16 @@ export const assignClassToStudentHandler = async (req: Request<AssignClassToStud
         const assignClass = await assignClassToStudent(studentId, termId, subjectName, levelName, sectionName);
         res.status(200).json(assignClass);
     }
+};
+/*get all classes for students*/
+export const findUniqueStudentClassDetailsHandler = async (req: Request<FindUniqueActiveStudentSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const student = await findUniqueStudentClassDetails(id);
+    res.status(200).json(student);
+};
+/*Manage classes for students*/
+export const manageClassesHandler = async (req: Request<ManageClassSchema['params'], {}, {}, {}>, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const updatedStudentClassHistoryRecords = await manageClasses(id);
+    res.status(200).json(updatedStudentClassHistoryRecords);
 };
