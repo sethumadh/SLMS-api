@@ -75,3 +75,17 @@ model StudentClassHistory {
 
   @@unique([studentId, termSubjectLevelId])
 }
+model TeacherSubjectAssignment {
+  id                 Int      @id @default(autoincrement())
+  teacherId          Int
+  termSubjectLevelId Int
+  sectionId          Int
+  timeSlot           String
+  startDate          DateTime
+  endDate            DateTime?
+  teacher            Teacher          @relation(fields: [teacherId], references: [id])
+  termSubjectLevel   TermSubjectLevel @relation(fields: [termSubjectLevelId], references: [id])
+  section            Section          @relation(fields: [sectionId], references: [id])
+
+  @@unique([teacherId, termSubjectLevelId, sectionId, timeSlot])
+}

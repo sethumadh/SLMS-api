@@ -37,7 +37,8 @@ enum PaymentType {
 model Student {
   id                  Int                   @id @default(autoincrement())
   role                Role                  @default(APPLICANT)
-  isActive            Boolean               @default(false) // RUN A CRON JOB TO MAKE THIS FIELD TRUE FOR CURRENT STUDENT
+  isActive            Boolean               @default(false)
+  isAllowedLogin      Boolean               @default(false)
   enrollments         Enrollment[]
   personalDetails     PersonalDetails?
   parentsDetails      ParentsDetails?
@@ -115,6 +116,7 @@ model Subject {
   termSubjectGroupSubject TermSubjectGroupSubject[]
   termSubjectGroup        TermSubjectGroup[]
   termSubjectLevel        TermSubjectLevel[]
+  TeacherSubject          TeacherSubject[]
 }
 
 model SubjectGroup {
@@ -150,10 +152,11 @@ model Level {
 }
 
 model Section {
-  id                  Int                   @id @default(autoincrement())
-  name                String                @unique
-  termSubjectLevel    TermSubjectLevel[]
-  StudentClassHistory StudentClassHistory[]
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @unique
+  termSubjectLevel         TermSubjectLevel[]
+  StudentClassHistory      StudentClassHistory[]
+  TeacherSubjectAssignment TeacherSubjectAssignment[]
 }
 
 model TermSubjectGroup {
@@ -188,16 +191,17 @@ model TermSubject {
 }
 
 model TermSubjectLevel {
-  id                  Int                   @id @default(autoincrement())
-  termId              Int
-  subjectId           Int
-  levelId             Int
-  sections            Section[]
-  term                Term                  @relation(fields: [termId], references: [id])
-  subject             Subject               @relation(fields: [subjectId], references: [id])
-  level               Level                 @relation(fields: [levelId], references: [id])
-  enrollments         Enrollment[]
-  StudentClassHistory StudentClassHistory[]
+  id                       Int                        @id @default(autoincrement())
+  termId                   Int
+  subjectId                Int
+  levelId                  Int
+  sections                 Section[]
+  term                     Term                       @relation(fields: [termId], references: [id])
+  subject                  Subject                    @relation(fields: [subjectId], references: [id])
+  level                    Level                      @relation(fields: [levelId], references: [id])
+  enrollments              Enrollment[]
+  StudentClassHistory      StudentClassHistory[]
+  TeacherSubjectAssignment TeacherSubjectAssignment[]
 
   @@unique([termId, subjectId, levelId])
 }
@@ -313,4 +317,115 @@ model TimeTable {
   data      Json
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+}
+
+model Teacher {
+  id                               Int                               @id @default(autoincrement())
+  role                             Role                              @default(APPLICANT)
+  isActive                         Boolean                           @default(false)
+  isAllowedLogin                   Boolean                           @default(false)
+  TeacherPersonalDetails           TeacherPersonalDetails?
+  TeacherEmergencyContact          TeacherEmergencyContact?
+  TeacherHealthInformation         TeacherHealthInformation?
+  TeacherWorkRights                TeacherWorkRights?
+  TeacherQualificationAvailability TeacherQualificationAvailability?
+  TeacherBankDetailss              TeacherBankDetailss?
+  TeacherOtherInformation          TeacherOtherInformation?
+  TeacherSubject                   TeacherSubject[]
+  TeacherSubjectAssignment         TeacherSubjectAssignment[]
+}
+
+model TeacherPersonalDetails {
+  id        Int      @id @default(autoincrement())
+  teacherId Int      @unique
+  firstName String
+  lastName  String
+  DOB       DateTime
+  gender    String
+  email     String
+  contact   String
+  address   String
+  suburb    String
+  state     String
+  country   String
+  postcode  String
+  image     String?
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+}
+
+model TeacherEmergencyContact {
+  id            Int     @id @default(autoincrement())
+  teacherId     Int     @unique
+  contactPerson String
+  contactNumber String
+  relationship  String
+  teacher       Teacher @relation(fields: [teacherId], references: [id])
+}
+
+model TeacherHealthInformation {
+  id                             Int      @id @default(autoincrement())
+  medicareNumber                 String?  @default("Medicare Number not provided")
+  medicalCondition               String
+  childrenCheckCardNumber        String
+  workingWithChildrenCheckExpiry DateTime
+  image                          String?
+  teacherId                      Int      @unique
+  teacher                        Teacher  @relation(fields: [teacherId], references: [id])
+}
+
+model TeacherWorkRights {
+  id                Int     @id @default(autoincrement())
+  workRights        Boolean
+  immigrationStatus Boolean
+  teacher           Teacher @relation(fields: [teacherId], references: [id])
+  teacherId         Int     @unique
+}
+
+model TeacherQualificationAvailability {
+  id              Int      @id @default(autoincrement())
+  qualification   String
+  subjectsChosen  String[]
+  timeSlotsChosen String[]
+  teacher         Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId       Int      @unique
+}
+
+model TeacherBankDetailss {
+  id            Int     @id @default(autoincrement())
+  accountName   String
+  BSB           String
+  accountNumber String
+  ABN           String
+  teacher       Teacher @relation(fields: [teacherId], references: [id])
+  teacherId     Int     @unique
+}
+
+model TeacherOtherInformation {
+  id        Int     @id @default(autoincrement())
+  otherInfo String  @default("No information provided")
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacherId Int     @unique
+}
+
+model TeacherSubject {
+  id        Int     @id @default(autoincrement())
+  teacherId Int
+  subjectId Int
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([teacherId, subjectId])
+}
+
+model TeacherSubjectAssignment {
+  id                 Int              @id @default(autoincrement())
+  teacherId          Int
+  termSubjectLevelId Int
+  sectionId          Int
+  timeSlot           String
+  teacher            Teacher          @relation(fields: [teacherId], references: [id])
+  termSubjectLevel   TermSubjectLevel @relation(fields: [termSubjectLevelId], references: [id])
+  section            Section          @relation(fields: [sectionId], references: [id])
+
+  @@unique([teacherId, termSubjectLevelId, sectionId, timeSlot])
 }

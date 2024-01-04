@@ -320,7 +320,7 @@ export async function findActiveStudentById(id: string) {
             }
         }
     });
-
+    console.log({activeStudent});
     return activeStudent;
 }
 export async function findStudentFeeDetails(studentId: number, termId: number) {
@@ -646,8 +646,8 @@ export async function findUniqueStudentClassDetails(studentId: string) {
                 }
             }
         },
-        orderBy:{
-            id:'desc'
+        orderBy: {
+            id: 'desc'
         }
     });
 
