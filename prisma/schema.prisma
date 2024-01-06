@@ -324,15 +324,15 @@ model Teacher {
   role                             Role                              @default(APPLICANT)
   isActive                         Boolean                           @default(false)
   isAllowedLogin                   Boolean                           @default(false)
-  TeacherPersonalDetails           TeacherPersonalDetails?
-  TeacherEmergencyContact          TeacherEmergencyContact?
-  TeacherHealthInformation         TeacherHealthInformation?
-  TeacherWorkRights                TeacherWorkRights?
-  TeacherQualificationAvailability TeacherQualificationAvailability?
-  TeacherBankDetailss              TeacherBankDetailss?
-  TeacherOtherInformation          TeacherOtherInformation?
-  TeacherSubject                   TeacherSubject[]
-  TeacherSubjectAssignment         TeacherSubjectAssignment[]
+  teacherPersonalDetails           TeacherPersonalDetails?
+  teacherEmergencyContact          TeacherEmergencyContact?
+  teacherWWCHealthInformation      TeacherWWCHealthInformation?
+  teacherWorkRights                TeacherWorkRights?
+  teacherQualificationAvailability TeacherQualificationAvailability?
+  teacherBankDetailss              TeacherBankDetails?
+  teacherOtherInformation          TeacherOtherInformation?
+  teacherSubject                   TeacherSubject[]
+  teacherSubjectAssignment         TeacherSubjectAssignment[]
 }
 
 model TeacherPersonalDetails {
@@ -342,8 +342,8 @@ model TeacherPersonalDetails {
   lastName  String
   DOB       DateTime
   gender    String
-  email     String
-  contact   String
+  email     String   @unique
+  contact   String   @unique
   address   String
   suburb    String
   state     String
@@ -362,21 +362,21 @@ model TeacherEmergencyContact {
   teacher       Teacher @relation(fields: [teacherId], references: [id])
 }
 
-model TeacherHealthInformation {
-  id                             Int      @id @default(autoincrement())
-  medicareNumber                 String?  @default("Medicare Number not provided")
-  medicalCondition               String
-  childrenCheckCardNumber        String
-  workingWithChildrenCheckExpiry DateTime
-  image                          String?
-  teacherId                      Int      @unique
-  teacher                        Teacher  @relation(fields: [teacherId], references: [id])
+model TeacherWWCHealthInformation {
+  id                                Int      @id @default(autoincrement())
+  medicareNumber                    String?  @default("Medicare Number not provided")
+  medicalCondition                  String
+  childrenCheckCardNumber           String   @unique
+  workingWithChildrenCheckExpiry    DateTime
+  WorkingwithChildrenCheckCardImage String?
+  teacherId                         Int      @unique
+  teacher                           Teacher  @relation(fields: [teacherId], references: [id])
 }
 
 model TeacherWorkRights {
   id                Int     @id @default(autoincrement())
   workRights        Boolean
-  immigrationStatus Boolean
+  immigrationStatus String
   teacher           Teacher @relation(fields: [teacherId], references: [id])
   teacherId         Int     @unique
 }
@@ -384,20 +384,21 @@ model TeacherWorkRights {
 model TeacherQualificationAvailability {
   id              Int      @id @default(autoincrement())
   qualification   String
+  experience      String
   subjectsChosen  String[]
   timeSlotsChosen String[]
   teacher         Teacher  @relation(fields: [teacherId], references: [id])
   teacherId       Int      @unique
 }
 
-model TeacherBankDetailss {
-  id            Int     @id @default(autoincrement())
-  accountName   String
-  BSB           String
-  accountNumber String
-  ABN           String
-  teacher       Teacher @relation(fields: [teacherId], references: [id])
-  teacherId     Int     @unique
+model TeacherBankDetails {
+  id              Int     @id @default(autoincrement())
+  bankAccountName String
+  BSB             String
+  accountNumber   String
+  ABN             String
+  teacher         Teacher @relation(fields: [teacherId], references: [id])
+  teacherId       Int     @unique
 }
 
 model TeacherOtherInformation {
