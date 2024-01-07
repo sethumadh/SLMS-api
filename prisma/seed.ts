@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { CreateNewTermSetupSchema } from '../src/schema/admin.dto/admin.administration.dto/admin.administration.dto';
+import { TeacherApplicantSchema } from '../src/schema/teacher.applicant.dto/teacher.applicant.dto';
 
 const prisma = new PrismaClient();
 
@@ -190,131 +191,234 @@ async function seedStudents() {
     console.log('Seeding finished.');
 }
 
-/* Create terms*/
-
-async function seedTerms() {
-    const termData: CreateNewTermSetupSchema['body'] = {
-        termName: 'Term Summer 2024',
-        startDate: new Date('2023-12-04T00:00:00Z').toISOString(),
-        endDate: new Date('2024-12-12T23:59:59Z').toISOString(),
-        groupSubjects: [
-            {
-                groupName: 'Group Music',
-                fee: '200',
-                feeInterval: 'MONTHLY',
-                subjects: [
-                    {
-                        subjectName: 'music',
-                        levels: ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8']
-                    }
-                ]
-            },
-            {
-                groupName: 'Group Other',
-                fee: '300',
-                feeInterval: 'TERM',
-                subjects: [
-                    {
-                        subjectName: 'maths',
-                        levels: ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8']
-                    },
-                    {
-                        subjectName: 'english',
-                        levels: ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8']
-                    }
-                ]
-            }
-        ]
-    };
-    const { termName, startDate, endDate, groupSubjects } = termData;
-
-    const existingTerm = await prisma.term.findFirst({
-        where: { name: termName.toLowerCase() }
-    });
-
-    if (!existingTerm) {
-        const createdTerm = await prisma.term.create({
-            data: {
-                name: termName.toLowerCase(),
-                startDate,
-                endDate
-            }
-        });
-
-        for (const group of groupSubjects) {
-            let subjectGroup = await prisma.subjectGroup.findUnique({
-                where: { groupName: group.groupName.toLowerCase() }
-            });
-
-            if (!subjectGroup) {
-                subjectGroup = await prisma.subjectGroup.create({
-                    data: { groupName: group.groupName.toLowerCase() }
-                });
-            }
-
-            let fee = await prisma.fee.findFirst({
-                where: {
-                    amount: parseInt(group.fee),
-                    paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
-                }
-            });
-
-            if (!fee) {
-                fee = await prisma.fee.create({
-                    data: {
-                        amount: parseInt(group.fee),
-                        paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
-                    }
-                });
-            }
-
-            const termSubjectGroup = await prisma.termSubjectGroup.create({
-                data: {
-                    termId: createdTerm.id,
-                    subjectGroupId: subjectGroup.id,
-                    feeId: fee.id
-                }
-            });
-
-            for (const subjectData of group.subjects) {
-                let subject = await prisma.subject.findUnique({
-                    where: { name: subjectData.subjectName.toLowerCase() }
-                });
-
-                if (!subject) {
-                    subject = await prisma.subject.create({
-                        data: { name: subjectData.subjectName.toLowerCase() }
-                    });
-                }
-
-                const levelConnections = subjectData.levels.map(levelName => ({
-                    where: { name: levelName },
-                    create: { name: levelName }
-                }));
-
-                await prisma.termSubject.create({
-                    data: {
-                        termSubjectGroupId: termSubjectGroup.id,
-                        subjectId: subject.id,
-                        level: {
-                            connectOrCreate: levelConnections
-                        },
-                        termId: createdTerm.id
-                    }
-                });
-            }
+/*Teacher*/
+// Define the teacher seed data
+const teacherSeedData: TeacherApplicantSchema['body'][] = [];
+for (let i = 1; i <= 15; i++) {
+    teacherSeedData.push({
+        teacherPersonalDetails: {
+            firstName: `TeacherFirst${i}`,
+            lastName: `TeacherLast${i}`,
+            DOB: new Date('1980-01-01').toISOString(),
+            gender: i % 2 === 0 ? 'male' : 'female',
+            email: `teacher${i}@domain.com`,
+            contact: `0456789${i}`,
+            address: `123 Main St ${i}`,
+            suburb: `Suburb${i}`,
+            state: 'SomeState',
+            country: 'SomeCountry',
+            postcode: `123${i}`,
+            image: 'path/to/image.jpg'
+        },
+        teacherEmergencyContact: {
+            contactPerson: `EmergencyContact${i}`,
+            contactNumber: `0456789${i + 10}`,
+            relationship: 'Relative'
+        },
+        teacherWWCHealthInformation: {
+            medicalCondition: 'None',
+            medicareNumber: `Medicare${i}`,
+            childrenCheckCardNumber: `WWC${i}`,
+            workingWithChildrenCheckExpiry: new Date('2030-01-01').toISOString(),
+            workingwithChildrenCheckCardPhotoImage: 'path/to/photo.jpg'
+        },
+        teacherWorkRights: {
+            immigrationStatus: i % 2 === 0 ? 'Citizen' : 'Visa Holder',
+            workRights: 'yes'
+        },
+        teacherQualificationAvailability: {
+            experience: `${i} years`,
+            qualification: `Qualification${i}`,
+            subjectsChosen: ['Math', 'Science'],
+            timeSlotsChosen: ['Monday Morning', 'Wednesday Afternoon']
+        },
+        teacherBankDetails: {
+            ABN: `ABN${i}`,
+            accountNumber: `Account${i}`,
+            bankAccountName: `BankName${i}`,
+            BSB: `BSB${i}`
+        },
+        teacherOtherInformation: {
+            otherInfo: `Other Info ${i}`
         }
+    });
+}
 
-        console.log(`Created term with id: ${createdTerm.id}`);
-    } else {
-        console.log(`Term with name '${termName}' already exists.`);
+async function seedTeachers() {
+    console.log('Start seeding teachers...');
+
+    for (const teacher of teacherSeedData) {
+        // Destructure your teacher data here
+        const { teacherPersonalDetails, teacherEmergencyContact, teacherWWCHealthInformation, teacherWorkRights, teacherQualificationAvailability, teacherBankDetails, teacherOtherInformation } =
+            teacher;
+
+        try {
+            const createdTeacher = await prisma.teacher.create({
+                data: {
+                    teacherPersonalDetails: {
+                        create: teacherPersonalDetails
+                    },
+                    teacherEmergencyContact: {
+                        create: teacherEmergencyContact
+                    },
+                    teacherWWCHealthInformation: {
+                        create: teacherWWCHealthInformation
+                    },
+                    teacherWorkRights: {
+                        create: {
+                            immigrationStatus: teacherWorkRights.immigrationStatus,
+                            workRights: true
+                        }
+                    },
+                    teacherQualificationAvailability: {
+                        create: teacherQualificationAvailability
+                    },
+                    teacherBankDetails: {
+                        create: teacherBankDetails
+                    },
+                    teacherOtherInformation: {
+                        create: teacherOtherInformation
+                    }
+                }
+            });
+            console.log(`Created teacher with id: ${createdTeacher.id}`);
+        } catch (error) {
+            console.error('Error creating teacher:', error);
+        }
     }
 
-    console.log('Finished seeding terms.');
+    console.log('Seeding teachers finished.');
 }
+/*Teacher*/
+
+/* Create terms*/
+
+// async function seedTerms() {
+//     const termData: CreateNewTermSetupSchema['body'] = {
+//         termName: 'Term Summer 2024',
+//         startDate: new Date('2023-12-04T00:00:00Z').toISOString(),
+//         endDate: new Date('2024-12-12T23:59:59Z').toISOString(),
+//         groupSubjects: [
+//             {
+//                 groupName: 'Group Music',
+//                 fee: '200',
+//                 feeInterval: 'MONTHLY',
+//                 subjects: [
+//                     {
+//                         subjectName: 'music',
+//                         levels: ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8']
+//                     }
+//                 ]
+//             },
+//             {
+//                 groupName: 'Group Other',
+//                 fee: '300',
+//                 feeInterval: 'TERM',
+//                 subjects: [
+//                     {
+//                         subjectName: 'maths',
+//                         levels: ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8']
+//                     },
+//                     {
+//                         subjectName: 'english',
+//                         levels: ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8']
+//                     }
+//                 ]
+//             }
+//         ]
+//     };
+//     const { termName, startDate, endDate, groupSubjects } = termData;
+
+//     const existingTerm = await prisma.term.findFirst({
+//         where: { name: termName.toLowerCase() }
+//     });
+
+//     if (!existingTerm) {
+//         const createdTerm = await prisma.term.create({
+//             data: {
+//                 name: termName.toLowerCase(),
+//                 startDate,
+//                 endDate
+//             }
+//         });
+
+//         for (const group of groupSubjects) {
+//             let subjectGroup = await prisma.subjectGroup.findUnique({
+//                 where: { groupName: group.groupName.toLowerCase() }
+//             });
+
+//             if (!subjectGroup) {
+//                 subjectGroup = await prisma.subjectGroup.create({
+//                     data: { groupName: group.groupName.toLowerCase() }
+//                 });
+//             }
+
+//             let fee = await prisma.fee.findFirst({
+//                 where: {
+//                     amount: parseInt(group.fee),
+//                     paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
+//                 }
+//             });
+
+//             if (!fee) {
+//                 fee = await prisma.fee.create({
+//                     data: {
+//                         amount: parseInt(group.fee),
+//                         paymentType: group.feeInterval === 'MONTHLY' ? 'MONTHLY' : 'TERM'
+//                     }
+//                 });
+//             }
+
+//             const termSubjectGroup = await prisma.termSubjectGroup.create({
+//                 data: {
+//                     termId: createdTerm.id,
+//                     subjectGroupId: subjectGroup.id,
+//                     feeId: fee.id
+//                 }
+//             });
+
+//             for (const subjectData of group.subjects) {
+//                 let subject = await prisma.subject.findUnique({
+//                     where: { name: subjectData.subjectName.toLowerCase() }
+//                 });
+
+//                 if (!subject) {
+//                     subject = await prisma.subject.create({
+//                         data: { name: subjectData.subjectName.toLowerCase() }
+//                     });
+//                 }
+
+//                 const levelConnections = subjectData.levels.map(levelName => ({
+//                     where: { name: levelName },
+//                     create: { name: levelName }
+//                 }));
+
+//                 await prisma.termSubject.create({
+//                     data: {
+//                         termSubjectGroupId: termSubjectGroup.id,
+//                         subjectId: subject.id,
+//                         level: {
+//                             connectOrCreate: levelConnections
+//                         },
+//                         termId: createdTerm.id
+//                     }
+//                 });
+//             }
+//         }
+
+//         console.log(`Created term with id: ${createdTerm.id}`);
+//     } else {
+//         console.log(`Term with name '${termName}' already exists.`);
+//     }
+
+//     console.log('Finished seeding terms.');
+// }
+
+//
 
 async function main() {
     await seedStudents();
+    await seedTeachers();
     // await seedTerms();
 }
 

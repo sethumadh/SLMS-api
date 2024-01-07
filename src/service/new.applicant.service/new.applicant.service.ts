@@ -19,7 +19,7 @@ export async function createApplicant(data: NewApplicantSchema['body']) {
             firstName,
             lastName,
             DOB: new Date(DOB),
-            // DOB:formattedDOB,
+
             email
         },
         include: {

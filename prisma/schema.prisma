@@ -329,10 +329,12 @@ model Teacher {
   teacherWWCHealthInformation      TeacherWWCHealthInformation?
   teacherWorkRights                TeacherWorkRights?
   teacherQualificationAvailability TeacherQualificationAvailability?
-  teacherBankDetailss              TeacherBankDetails?
+  teacherBankDetails               TeacherBankDetails?
   teacherOtherInformation          TeacherOtherInformation?
   teacherSubject                   TeacherSubject[]
   teacherSubjectAssignment         TeacherSubjectAssignment[]
+  createdAt                        DateTime                          @default(now())
+  updatedAt                        DateTime                          @updatedAt
 }
 
 model TeacherPersonalDetails {
@@ -359,53 +361,53 @@ model TeacherEmergencyContact {
   contactPerson String
   contactNumber String
   relationship  String
-  teacher       Teacher @relation(fields: [teacherId], references: [id])
+  teacher       Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 }
 
 model TeacherWWCHealthInformation {
-  id                                Int      @id @default(autoincrement())
-  medicareNumber                    String?  @default("Medicare Number not provided")
-  medicalCondition                  String
-  childrenCheckCardNumber           String   @unique
-  workingWithChildrenCheckExpiry    DateTime
-  WorkingwithChildrenCheckCardImage String?
-  teacherId                         Int      @unique
-  teacher                           Teacher  @relation(fields: [teacherId], references: [id])
+  id                                     Int      @id @default(autoincrement())
+  teacherId                              Int      @unique
+  medicareNumber                         String?  @default("Medicare Number not provided")
+  medicalCondition                       String
+  childrenCheckCardNumber                String   @unique
+  workingWithChildrenCheckExpiry         DateTime
+  workingwithChildrenCheckCardPhotoImage String?
+  teacher                                Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 }
 
 model TeacherWorkRights {
   id                Int     @id @default(autoincrement())
+  teacherId         Int     @unique
   workRights        Boolean
   immigrationStatus String
-  teacher           Teacher @relation(fields: [teacherId], references: [id])
-  teacherId         Int     @unique
+  teacher           Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 }
 
 model TeacherQualificationAvailability {
   id              Int      @id @default(autoincrement())
+  teacherId       Int      @unique
   qualification   String
   experience      String
   subjectsChosen  String[]
   timeSlotsChosen String[]
-  teacher         Teacher  @relation(fields: [teacherId], references: [id])
-  teacherId       Int      @unique
+  teacher         Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 }
 
 model TeacherBankDetails {
   id              Int     @id @default(autoincrement())
+  teacherId       Int     @unique
   bankAccountName String
   BSB             String
   accountNumber   String
-  ABN             String
-  teacher         Teacher @relation(fields: [teacherId], references: [id])
-  teacherId       Int     @unique
+  ABN             String? @default("NA")
+  teacher         Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 }
 
 model TeacherOtherInformation {
   id        Int     @id @default(autoincrement())
-  otherInfo String  @default("No information provided")
-  teacher   Teacher @relation(fields: [teacherId], references: [id])
   teacherId Int     @unique
+  otherInfo String  @default("No information provided")
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 }
 
 model TeacherSubject {
