@@ -198,7 +198,7 @@ for (let i = 1; i <= 15; i++) {
     teacherSeedData.push({
         teacherPersonalDetails: {
             firstName: `TeacherFirst${i}`,
-            lastName: `TeacherLast${i}`,
+            lastName: `Last${i}`,
             DOB: new Date('1980-01-01').toISOString(),
             gender: i % 2 === 0 ? 'male' : 'female',
             email: `teacher${i}@domain.com`,

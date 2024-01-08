@@ -86,18 +86,12 @@ export async function findAllTeacherApplicants(page: number) {
             createdAt: 'desc'
         }
     });
-    const count = await db.teacher.aggregate({
+    const count = await db.teacher.count({
         where: {
-            role: 'APPLICANT'
-        },
-        _count: {
-            id: true
+            role: 'APPLICANT',
+            isActive: false
         }
     });
-
-    if (applicants.length == 0) {
-        throw customError(`No applicants lists to show`, 'fail', 400, true);
-    }
 
     return { applicants, count };
 }
@@ -202,7 +196,7 @@ export async function searchTeacherApplicants(search: string, page: number) {
         }
     });
 
-    const count = await db.teacher.aggregate({
+    const count = await db.teacher.count({
         where: {
             role: 'APPLICANT',
             OR: [
@@ -218,15 +212,8 @@ export async function searchTeacherApplicants(search: string, page: number) {
                     }
                 }
             ]
-        },
-        _count: {
-            id: true
         }
     });
-
-    if (applicants.length == 0) {
-        throw customError(`No applicants lists to show`, 'fail', 400, true);
-    }
 
     return { applicants, count };
 }
@@ -305,7 +292,7 @@ export async function findTeacherApplicantById(id: string) {
                     otherInfo: true
                 }
             }
-        },
+        }
     });
 
     return applicant;

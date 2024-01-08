@@ -75,18 +75,12 @@ export async function findAllApplicants(page: number) {
             createdAt: 'desc'
         }
     });
-    const count = await db.student.aggregate({
+    const count = await db.student.count({
         where: {
-            role: 'APPLICANT'
-        },
-        _count: {
-            id: true
+            role: 'APPLICANT',
+            isActive: false
         }
     });
-
-    if (applicants.length == 0) {
-        throw customError(`No applicants lists to show`, 'fail', 400, true);
-    }
 
     return { applicants, count };
 }
@@ -189,9 +183,10 @@ export async function searchApplicants(search: string, page: number) {
         }
     });
 
-    const count = await db.student.aggregate({
+    const count = await db.student.count({
         where: {
             role: 'APPLICANT',
+            isActive: false,
             OR: [
                 {
                     personalDetails: {
@@ -215,15 +210,8 @@ export async function searchApplicants(search: string, page: number) {
                     }
                 }
             ]
-        },
-        _count: {
-            id: true
         }
     });
-
-    if (applicants.length == 0) {
-        throw customError(`No applicants lists to show`, 'fail', 400, true);
-    }
 
     return { applicants, count };
 }
